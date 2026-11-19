@@ -3,9 +3,9 @@
 Each requirement has acceptance criteria (AC). WPs in `09-roadmap.md` reference these IDs.
 
 ## REQ-01 Lives in the notch
-The pet is anchored to the notch of the built-in display. If the built-in display is closed or absent, it uses the top centre of the **main display** (the one with the menu bar) as a virtual notch.
-- AC1: On a notched MacBook, the pet's wings sit flush against the left and right edges of the physical notch (±1 pt).
-- AC2: With the lid closed and an external display connected, the pet is centred at the top of the main display.
+The pet always lives on the **main display** (the one with the menu bar, as set in System Settings → Displays). If that display has a notch, the pet anchors to it. Otherwise it uses the top centre of the display as a virtual notch. This is the user's decision: with an external monitor set as main, the pet goes there even when the MacBook lid is open.
+- AC1: When the main display is a notched MacBook screen, the pet's wings sit flush against the left and right edges of the physical notch (±1 pt).
+- AC2: When the main display is an external monitor, the pet is centred at its top, whether the lid is open or closed.
 - AC3: A display change (plug, unplug, resolution change, or a different main display) moves the pet within 1 s, without a restart.
 
 ## REQ-02 Always on top

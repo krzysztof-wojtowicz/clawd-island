@@ -27,9 +27,9 @@ final class NotchWindowController {
         }
     }
 
-    /// Prefers the notched built-in display; otherwise uses the main display (the one with the menu bar).
+    /// The main display, i.e. the one with the menu bar (not `NSScreen.main`, which follows the key window).
     private static func targetScreen() -> NSScreen? {
-        NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.screens.first
+        NSScreen.screens.first
     }
 
     private func layout() {

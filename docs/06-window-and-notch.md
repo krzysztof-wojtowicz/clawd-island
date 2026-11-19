@@ -9,9 +9,8 @@
 - The app sets `LSUIElement = true` in Info.plist, so it has no Dock icon and does not appear in Cmd-Tab.
 
 ## Choosing the screen
-1. If a screen has `safeAreaInsets.top > 0` (a notch), use it. This is the built-in display with the lid open.
-2. Otherwise, use `NSScreen.screens.first`, which is the main display with the menu bar.
-3. A config override can force "main display".
+- Always use `NSScreen.screens.first`, which is the main display with the menu bar (REQ-01). Do not use `NSScreen.main`, which follows the key window.
+- `NotchGeometry` decides between a physical and a virtual notch from that screen's metrics.
 - Re-layout on `NSApplication.didChangeScreenParametersNotification`.
 
 ## Notch geometry
@@ -45,7 +44,6 @@ These settings are not in scope for WP-2. The full set:
 - Port.
 - Hide mode default.
 - Focus-read mode: tab, app, or off.
-- Display: auto or main.
 - Launch at login (`SMAppService.mainApp`).
 - Install/Uninstall hooks.
 - Hook status (whether the last event was received and when).

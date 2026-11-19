@@ -2,7 +2,7 @@
 
 How to use this file: the orchestrator picks every WP whose dependencies are `done`, delegates it to the owner agent (run WPs in parallel when their file ownership does not overlap), has `reviewer` check it, commits, and then updates **Status** here in the same commit.
 
-Status values: `todo` · `in-progress` · `done` · `done-pending-AC` (counts as done for dependencies; the open check is carried into a named WP) · `blocked(<reason>)`
+Status values: `todo` · `in-progress` · `done` · `blocked(<reason>)`
 
 ## Dependency graph
 ```
@@ -14,7 +14,7 @@ WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories
 
 ---
 
-### WP-0 — Skeleton and spikes · owner: orchestrator (or core-engineer) · status: `done-pending-AC` (full-screen visibility awaits the user's visual check, carried into WP-2)
+### WP-0 — Skeleton and spikes · owner: orchestrator (or core-engineer) · status: `done` (full-screen visibility confirmed by the user)
 Goal: a buildable skeleton, and answers to the risky unknowns.
 - `Package.swift` with the 4 targets (see `03`). Swift 6 language mode. Platform `.macOS(.v14)`.
 - Minimal `ClawdNotch` app: `NSApplication` + `AppDelegate`, `LSUIElement`, an empty black `NSPanel` at the notch.
@@ -33,7 +33,7 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 ### WP-2 — Window and notch · owner: macos-ui-engineer · deps: WP-0 · status: `todo`
 - `NotchPanel`, `NotchWindowController`: screen choice, geometry, re-layout on screen changes, hover expand/collapse, right-click menu (items may be stubs), click-through sizing.
 - An island view with placeholder slots for the pet (left), the counters (right), and the expanded panel.
-- AC: REQ-01 AC1–3, REQ-02 AC1–3, including the visual check carried over from WP-0: the island stays visible over a full-screen app and on another Space.
+- AC: REQ-01 AC1–3, REQ-02 AC1–3.
 
 ### WP-3 — Clawd pet · owner: pet-animator · deps: WP-0 · status: `todo`
 - `PetTokens`, `PetView` (the layer tree from `07`), all 6 poses with loops, transitions, `popOut()`, `setPaused(_:)`, and Reduce Motion support.

@@ -43,7 +43,7 @@ Claude Code ──(http hooks, POST JSON)─────────────
 - Swift 6 strict concurrency must be on, with no `@unchecked Sendable` unless there is a `shortcut:` comment justifying it.
 
 ## Config and runtime files
-- `~/Library/Application Support/ClawdNotch/config.json` holds the port, token, hide mode, display preference, focus-read mode, and the original statusline command (for uninstall and wrapping).
+- `~/Library/Application Support/ClawdNotch/config.json` holds the port, token, hide mode, focus-read mode, and the original statusline command (for uninstall and wrapping).
 - `~/.claude/settings.json` is edited only by `HookInstaller` (see `05`). The backup goes to `~/.claude/settings.json.clawdnotch-backup-<timestamp>`.
 - The bridge reads the port and token from the config file. If the file is missing, it exits silently.
 
