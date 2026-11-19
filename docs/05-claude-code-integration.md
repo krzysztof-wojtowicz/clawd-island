@@ -8,7 +8,7 @@ Verified against Claude Code 2.1.329 docs (hooks, statusline). Re-check field na
 3. **The statusLine command** `clawd-bridge statusline` forwards the statusline JSON (which carries `rate_limits`) to the app and prints a status line.
 
 ## Hook config written by the installer
-The installer recognises its own entries by their URL (`127.0.0.1:<port>/hook`) or by the `clawd-bridge` path. This keeps install idempotent and makes uninstall remove exactly what was added.
+The installer recognises its own entries by their URL (`http://127.0.0.1:<any port>/hook`, and only when the hook also carries an `X-Clawd-Token` header, so another tool's localhost hook is never removed) or by a command containing `clawd-bridge`. This keeps install idempotent and makes uninstall remove exactly what was added.
 
 ```jsonc
 {
@@ -41,17 +41,18 @@ The installer recognises its own entries by their URL (`127.0.0.1:<port>/hook`) 
 | `POST /statusline` | raw statusline JSON | `SessionStore.apply(usage:)` when `UsageSnapshot(statusline:)` finds `rate_limits.five_hour.*`; otherwise the last usage is kept |
 | anything else | — | 404 |
 Every endpoint requires `X-Clawd-Token`. Bodies are limited to 64 KiB, with a 2 s read timeout and `Connection: close`.
+Every reply has an empty body and `Content-Length: 0`. The checks run in this order: 401 for a missing or wrong token (checked first, so unauthenticated clients learn nothing about routes), 404 for an unknown path or a non-`POST` method, and 413 when `Content-Length` exceeds 64 KiB (the body is not read). A malformed request line or `Content-Length` gets 400, and a head over 8 KiB gets 431. A valid request always gets 200, even if its body decodes to nothing.
 
 ## clawd-bridge
-Startup must stay under 20 ms. It uses only Foundation and Darwin.
+Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the config from `AppConfig.defaultURL`, or from `$CLAWD_CONFIG` when set (used for testing).
 
 ### `hook session-start`
 1. Reads the hook JSON from stdin and takes `session_id` and `cwd` from it.
 2. Walks the parent process chain (`proc_pidinfo` / `sysctl KERN_PROC_PID`):
-   - **CC pid** is the nearest ancestor whose executable name is `claude`. `shortcut: name match, upgrade if CC renames its binary or runs under node`
+   - **CC pid** is the nearest ancestor whose executable path (`proc_pidpath`) ends in `/claude` or contains `/claude/versions/`. The native installer runs `~/.local/share/claude/versions/<version>`, so its kernel process name is the version, not `claude`. `shortcut: path match, upgrade to argv matching if CC runs under node`
    - **tty** comes from that process's controlling terminal (`e_tdev` → `devname`).
    - **terminal app** is the nearest ancestor whose executable path is inside a `.app` bundle. The bridge reads `CFBundleIdentifier` from its Info.plist.
-   - Env: `TERM_PROGRAM`, `ITERM_SESSION_ID`, `TMUX` (tmux makes tab focus imprecise; fall back to app-level focus).
+   - Env: `TERM_PROGRAM`, `ITERM_SESSION_ID`, `TMUX` (`ITERM_SESSION_ID` and `TMUX` not sent yet: no SessionMeta field; tmux makes tab focus imprecise; fall back to app-level focus).
 3. POSTs `SessionMeta` to `/session-meta` with a 300 ms timeout, then exits with code 0. **It always exits 0, even on error.**
 
 ### `statusline`
@@ -66,15 +67,16 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin.
 - The statusline refreshes on assistant messages, so the data is as fresh as the last active session.
 - **Forbidden:** the undocumented OAuth usage endpoint, and any Keychain or credentials access.
 
-## Installer (`HookInstaller`, App/Integration)
+## Installer (`HookInstaller`, ClawdCore)
 - **Install:**
   1. Read `~/.claude/settings.json` (create it if missing).
   2. Write a backup.
   3. Remove any of our old entries, then add the current ones.
-  4. If there is a foreign `statusLine`, save it as `originalStatusLine` in our config.
-  5. Write atomically, preserving unknown keys.
-- **Uninstall:** remove our entries, then restore `originalStatusLine` if one was saved.
-- If the JSON is invalid, abort without writing and show an error. Never overwrite a file we failed to parse.
+  4. If there is a foreign `statusLine`, save it as `originalStatusLine` in our config (created with a fresh token if missing). Only its `command` is swapped, so other keys such as `padding` survive.
+  5. Write atomically, preserving unknown keys. A symlinked settings file is written through to its target. The backup always sits next to `~/.claude/settings.json`.
+- **Uninstall:** remove our entries, then restore `originalStatusLine` if one was saved (or remove our statusLine if none was). A statusLine the user changed after install is left alone.
+- Merge logic is the pure `ClawdCore.HookSettings` (`parse`, `install`, `uninstall`, `isInstalled`). File IO is `ClawdCore.HookInstaller` (URLs and bridge path injected by the app, so tests use temp dirs).
+- If the JSON is invalid, abort without writing and show an error. Never overwrite a file we failed to parse. The same holds for a `config.json` that exists but does not decode.
 - `JSONSerialization` with sorted keys and pretty printing is acceptable. Comments are not supported, and CC settings are plain JSON.
 - Tests: the install and uninstall round-trip leaves the file semantically equal to the original. Install is idempotent (installing twice gives the same result).
 

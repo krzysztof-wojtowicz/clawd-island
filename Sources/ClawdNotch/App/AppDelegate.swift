@@ -2,12 +2,20 @@
 // Owns the app's long-lived objects and wires them together at launch.
 
 import AppKit
+import ClawdCore
+import os
 
-/// Application lifecycle owner. It holds the notch window controller and the pet for the life of the app.
+/// Application lifecycle owner. It holds the notch window controller, the pet, the model and the event server
+/// for the life of the app.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private static let logger = Logger(subsystem: "dev.clawdnotch", category: "app")
+
     private var notchController: NotchWindowController?
     private let pet = PetView(frame: .zero)
+    /// The session model every UI piece reads from.
+    let model = AppModel()
+    private var server: EventServer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let controller = NotchWindowController()
@@ -18,9 +26,62 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PetDemo.startIfRequested(on: pet)
         notchController = controller
         pausePetWhileUnseen()
+        bindPet()
+        startServer()
     }
 
-    /// Freezes the pet's loops while the screen sleeps or the user session is switched away (docs/08 rule 4).
+    /// Mirrors the aggregate onto the pet and pops it out on each new `popToken`.
+    // TODO(WP-5): replace with the full HUD binding.
+    private func bindPet() {
+        pet.setState(model.snapshot.aggregate)
+        model.onSnapshotChange = { [pet] old, new in
+            pet.setState(new.aggregate)
+            if new.popToken > old.popToken { pet.popOut() }
+        }
+    }
+
+    /// Starts the event server from the config file, creating a default config (random token) on first launch.
+    private func startServer() {
+        guard let config = loadOrCreateConfig() else { return }
+        do {
+            let server = try EventServer(
+                config: config,
+                onMessage: { [model] message in
+                    // main.async keeps arrival order, which the state machine depends on.
+                    DispatchQueue.main.async { MainActor.assumeIsolated { model.receive(message) } }
+                },
+                onFailure: { [model] error in
+                    let text = "Port \(config.port) unavailable: \(error.localizedDescription)"
+                    DispatchQueue.main.async { MainActor.assumeIsolated { model.serverError = text } }
+                }
+            )
+            server.start()
+            self.server = server
+        } catch {
+            Self.logger.error("event server not started: \(error.localizedDescription, privacy: .public)")
+            model.serverError = error.localizedDescription
+        }
+    }
+
+    private func loadOrCreateConfig() -> AppConfig? {
+        if let config = AppConfig.load() { return config }
+        // Never overwrite a config we failed to parse: it may hold the user's original statusline.
+        guard !FileManager.default.fileExists(atPath: AppConfig.defaultURL.path) else {
+            Self.logger.error("config.json is unreadable; event server not started")
+            model.serverError = "config.json is unreadable"
+            return nil
+        }
+        let config = AppConfig.makeDefault()
+        do {
+            try config.write()
+        } catch {
+            Self.logger.error("cannot write config.json: \(error.localizedDescription, privacy: .public)")
+        }
+        return config
+    }
+
+    /// Freezes the pet's loops and the liveness timer while the screen sleeps or the user session
+    /// is switched away (docs/08 rule 4).
     private func pausePetWhileUnseen() {
         let center = NSWorkspace.shared.notificationCenter
         let pauses: [(Notification.Name, Bool)] = [
@@ -30,8 +91,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             (NSWorkspace.sessionDidBecomeActiveNotification, false),
         ]
         for (name, paused) in pauses {
-            center.addObserver(forName: name, object: nil, queue: .main) { [pet] _ in
-                MainActor.assumeIsolated { pet.setPaused(paused) }
+            center.addObserver(forName: name, object: nil, queue: .main) { [pet, model] _ in
+                MainActor.assumeIsolated {
+                    pet.setPaused(paused)
+                    model.setPaused(paused)
+                }
             }
         }
     }

@@ -40,7 +40,7 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - A debug-only state cycler (for example, launching with `--pet-demo` cycles the states every 3 s), used for screenshots.
 - AC: REQ-03 AC1, REQ-06 AC1. The perf budget holds while it animates (perf-check skill).
 
-### WP-4 — Event server, bridge, installer · owner: core-engineer (server), integration-engineer (bridge + installer) · deps: WP-1 · status: `todo`
+### WP-4 — Event server, bridge, installer · owner: core-engineer (server), integration-engineer (bridge + installer) · deps: WP-1 · status: `done` (e2e: a real `claude -p` with scratch `--settings` drove idle → thinking → talking → done → sleeping)
 - `EventServer` (`03`, `05`), feeding into the `AppModel` → `SessionStore`.
 - `clawd-bridge` with the `hook session-start` and `statusline` subcommands.
 - `HookInstaller` install/uninstall, with round-trip and idempotency tests (put the pure JSON-merge logic in Core so it can be tested).

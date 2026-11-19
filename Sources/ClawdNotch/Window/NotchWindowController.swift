@@ -94,12 +94,43 @@ final class NotchWindowController {
     private static func makeMenu() -> NSMenu {
         let menu = NSMenu()
         // TODO(WP-7): hide mode toggle, launch at login and Settings.
-        // TODO(WP-5): mark all read. TODO(WP-4): install/uninstall hooks.
-        for title in ["Hide Mode", "Mark All Read", "Install Hooks", "Launch at Login", "Settings…"] {
+        // TODO(WP-5): mark all read.
+        menu.addItem(withTitle: "Hide Mode", action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: "Mark All Read", action: nil, keyEquivalent: "")
+        let hooks = menu.addItem(
+            withTitle: HooksMenuTarget.installer.isInstalled ? "Uninstall Hooks" : "Install Hooks",
+            action: #selector(HooksMenuTarget.toggle(_:)),
+            keyEquivalent: ""
+        )
+        hooks.target = HooksMenuTarget.shared
+        for title in ["Launch at Login", "Settings…"] {
             menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
         }
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit ClawdNotch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         return menu
+    }
+}
+
+/// Menu target for the one-click hook install/uninstall (REQ-09 AC1). Menu items hold their target weakly,
+/// so a single shared instance lives for the app's lifetime.
+@MainActor
+private final class HooksMenuTarget: NSObject {
+    static let shared = HooksMenuTarget()
+
+    /// Installer pointed at the `clawd-bridge` shipped next to the app's main executable.
+    static var installer: HookInstaller {
+        HookInstaller(bridgePath: Bundle.main.executableURL?.deletingLastPathComponent()
+            .appending(path: "clawd-bridge").path ?? "/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge")
+    }
+
+    @objc func toggle(_ sender: NSMenuItem) {
+        let installer = Self.installer
+        do {
+            if installer.isInstalled { try installer.uninstall() } else { try installer.install() }
+        } catch {
+            NSApp.activate()
+            NSAlert(error: error).runModal()
+        }
     }
 }
