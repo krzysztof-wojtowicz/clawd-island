@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(swift build:*)",
+      "Bash(swift test:*)",
+      "Bash(scripts/bundle.sh:*)",
+      "Bash(scripts/run.sh:*)",
+      "Bash(scripts/simulate.sh:*)",
+      "Bash(scripts/perf.sh:*)",
+      "Bash(pgrep:*)",
+      "Bash(pkill -x ClawdNotch)",
+      "Bash(screencapture:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(security find-generic-password:*)"
+    ]
+  }
+}
