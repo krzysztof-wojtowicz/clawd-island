@@ -28,7 +28,8 @@
           │  proj-b   ✋ done (unread)           2m     [mark read]     │
           │  HP 63%  · resets in 1h 12m                    [⚙] [hide]   │
 ```
-- Left wing: Clawd, 28–32 pt tall, vertically centred in the notch height.
+- Top row: as wide as the notch and `max(notch height, 32 pt)` tall, so on a short virtual notch (24 pt menu bar) the island hangs a little below the menu bar. Each wing is 60 pt wide and flush with a notch edge.
+- Left wing: Clawd, 26 pt tall (`07`), vertically centred in the top row.
 - Right wing: active count, attention count (the badge turns red on `needsInput`), and the HP bar (5 segments or continuous, 3 pt tall).
 - The island is black (`#000`), so it merges with the physical notch. Corners use a continuous (squircle) curve.
 - **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext` together with SwiftUI.

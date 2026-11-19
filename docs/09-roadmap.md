@@ -30,7 +30,7 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - All the tests listed in `04`, plus decoder tests built from the sample payloads.
 - AC: REQ-03 AC3 and REQ-04 AC1 are provable by tests. Coverage of the transition table is 100 %.
 
-### WP-2 — Window and notch · owner: macos-ui-engineer · deps: WP-0 · status: `todo`
+### WP-2 — Window and notch · owner: macos-ui-engineer · deps: WP-0 · status: `done` (physical-notch fit, full-screen hover and no-focus right-click still to be checked by eye)
 - `NotchPanel`, `NotchWindowController`: screen choice, geometry, re-layout on screen changes, hover expand/collapse, right-click menu (items may be stubs), click-through sizing.
 - An island view with placeholder slots for the pet (left), the counters (right), and the expanded panel.
 - AC: REQ-01 AC1–3, REQ-02 AC1–3.

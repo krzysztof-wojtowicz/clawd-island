@@ -1,29 +1,40 @@
 // NotchWindowController.swift
-// Places the black notch island on the right screen and keeps it there when displays change (REQ-01).
+// Places the notch island on the main display, keeps it there when displays change (REQ-01),
+// and sizes the panel to the island so the rest of the screen stays click-through.
 
 import AppKit
 import ClawdCore
 
-/// Creates the notch panel and positions it over the physical or virtual notch.
+/// Owns the notch panel: screen choice, island geometry, hover expand/collapse and the right-click menu.
 @MainActor
 final class NotchWindowController {
-    /// Width each black "wing" adds on either side of the notch; the pet and the counters live there in WP-2/WP-5.
-    private static let wingWidth: CGFloat = 44
-    private static let cornerRadius: CGFloat = 10
+    private static let expandedMinWidth: CGFloat = 360
+    private static let expandedExtraHeight: CGFloat = 160
+    private static let expandDelay: Duration = .milliseconds(150)
+    private static let collapseDelay: Duration = .milliseconds(300)
+    private static let resizeDuration: TimeInterval = 0.25
+
+    /// The island content view; its `petSlot`, `countersSlot` and `panelSlot` are the integration points.
+    let island = IslandView()
 
     private let panel: NotchPanel
+    private var isExpanded = false
+    private var hoverTask: Task<Void, Never>?
 
     init() {
         panel = NotchPanel(contentRect: .zero)
-        panel.contentView = Self.makeIslandView()
-        layout()
+        panel.contentView = island
+        island.menuProvider = Self.makeMenu
+        island.onHoverChange = { [weak self] inside in self?.hoverChanged(inside) }
+        layout(animated: false)
         panel.orderFrontRegardless()
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.layout() }
+            // layout(animated: false) re-syncs hover, which also cancels any pending expand/collapse.
+            MainActor.assumeIsolated { self?.layout(animated: false) }
         }
     }
 
@@ -32,7 +43,22 @@ final class NotchWindowController {
         NSScreen.screens.first
     }
 
-    private func layout() {
+    /// Expands after the mouse rests on the island and collapses after it leaves (delays from docs/06).
+    private func hoverChanged(_ inside: Bool) {
+        hoverTask?.cancel()
+        guard inside != isExpanded else { return }
+        hoverTask = Task { [weak self] in
+            try? await Task.sleep(for: inside ? Self.expandDelay : Self.collapseDelay)
+            guard !Task.isCancelled, let self else { return }
+            isExpanded = inside
+            layout(animated: true)
+        }
+    }
+
+    /// Recomputes the notch on the target screen and fits the panel to the island.
+    /// A non-animated layout (launch, screen change) also re-syncs hover, since a panel that moves under a still
+    /// cursor gets no enter/exit event.
+    private func layout(animated: Bool) {
         guard let screen = Self.targetScreen() else { return }
         let notch = NotchGeometry.compute(
             screenFrame: screen.frame,
@@ -40,19 +66,40 @@ final class NotchWindowController {
             safeTop: screen.safeAreaInsets.top,
             auxLeft: screen.auxiliaryTopLeftArea?.width,
             auxRight: screen.auxiliaryTopRightArea?.width
-        )
-        panel.setFrame(notch.frame.insetBy(dx: -Self.wingWidth, dy: 0), display: true)
+        ).frame
+        let rowHeight = max(notch.height, IslandView.minRowHeight)
+        let topRow = CGRect(x: notch.minX, y: notch.maxY - rowHeight, width: notch.width, height: rowHeight)
+        island.topRowSize = topRow.size
+        let frame = islandFrame(around: topRow)
+        // Always go through the animator: a plain setFrame could be overwritten by an in-flight resize animation.
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = animated ? Self.resizeDuration : 0
+            panel.animator().setFrame(frame, display: true)
+        }
+        if !animated {
+            hoverChanged(frame.contains(NSEvent.mouseLocation))
+        }
     }
 
-    private static func makeIslandView() -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        guard let layer = view.layer else { return view }
-        layer.backgroundColor = NSColor.black.cgColor
-        layer.cornerRadius = cornerRadius
-        layer.cornerCurve = .continuous
-        // Layer coordinates are bottom-up here, so "MinY" corners are the bottom ones.
-        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        return view
+    /// The island in screen coordinates: the top row plus one wing per side, grown downward when expanded.
+    private func islandFrame(around topRow: CGRect) -> CGRect {
+        let collapsed = topRow.insetBy(dx: -IslandView.wingWidth, dy: 0)
+        guard isExpanded else { return collapsed }
+        let width = max(collapsed.width, Self.expandedMinWidth)
+        let height = topRow.height + Self.expandedExtraHeight
+        return CGRect(x: topRow.midX - width / 2, y: topRow.maxY - height, width: width, height: height)
+    }
+
+    /// The right-click menu from docs/06. Items without an action are disabled stubs until their WP lands.
+    private static func makeMenu() -> NSMenu {
+        let menu = NSMenu()
+        // TODO(WP-7): hide mode toggle, launch at login and Settings.
+        // TODO(WP-5): mark all read. TODO(WP-4): install/uninstall hooks.
+        for title in ["Hide Mode", "Mark All Read", "Install Hooks", "Launch at Login", "Settings…"] {
+            menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
+        }
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Quit ClawdNotch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
+        return menu
     }
 }
