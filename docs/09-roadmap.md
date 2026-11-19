@@ -35,7 +35,7 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - An island view with placeholder slots for the pet (left), the counters (right), and the expanded panel.
 - AC: REQ-01 AC1–3, REQ-02 AC1–3.
 
-### WP-3 — Clawd pet · owner: pet-animator · deps: WP-0 · status: `todo`
+### WP-3 — Clawd pet · owner: pet-animator · deps: WP-0 · status: `done` (measured: debug demo 0.00 % CPU / 35.7 MB; release sleeping 0.16 % / 38.9 MB)
 - `PetTokens`, `PetView` (the layer tree from `07`), all 6 poses with loops, transitions, `popOut()`, `setPaused(_:)`, and Reduce Motion support.
 - A debug-only state cycler (for example, launching with `--pet-demo` cycles the states every 3 s), used for screenshots.
 - AC: REQ-03 AC1, REQ-06 AC1. The perf budget holds while it animates (perf-check skill).

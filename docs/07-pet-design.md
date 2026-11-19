@@ -7,6 +7,7 @@
 | `clawd.bodyShade` | `#C2643F` | bottom shading or the leg back row (optional) |
 | `clawd.eye` | `#1F1A17` | eyes |
 | `badge.alert` | `#FF3B30` | "!" badge, needsInput counter |
+| `badge.glyph` | `#FFFFFF` | the "!" on the badge |
 | `bubble.fill` | `#FFFFFF` at 92 % | speech and thought bubbles |
 | `hp.high` / `hp.mid` / `hp.low` | `#34C759` / `#FFCC00` / `#FF3B30` | HP bar at > 50 / 20–50 / < 20 |
 | `island.bg` | `#000000` | island |
@@ -16,9 +17,9 @@ Define these once, in `Sources/ClawdNotch/Pet/PetTokens.swift`. Any colour liter
 Every part is a separate `CAShapeLayer`. Coordinates are in a unit box of **32 × 24** (width × height), scaled to the actual size, with the origin at the bottom-left.
 - **body:** a rounded rect of 24 × 14 at (4, 6), corner radius 3.5 with a continuous curve.
 - **eyes:** 2 × rounded rects of 2.4 × 4.2, at x = 10.5 and x = 19, y = 12.5, corner radius 1.2.
-- **arms:** 2 × rounded rects of 3.5 × 4, on the left and right sides at mid-height. The anchor point is the inner edge, so an arm can rotate up like a "raised paw".
+- **arms:** 2 × rounded rects of 3.5 × 4, on the left and right sides at mid-height. The anchor point is the inner edge; the right arm pivots at the shoulder (28, 18.5) when raised, because a mid-height pivot keeps the paw inside the body outline at notch size.
 - **legs:** 4 × rounded rects of 2.2 × 4, spaced evenly below the body, corner radius 1.
-- **accessories** (hidden by default): the speech bubble (with a 3-dot layer), the thought cloud (3 circles), the "Zzz" text layer, and the "!" badge (a red circle with white text).
+- **accessories** (hidden by default): the speech bubble (with a 3-dot layer), the thought cloud (3 circles), the "Zzz" text layer, and the "!" badge (a red circle with white text), placed top-left so it never covers the raised right arm.
 
 ## Poses and animations
 All animations are `CABasicAnimation` / `CAKeyframeAnimation` added to layers. They are repeating where noted and run by the render server. **Never drive frames from Swift timers.**
@@ -29,7 +30,7 @@ All animations are `CABasicAnimation` / `CAKeyframeAnimation` added to layers. T
 | `idle` | neutral | blink (eyes scale-y → 0.1 for 120 ms) using keyframes with a long hold, gentle x-sway ±0.5 u | 4.5 s |
 | `thinking` | eyes shifted up 1 u, thought cloud visible | cloud circles pulse in sequence, body bob ±0.6 u | 1.6 s |
 | `talking` | speech bubble visible | dots light up in sequence, body bounce ±0.8 u, arms wiggle ±8° | 0.9 s |
-| `done` | right arm raised to −110° | arm wave ±15° for 2 cycles after the pop, then hold | — |
+| `done` | right arm raised 110° (counter-clockwise; +110° in macOS layer coordinates, y up) | arm wave ±15° for 2 cycles after the pop, then hold | — |
 | `needsInput` | right arm raised, "!" badge visible | badge scale pulse 1.0↔1.15, slight body shake on entry | 1.2 s |
 
 - **Transitions:** cross-fade the accessories (150 ms), and move pose parts with an implicit `CATransaction`, 200 ms, ease-out.

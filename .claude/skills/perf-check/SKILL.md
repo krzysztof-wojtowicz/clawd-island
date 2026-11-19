@@ -8,7 +8,7 @@ description: Measure ClawdNotch CPU and memory against the performance budget in
 1. Build and launch a **release** bundle: `scripts/bundle.sh release && open dist/ClawdNotch.app`. Debug builds are not representative.
 2. For each scenario in `docs/08-performance.md`:
    - sleeping: no sessions, then `scripts/perf.sh 60`
-   - animating: `scripts/simulate.sh think` (or `--pet-demo`), then `scripts/perf.sh 60`
+   - animating: `scripts/simulate.sh think` (`--pet-demo` is DEBUG-only, so in a release build pin a state with the simulator instead), then `scripts/perf.sh 60`
    - burst: run `scripts/simulate.sh burst &` and `scripts/perf.sh 15` at the same time
    - bridge: `time (echo '{}' | dist/ClawdNotch.app/Contents/MacOS/clawd-bridge statusline)`, which must take < 20 ms
 3. `scripts/perf.sh` prints the average and maximum CPU and RSS, plus PASS/FAIL.

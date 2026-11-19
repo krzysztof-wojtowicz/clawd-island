@@ -15,7 +15,7 @@ final class IslandView: NSView {
     /// Minimum top-row height: room for the pet slot plus 3 pt above and below.
     static let minRowHeight: CGFloat = 32
     /// Height of the pet and counters slots; the pet is 26 pt tall in the collapsed island (docs/07).
-    private static let slotHeight: CGFloat = 26
+    private static let slotHeight = PetTokens.collapsedHeight
     private static let slotHorizontalInset: CGFloat = 6
     private static let panelInset: CGFloat = 12
     private static let cornerRadius: CGFloat = 10
@@ -42,8 +42,7 @@ final class IslandView: NSView {
         super.init(frame: frameRect)
         wantsLayer = true
         if let layer {
-            // TODO(WP-5): take island.bg from PetTokens once WP-3 lands.
-            layer.backgroundColor = NSColor.black.cgColor
+            layer.backgroundColor = PetTokens.islandBackground
             layer.cornerRadius = Self.cornerRadius
             layer.cornerCurve = .continuous
             // Layer coordinates are bottom-up here, so "MinY" corners are the bottom ones.
