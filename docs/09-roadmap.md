@@ -2,7 +2,7 @@
 
 How to use this file: the orchestrator picks every WP whose dependencies are `done`, delegates it to the owner agent (run WPs in parallel when their file ownership does not overlap), has `reviewer` check it, commits, and then updates **Status** here in the same commit.
 
-Status values: `todo` · `in-progress` · `done` · `blocked(<reason>)`
+Status values: `todo` · `in-progress` · `done` · `done-pending-AC` (counts as done for dependencies; the open check is carried into a named WP) · `blocked(<reason>)`
 
 ## Dependency graph
 ```
@@ -14,27 +14,26 @@ WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories
 
 ---
 
-### WP-0 — Skeleton and spikes · owner: orchestrator (or core-engineer) · status: `todo`
+### WP-0 — Skeleton and spikes · owner: orchestrator (or core-engineer) · status: `done-pending-AC` (full-screen visibility awaits the user's visual check, carried into WP-2)
 Goal: a buildable skeleton, and answers to the risky unknowns.
 - `Package.swift` with the 4 targets (see `03`). Swift 6 language mode. Platform `.macOS(.v14)`.
 - Minimal `ClawdNotch` app: `NSApplication` + `AppDelegate`, `LSUIElement`, an empty black `NSPanel` at the notch.
 - `scripts/bundle.sh`, `scripts/run.sh`, `scripts/simulate.sh` (with the scenario stubs listed in the skill), and `scripts/perf.sh`.
-- `.gitignore` entries are already present. Add `Tests/ClawdCoreTests/SmokeTests.swift`.
+- `.gitignore` entries are already present. The smoke test is `Tests/ClawdCoreTests/NotchGeometryTests.swift`: `NotchGeometry` was pulled forward from WP-1 because the panel needed it.
 - **Spike A:** find the window level and collection behaviour that stays visible over full-screen apps and on all Spaces. Record the result in `06`.
 - **Spike B:** register one http hook pointing at a closed port and start `claude`. Confirm there is no blocking and no noisy errors. Record the result in ADR-0002.
-- **Spike C:** confirm that `swift test` runs swift-testing with Command Line Tools only.
-- AC: `swift build`, `swift test`, and `scripts/run.sh` all work. A black island appears at the notch over a full-screen app.
+- **Spike C:** confirm that `swift test` runs swift-testing with Command Line Tools only. **Result:** plain `swift test` builds but silently runs 0 tests, and `_Testing_Foundation` has no module. `scripts/test.sh` adds `-F <CLT>/Library/Developer/Frameworks`, an rpath, and `-disable-cross-import-overlays` (see ADR-0001).
+- AC: `swift build`, `scripts/test.sh`, and `scripts/run.sh` all work. A black island appears at the notch over a full-screen app.
 
 ### WP-1 — ClawdCore · owner: core-engineer · deps: WP-0 · status: `todo`
 - `ClawdEvent` + lenient decoder, `SessionMeta`, `UsageSnapshot` (statusline decoder), `Session`, `SessionStore`, `Snapshot`, `PetState`, aggregate, `popToken`, talking decay, liveness expiry.
-- `NotchGeometry.compute`, a pure function (see `06`).
 - All the tests listed in `04`, plus decoder tests built from the sample payloads.
 - AC: REQ-03 AC3 and REQ-04 AC1 are provable by tests. Coverage of the transition table is 100 %.
 
 ### WP-2 — Window and notch · owner: macos-ui-engineer · deps: WP-0 · status: `todo`
 - `NotchPanel`, `NotchWindowController`: screen choice, geometry, re-layout on screen changes, hover expand/collapse, right-click menu (items may be stubs), click-through sizing.
 - An island view with placeholder slots for the pet (left), the counters (right), and the expanded panel.
-- AC: REQ-01 AC1–3, REQ-02 AC1–3.
+- AC: REQ-01 AC1–3, REQ-02 AC1–3, including the visual check carried over from WP-0: the island stays visible over a full-screen app and on another Space.
 
 ### WP-3 — Clawd pet · owner: pet-animator · deps: WP-0 · status: `todo`
 - `PetTokens`, `PetView` (the layer tree from `07`), all 6 poses with loops, transitions, `popOut()`, `setPaused(_:)`, and Reduce Motion support.

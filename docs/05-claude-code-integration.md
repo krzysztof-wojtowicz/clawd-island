@@ -4,7 +4,7 @@ Verified against Claude Code 2.1.329 docs (hooks, statusline). Re-check field na
 
 ## Transports (ADR-0002)
 1. **HTTP hooks** (`"type": "http"`). Claude Code POSTs the event JSON directly to the app. No process is spawned per event, so this is the cheapest option.
-2. **One command hook on `SessionStart`** (`"async": true`) runs `clawd-bridge hook session-start`. This captures what HTTP hooks cannot provide: the Claude Code PID, the tty, and the terminal app.
+2. **One command hook on `SessionStart`** (`"async": true`) runs `clawd-bridge hook session-start`. `SessionStart` accepts only `command` and `mcp_tool` hooks (verified in WP-0), so this hook is also the only source of the start event. It additionally captures what HTTP hooks cannot provide: the Claude Code PID, the tty, and the terminal app.
 3. **The statusLine command** `clawd-bridge statusline` forwards the statusline JSON (which carries `rate_limits`) to the app and prints a status line.
 
 ## Hook config written by the installer
@@ -15,11 +15,11 @@ The installer recognises its own entries by their URL (`127.0.0.1:<port>/hook`) 
   "hooks": {
     "UserPromptSubmit": [{ "hooks": [{ "type": "http", "url": "http://127.0.0.1:47474/hook",
                                         "headers": { "X-Clawd-Token": "<token>" }, "timeout": 2 }] }],
-    // Same http entry for: SessionStart, PreToolUse, PostToolUse, PostToolBatch, PostToolUseFailure,
+    // Same http entry for: PreToolUse, PostToolUse, PostToolBatch, PostToolUseFailure,
     // PermissionRequest, PermissionDenied, Notification, MessageDisplay, SubagentStart, SubagentStop,
     // Stop, StopFailure, PreCompact, SessionEnd
+    // SessionStart cannot use http hooks; the bridge forwards it together with the session metadata.
     "SessionStart": [{ "hooks": [
-      { "type": "http", "url": "http://127.0.0.1:47474/hook", "headers": { "X-Clawd-Token": "<token>" }, "timeout": 2 },
       { "type": "command", "command": "'/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge' hook session-start", "async": true }
     ]}]
   },
@@ -29,14 +29,15 @@ The installer recognises its own entries by their URL (`127.0.0.1:<port>/hook`) 
 
 ### Hard rules
 - **The response body must be empty with status 200** for every hook. A JSON body on `PreToolUse` or `PermissionRequest` could be read as a decision (allow, deny, or block). In v1 we never decide anything.
-- `timeout: 2` (seconds). If the app is not running, the connection is refused immediately. WP-0 must **verify** that Claude Code treats this as a silent, non-blocking error and does not print anything noisy to the user. If it does, fall back to: http for high-frequency events, and document the tradeoff in ADR-0002.
+- `timeout: 2` (seconds). If the app is not running, the connection is refused immediately (verified in WP-0, see ADR-0002): there is no measurable delay, and every event fails silently except `SessionEnd`. That one prints a single `SessionEnd hook [...] failed: connect ECONNREFUSED` line as the session exits. This is accepted.
+- Claude Code (axios) sends `Content-Type: application/json`, a `Content-Length`, our custom header, and `Connection: keep-alive`. The server must reply with `Content-Length: 0` and `Connection: close`.
 - Port `47474` is the default and can be changed in the config. If the port is busy, the app shows an error in its menu and does not silently move to another port, because hooks are written with a fixed URL.
 
 ## Endpoints (EventServer)
 | Method / path | Body | Effect |
 |---|---|---|
 | `POST /hook` | raw hook JSON | `SessionStore.apply(event)` |
-| `POST /session-meta` | `SessionMeta` JSON from the bridge | `SessionStore.apply(meta:)` |
+| `POST /session-meta` | `SessionMeta` JSON from the bridge (it includes `session_id`, `cwd`, `source`) | creates the session if unknown (`idle`), then `SessionStore.apply(meta:)` |
 | `POST /statusline` | raw statusline JSON | `UsageModel.update` (reads `rate_limits.five_hour.*` only) |
 | anything else | — | 404 |
 Every endpoint requires `X-Clawd-Token`. Bodies are limited to 64 KiB, with a 2 s read timeout and `Connection: close`.

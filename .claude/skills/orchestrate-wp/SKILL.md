@@ -13,7 +13,7 @@ description: How the main (orchestrator) agent executes ClawdNotch work packages
    - any public APIs it must consume or expose (from `03`),
    - "Invoke the `ponytail` skill first. Follow `docs/10-code-style.md`. Do not commit.",
    - the expected report format: files, REQ/WP, verification, and the ponytail closing line.
-4. **Integrate:** apply any cross-boundary requests that agents reported (for example a Core API addition) by delegating to the owner. Then run `swift build && swift test` yourself.
+4. **Integrate:** apply any cross-boundary requests that agents reported (for example a Core API addition) by delegating to the owner. Then run `swift build && scripts/test.sh` yourself.
 5. **Review:** launch `reviewer` on the diff. Fix the `blocker` and `should-fix` findings through the owning agent, and re-review until the verdict is `approve`. Nits are optional.
 6. **Verify for real** when there is UI: use the `build-and-run`, `simulate-claude-events`, and `perf-check` skills.
 7. **Commit locally:**

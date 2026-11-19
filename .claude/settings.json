@@ -3,6 +3,7 @@
     "allow": [
       "Bash(swift build:*)",
       "Bash(swift test:*)",
+      "Bash(scripts/test.sh:*)",
       "Bash(scripts/bundle.sh:*)",
       "Bash(scripts/run.sh:*)",
       "Bash(scripts/simulate.sh:*)",

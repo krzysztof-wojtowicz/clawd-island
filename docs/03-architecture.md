@@ -8,7 +8,7 @@ Claude Code ──(http hooks, POST JSON)─────────────
                                                           └─ optionally runs the user's original statusline and prints its output
                                          │
                                          ▼  (decode → ClawdEvent, hop to MainActor)
-            ┌──────────────────────── ClawdCore (Foundation only) ────────────────────────┐
+            ┌──────────────────────── ClawdCore (Foundation + CG) ────────────────────────┐
             │ SessionStore  ── per-session StateMachine ── Aggregator ── UsageModel        │
             └──────────────────────────────────┬──────────────────────────────────────────┘
                                                ▼  @Observable AppModel (publishes only on change)
@@ -21,14 +21,14 @@ Claude Code ──(http hooks, POST JSON)─────────────
 ## SPM targets
 | Target | Kind | Depends on | Notes |
 |---|---|---|---|
-| `ClawdCore` | library | Foundation | Pure, deterministic and testable. Time is injected (`now: Date` parameters), never read from a global clock. |
+| `ClawdCore` | library | Foundation, CoreGraphics | Pure, deterministic and testable. Time is injected (`now: Date` parameters), never read from a global clock. |
 | `ClawdNotch` | executable (app) | ClawdCore, AppKit, SwiftUI, QuartzCore, Network, ServiceManagement | The `.app` main binary. |
 | `clawd-bridge` | executable (CLI) | Foundation | Bundled into `ClawdNotch.app/Contents/MacOS/`. It must start and exit in < 20 ms. |
 | `ClawdCoreTests` | test | ClawdCore, Testing | swift-testing. |
 
 ## Key types (contracts)
 - `ClawdEvent` (Core) is a decoded hook event: `sessionID`, `kind` (an enum mirroring the hook events we use), `cwd`, `toolName?`, `notificationType?`, `agentID?`, `receivedAt`.
-- `SessionMeta` (Core) comes from the bridge: `sessionID`, `pid`, `tty?`, `terminalBundleID?`, `termProgram?`, `cwd`.
+- `SessionMeta` (Core) comes from the bridge on SessionStart: `sessionID`, `cwd`, `source` (startup, resume, clear, compact, or fork), `pid?`, `tty?`, `terminalBundleID?`, `termProgram?`. The process fields are optional because the bridge never fails, even when the process walk fails.
 - `UsageSnapshot` (Core) holds `fiveHourUsedPercent?` and `resetsAt?`, taken from the statusline payload.
 - `Session` (Core) holds `id`, `projectName` (the last path component of `cwd`), `state: SessionState`, `unread: Bool`, `meta?`, `lastEventAt`, `activeSubagents`.
 - `SessionStore` (Core, `@MainActor` class or a plain struct owned by AppModel) has `apply(_:now:)`, `apply(meta:)`, `markRead(_:)`, `markAllRead()`, `expire(now:isAlive:)`, and returns `Snapshot`.

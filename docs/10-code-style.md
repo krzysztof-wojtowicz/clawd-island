@@ -36,4 +36,4 @@ Clean, small, and readable code. Apply the `ponytail` skill (level `full`) on ev
 
 ## Commits
 - Use Conventional-ish messages: `feat(core): session state machine (WP-1, REQ-03)`. The body explains the why. End with the attribution trailer that the harness requires.
-- Commit only after `swift build && swift test` pass. Never push.
+- Commit only after `swift build && scripts/test.sh` pass. Never push.

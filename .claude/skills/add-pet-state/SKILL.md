@@ -15,5 +15,5 @@ Work through every step. Missing any step leaves the system inconsistent.
 3. **Pet** (pet-animator): the pose and loop in `Sources/ClawdNotch/Pet/`, any new colours in `PetTokens`, and Reduce Motion behaviour.
 4. **HUD** (macos-ui-engineer): add the state to the session panel's label or icon, if it is shown there.
 5. **Simulator:** add a scenario to `scripts/simulate.sh` and to the table in the `simulate-claude-events` skill.
-6. **Verify:** `swift test`, a screenshot through `build-and-run`, and `perf-check` for the animating scenario.
+6. **Verify:** `scripts/test.sh`, a screenshot through `build-and-run`, and `perf-check` for the animating scenario.
 7. Commit everything together: `feat(pet): <state> state (REQ-03)`.

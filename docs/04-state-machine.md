@@ -8,7 +8,7 @@ Claude Code hooks give no explicit "thinking" signal, so the phases are **inferr
 ## Transitions
 | Hook event (`hook_event_name`) | Condition | New state | Side effects |
 |---|---|---|---|
-| `SessionStart` | — | `idle` | Create the session if unknown. The `source` may be startup, resume, clear, compact, or fork. |
+| `SessionStart` (via bridge `/session-meta`) | — | `idle` | Create the session if unknown. The `source` may be startup, resume, clear, compact, or fork. Arrives through the bridge, because `SessionStart` has no http hooks. |
 | `UserPromptSubmit` | — | `thinking` | `unread = false`, `failed = false` |
 | `PreToolUse` | — | `talking(.tool)` | Store `tool_name` (used for the tooltip only). |
 | `MessageDisplay` | — | `talking(.text)` | High-frequency event; the aggregate is debounced. |

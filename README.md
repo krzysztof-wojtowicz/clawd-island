@@ -28,7 +28,7 @@ It is native Swift, has no dependencies, and is built to be featherweight.
 ## Build (after WP-0)
 Requires macOS 14+ and Swift 6 (the Command Line Tools are enough).
 ```bash
-swift build && swift test
+swift build && scripts/test.sh
 scripts/run.sh
 ```
 

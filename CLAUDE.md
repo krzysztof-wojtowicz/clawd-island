@@ -10,7 +10,7 @@ Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual
 5. **Never copy code from `rullerzhou-afk/clawd-on-desk`** (AGPL-3.0). Reading it for ideas is fine.
 
 ## Invariants (reviewer blocks on these)
-- `ClawdCore` imports only Foundation. No AppKit/SwiftUI/Network there — it must stay unit-testable.
+- `ClawdCore` imports only Foundation and CoreGraphics (geometry types). No AppKit/SwiftUI/Network there — it must stay unit-testable.
 - Hooks **never block or slow Claude Code**: HTTP hooks have a short timeout, the bridge never waits on the app, failures are silent.
 - No reading Keychain, OAuth tokens or `~/.claude/.credentials*`. Usage comes only from the statusline `rate_limits` payload (ADR-0004).
 - Event server binds to `127.0.0.1` only and checks the `X-Clawd-Token` header.
@@ -21,16 +21,21 @@ Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual
 Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift-testing (`import Testing`; XCTest is unavailable). No third-party dependencies.
 
 ## Commands
-> Scripts are created in WP-0. Until then only `swift build` / `swift test` apply.
 
 | Command | Purpose |
 |---|---|
 | `swift build` | Build all targets (debug) |
-| `swift test` | Run `ClawdCoreTests` |
+| `scripts/test.sh` | Run `ClawdCoreTests` (wraps `swift test`; with Command Line Tools only, plain `swift test` silently runs nothing) |
 | `scripts/bundle.sh [debug\|release]` | Assemble + ad-hoc sign `dist/ClawdNotch.app` |
 | `scripts/run.sh` | Kill running instance, bundle debug, launch |
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU/RSS of the running app against the budget |
+| `swift scripts/window-info.swift` | Print screens and the app's window level and bounds (no Screen Recording permission needed) |
+
+### Environment gotchas
+- The Claude Code Bash sandbox blocks localhost connections. Anything that talks to the app's event server (`simulate.sh`, `curl 127.0.0.1:…`, a real `claude` run with test hooks) must run with the sandbox disabled.
+- `screencapture` fails unless the terminal has the Screen Recording permission. Use `window-info.swift` for geometry, and ask the user to look when visuals matter.
+- Never test hooks against the real `~/.claude/settings.json`. Use `claude -p … --settings <scratch file>` instead.
 
 ## Repo map
 ```

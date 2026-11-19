@@ -10,7 +10,7 @@ description: Send fake Claude Code hook / statusline events to the running Clawd
 Scenarios. Implement all of these in WP-0/WP-4 and keep this list in sync with the script:
 | Scenario | Sends | Expected pet state |
 |---|---|---|
-| `start` | SessionStart | idle |
+| `start` | `/session-meta` (how SessionStart arrives in production) | idle |
 | `think` | UserPromptSubmit | thinking |
 | `tool` | PreToolUse(Bash) | talking (decays to thinking after 2 s) |
 | `text` | MessageDisplay ×5, 200 ms apart | talking |
@@ -30,4 +30,6 @@ Manual one-off example:
 curl -s -X POST "http://127.0.0.1:$PORT/hook" -H "X-Clawd-Token: $TOKEN" \
   -d '{"hook_event_name":"Stop","session_id":"sim-1","cwd":"/tmp/demo"}'
 ```
+The Claude Code sandbox blocks localhost, so run this script with the sandbox disabled.
+
 After sending events, verify with a screenshot (the `build-and-run` skill). For logic, prefer unit tests in `ClawdCoreTests`.
