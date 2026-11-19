@@ -37,8 +37,8 @@ The installer recognises its own entries by their URL (`127.0.0.1:<port>/hook`) 
 | Method / path | Body | Effect |
 |---|---|---|
 | `POST /hook` | raw hook JSON | `SessionStore.apply(event)` |
-| `POST /session-meta` | `SessionMeta` JSON from the bridge (it includes `session_id`, `cwd`, `source`) | creates the session if unknown (`idle`), then `SessionStore.apply(meta:)` |
-| `POST /statusline` | raw statusline JSON | `UsageModel.update` (reads `rate_limits.five_hour.*` only) |
+| `POST /session-meta` | `SessionMeta` JSON from the bridge with snake_case keys: `session_id`, `cwd` (both required), `source`, `pid`, `tty`, `terminal_bundle_id`, `term_program` | creates the session if unknown (`idle`), then `SessionStore.apply(meta:now:)` |
+| `POST /statusline` | raw statusline JSON | `SessionStore.apply(usage:)` when `UsageSnapshot(statusline:)` finds `rate_limits.five_hour.*`; otherwise the last usage is kept |
 | anything else | — | 404 |
 Every endpoint requires `X-Clawd-Token`. Bodies are limited to 64 KiB, with a 2 s read timeout and `Connection: close`.
 

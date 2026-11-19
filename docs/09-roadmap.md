@@ -25,7 +25,7 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - **Spike C:** confirm that `swift test` runs swift-testing with Command Line Tools only. **Result:** plain `swift test` builds but silently runs 0 tests, and `_Testing_Foundation` has no module. `scripts/test.sh` adds `-F <CLT>/Library/Developer/Frameworks`, an rpath, and `-disable-cross-import-overlays` (see ADR-0001).
 - AC: `swift build`, `scripts/test.sh`, and `scripts/run.sh` all work. A black island appears at the notch over a full-screen app.
 
-### WP-1 — ClawdCore · owner: core-engineer · deps: WP-0 · status: `todo`
+### WP-1 — ClawdCore · owner: core-engineer · deps: WP-0 · status: `done`
 - `ClawdEvent` + lenient decoder, `SessionMeta`, `UsageSnapshot` (statusline decoder), `Session`, `SessionStore`, `Snapshot`, `PetState`, aggregate, `popToken`, talking decay, liveness expiry.
 - All the tests listed in `04`, plus decoder tests built from the sample payloads.
 - AC: REQ-03 AC3 and REQ-04 AC1 are provable by tests. Coverage of the transition table is 100 %.

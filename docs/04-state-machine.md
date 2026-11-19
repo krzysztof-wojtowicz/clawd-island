@@ -25,9 +25,9 @@ Claude Code hooks give no explicit "thinking" signal, so the phases are **inferr
 | any unknown event | — | unchanged | Update `lastEventAt` only. Never crash on unknown input. |
 
 Notes:
-- A `needsInput` session leaves that state on the next `PostToolUse`, `PreToolUse`, `UserPromptSubmit`, `PermissionDenied`, or `Stop`.
+- A `needsInput` session leaves that state on the next event whose row sets a new state (in practice `PostToolUse`, `PreToolUse`, `UserPromptSubmit`, `PermissionDenied`, or `Stop`). `Notification` of other types, `Subagent*` and unknown events leave it in place.
 - **Talking decay:** if a session has been in `talking` for 2 s with no new talking event, it returns to `thinking`. Implement this as a computed check against `lastTalkingAt` when building the snapshot. The app schedules a single one-shot re-evaluation 2 s after the last talking event. This is not a periodic timer.
-- Events from subagents (`agent_id` present) update `lastEventAt` and the subagent counter. They never move the parent to `done`.
+- Events from subagents (`agent_id` present) update `lastEventAt` and the subagent counter. They never move the parent to `done`: `Stop` and `StopFailure` with an `agent_id` change nothing else.
 - **Unknown sessions:** any event for an unknown `session_id` creates the session (the app may have started mid-session).
 
 ## Read tracking (REQ-10)

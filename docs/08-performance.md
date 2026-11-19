@@ -13,7 +13,7 @@
 2. **Animation runs in the render server.** The pet uses Core Animation layer animations. No `TimelineView`, `CADisplayLink`, `Timer`, or SwiftUI `repeatForever` drives the pet.
 3. **Render only on change.** `AppModel` publishes a new `Snapshot` only when it is `!=` to the previous one. `MessageDisplay` floods are coalesced, so at most one snapshot is built per 100 ms.
 4. **Pause when nobody can see it.** Respond to `NSWorkspace.screensDidSleepNotification` and `sessionDidResignActiveNotification` by pausing layers (`speed = 0`) and stopping the liveness timer. Resume on the matching wake notifications.
-5. **Lean decoding.** Decode only the fields we use (a dedicated `Decodable` struct). Ignore large fields. Store nothing per event beyond the session state.
+5. **Lean decoding.** Read only the fields we use from a `JSONSerialization` object, field by field, so a missing or mistyped field becomes nil instead of failing the whole event (bodies are capped at 64 KiB). Ignore large fields. Store nothing per event beyond the session state.
 6. **No logging in hot paths in release builds.** Use `os.Logger` at `.debug` level only.
 7. **Small binary.** No dependencies. Build release with `-Osize` if it is not slower in practice.
 8. **No App Nap fights.** Do not disable App Nap. The app should be naturally idle.
