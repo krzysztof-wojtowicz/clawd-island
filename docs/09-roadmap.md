@@ -46,7 +46,7 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - `HookInstaller` install/uninstall, with round-trip and idempotency tests (put the pure JSON-merge logic in Core so it can be tested).
 - AC: REQ-09 AC1–3. `scripts/simulate.sh` drives the app end-to-end. A real `claude` session changes the state.
 
-### WP-5 — HUD and wiring · owner: macos-ui-engineer · deps: WP-2, WP-3, WP-4 · status: `todo`
+### WP-5 — HUD and wiring · owner: macos-ui-engineer · deps: WP-2, WP-3, WP-4 · status: `done` (launch RSS peak 42.6 MB > budget, steady 39.7 MB; handed to WP-8, see `08`)
 - Bind the `Snapshot` to `PetView` and the counters, the HP bar (with its tooltip and reset countdown), the expanded session list, and "mark read" / "mark all read".
 - AC: REQ-03 AC2, REQ-04 AC1–3.
 

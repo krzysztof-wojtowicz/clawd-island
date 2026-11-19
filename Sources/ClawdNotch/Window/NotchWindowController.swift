@@ -16,6 +16,10 @@ final class NotchWindowController {
 
     /// The island content view; its `petSlot`, `countersSlot` and `panelSlot` are the integration points.
     let island = IslandView()
+    /// Called by the "Mark All Read" menu item.
+    var onMarkAllRead: (() -> Void)?
+    /// Whether anything is unread or waiting; the "Mark All Read" item is disabled otherwise.
+    var hasAttention: () -> Bool = { false }
 
     private let panel: NotchPanel
     private var isExpanded = false
@@ -24,7 +28,7 @@ final class NotchWindowController {
     init() {
         panel = NotchPanel(contentRect: .zero)
         panel.contentView = island
-        island.menuProvider = Self.makeMenu
+        island.menuProvider = { [weak self] in self?.makeMenu() ?? NSMenu() }
         island.onHoverChange = { [weak self] inside in self?.hoverChanged(inside) }
         layout(animated: false)
         panel.orderFrontRegardless()
@@ -91,12 +95,13 @@ final class NotchWindowController {
     }
 
     /// The right-click menu from docs/06. Items without an action are disabled stubs until their WP lands.
-    private static func makeMenu() -> NSMenu {
+    private func makeMenu() -> NSMenu {
         let menu = NSMenu()
         // TODO(WP-7): hide mode toggle, launch at login and Settings.
-        // TODO(WP-5): mark all read.
         menu.addItem(withTitle: "Hide Mode", action: nil, keyEquivalent: "")
-        menu.addItem(withTitle: "Mark All Read", action: nil, keyEquivalent: "")
+        menu.addItem(ActionMenuItem(title: "Mark All Read", isEnabled: hasAttention()) { [weak self] in
+            self?.onMarkAllRead?()
+        })
         let hooks = menu.addItem(
             withTitle: HooksMenuTarget.installer.isInstalled ? "Uninstall Hooks" : "Install Hooks",
             action: #selector(HooksMenuTarget.toggle(_:)),
@@ -109,6 +114,31 @@ final class NotchWindowController {
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit ClawdNotch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         return menu
+    }
+}
+
+/// A menu item that runs a closure; it is its own target, so the menu keeps it alive.
+private final class ActionMenuItem: NSMenuItem, NSMenuItemValidation {
+    private let handler: () -> Void
+    private let isAvailable: Bool
+
+    init(title: String, isEnabled: Bool, handler: @escaping () -> Void) {
+        self.handler = handler
+        isAvailable = isEnabled
+        super.init(title: title, action: #selector(fire), keyEquivalent: "")
+        target = self
+    }
+
+    @available(*, unavailable)
+    required init(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    @objc private func fire() {
+        handler()
+    }
+
+    // The menu auto-enables items, so a plain isEnabled would be overwritten.
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        isAvailable
     }
 }
 

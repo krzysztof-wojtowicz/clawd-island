@@ -15,6 +15,10 @@ final class NotchPanel: NSPanel {
         // Above the menu bar so the island can cover the notch strip; see docs/06 (Spike A).
         level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 3)
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        // The app is never active, so the HP tooltip would otherwise never show.
+        allowsToolTipsWhenApplicationIsInactive = true
+        // The island is always black, so semantic text colours must resolve to their light variants.
+        appearance = NSAppearance(named: .darkAqua)
     }
 
     override var canBecomeKey: Bool { false }

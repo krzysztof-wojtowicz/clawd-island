@@ -31,8 +31,10 @@
 - Top row: as wide as the notch and `max(notch height, 32 pt)` tall, so on a short virtual notch (24 pt menu bar) the island hangs a little below the menu bar. Each wing is 60 pt wide and flush with a notch edge.
 - Left wing: Clawd, 26 pt tall (`07`), vertically centred in the top row.
 - Right wing: active count, attention count (the badge turns red on `needsInput`), and the HP bar (5 segments or continuous, 3 pt tall).
+  - Implemented as a continuous bar. The attention badge is hidden at 0 and orange (`clawd.body`) while only `done` sessions are unread. The bar is hidden while usage is unknown, and full and dimmed while stale. The hover tooltip shows the exact HP and the reset countdown, computed when it is shown.
+  - The expanded panel lists up to 5 sessions (then "+n more"), with the usage line and "Mark all read" in the footer. Per-session elapsed times and the ⚙/hide buttons from the sketch are not shown; settings and hide live in the right-click menu (WP-7).
 - The island is black (`#000`), so it merges with the physical notch. Corners use a continuous (squircle) curve.
-- **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext` together with SwiftUI.
+- **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext`.
 - Hover uses `NSTrackingArea` and expands after 150 ms of hover. It collapses 300 ms after the mouse leaves.
 - **Right-click** opens an `NSMenu` with: Hide mode toggle, Mark all read, Install/Uninstall hooks, Launch at login, Settings…, Quit.
 

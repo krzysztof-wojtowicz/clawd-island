@@ -12,7 +12,7 @@ Claude Code ──(http hooks, POST JSON)─────────────
             │ SessionStore ── Session.apply ── PetState(aggregating:) ── apply(usage:)    │
             └──────────────────────────────────┬──────────────────────────────────────────┘
                                                ▼  @Observable AppModel (publishes only on change)
-     NotchWindowController (NSPanel) ── PetView (CALayer Clawd) ── HUDView (SwiftUI) ── SessionPanel (SwiftUI)
+     NotchWindowController (NSPanel) ── PetView (CALayer Clawd) ── HUDController ── CountersView + SessionPanelView (AppKit)
                                                ▲
                          TerminalFocusWatcher (NSWorkspace activation + AppleScript tty)  → SessionStore.markRead
                          LivenessTimer (30 s, kill(pid, 0))                               → SessionStore.expire
@@ -35,6 +35,7 @@ Claude Code ──(http hooks, POST JSON)─────────────
 - `Snapshot` (Core, `Equatable`) holds `aggregate: PetState`, `activeCount`, `attentionCount`, `hasNeedsInput`, `sessions: [Session]` (arrival order, talking decay applied), `usage: UsageSnapshot?`, and `popToken: Int`. **The UI renders only Snapshot.** An unchanged snapshot does not trigger a re-render.
 - `PetState` (Core) is one of `sleeping`, `idle`, `thinking`, `talking`, `done`, or `needsInput` (see `04-state-machine.md`).
 - `PetView` (App/Pet) is an `NSView` with a layer tree. Its API is `setState(_:)`, `popOut()`, and `setPaused(_:)`.
+- `HUDController` (App/HUD) renders each new `Snapshot` into `CountersView` (right wing) and `SessionPanelView` (expanded panel). Both are plain AppKit views, not SwiftUI, because a SwiftUI hosting view would break the RSS budget (docs/08). `UsageSnapshot.hitPoints(now:)` (Core) is the single HP rule both views use.
 - `EventServer` (App/Server) is an `NWListener` that accepts `POST /hook`, `/session-meta`, and `/statusline`. It reads at most 64 KiB per body and requires the `X-Clawd-Token` header.
 
 ## Threading

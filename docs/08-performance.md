@@ -9,7 +9,7 @@
 | `clawd-bridge statusline` | < 20 ms wall time per run | — |
 
 ## Rules
-1. **Event-driven only.** The only repeating timer is the 30 s liveness check, and it is suspended while there are no sessions. The talking-decay check is a one-shot timer that is rescheduled, never a repeating one.
+1. **Event-driven only.** The only repeating timer is the 30 s liveness check, and it is suspended while there are no sessions. The talking-decay check is a one-shot timer that is rescheduled, never a repeating one. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3).
 2. **Animation runs in the render server.** The pet uses Core Animation layer animations. No `TimelineView`, `CADisplayLink`, `Timer`, or SwiftUI `repeatForever` drives the pet.
 3. **Render only on change.** `AppModel` publishes a new `Snapshot` only when it is `!=` to the previous one. `MessageDisplay` floods are coalesced, so at most one snapshot is built per 100 ms.
 4. **Pause when nobody can see it.** Respond to `NSWorkspace.screensDidSleepNotification` and `sessionDidResignActiveNotification` by pausing layers (`speed = 0`) and stopping the liveness timer. Resume on the matching wake notifications.
@@ -17,6 +17,10 @@
 6. **No logging in hot paths in release builds.** Use `os.Logger` at `.debug` level only.
 7. **Small binary.** No dependencies. Build release with `-Osize` if it is not slower in practice.
 8. **No App Nap fights.** Do not disable App Nap. The app should be naturally idle.
+
+## Measured
+- WP-5 (release, `perf.sh`, with one usage post): the HEAD baseline before WP-5 peaked at 37.9–40.0 MB RSS at launch. WP-5 peaks at 42.6 MB at launch and settles to 39.7 MB about 20 s later. CPU is 0.00 % idle and 0.99 % during a multi-session burst.
+- WP-8 owns this headroom. The first lever: build `SessionPanelView`'s subviews lazily on the first expand (about 1.2 MB at launch).
 
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

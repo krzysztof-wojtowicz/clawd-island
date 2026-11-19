@@ -9,9 +9,10 @@
 | `badge.alert` | `#FF3B30` | "!" badge, needsInput counter |
 | `badge.glyph` | `#FFFFFF` | the "!" on the badge |
 | `bubble.fill` | `#FFFFFF` at 92 % | speech and thought bubbles |
-| `hp.high` / `hp.mid` / `hp.low` | `#34C759` / `#FFCC00` / `#FF3B30` | HP bar at > 50 / 20–50 / < 20 |
+| `hp.high` / `hp.mid` / `hp.low` | `#34C759` / `#FFCC00` / `#FF3B30` | HP bar at ≥ 50 / 20–49 / < 20 (REQ-04) |
 | `island.bg` | `#000000` | island |
 Define these once, in `Sources/ClawdNotch/Pet/PetTokens.swift`. Any colour literal anywhere else is a review finding.
+HUD text has no token: it uses the system label colours (`labelColor`, `secondaryLabelColor`), which the panel's forced `.darkAqua` appearance resolves to light text on the black island.
 
 ## Anatomy
 Every part is a separate `CAShapeLayer`. Coordinates are in a unit box of **32 × 24** (width × height), scaled to the actual size, with the origin at the bottom-left.

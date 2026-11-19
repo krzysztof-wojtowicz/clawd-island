@@ -15,28 +15,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let pet = PetView(frame: .zero)
     /// The session model every UI piece reads from.
     let model = AppModel()
+    private lazy var hud = HUDController(model: model)
     private var server: EventServer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let controller = NotchWindowController()
-        let slot = controller.island.petSlot
-        pet.frame = slot.bounds
-        pet.autoresizingMask = [.width, .height]
-        slot.addSubview(pet)
+        controller.onMarkAllRead = { [model] in model.markAllRead() }
+        controller.hasAttention = { [model] in model.snapshot.attentionCount > 0 }
+        Self.embed(pet, in: controller.island.petSlot)
+        Self.embed(hud.counters, in: controller.island.countersSlot)
+        Self.embed(hud.panel, in: controller.island.panelSlot)
         PetDemo.startIfRequested(on: pet)
         notchController = controller
         pausePetWhileUnseen()
-        bindPet()
+        bindSnapshot()
         startServer()
     }
 
-    /// Mirrors the aggregate onto the pet and pops it out on each new `popToken`.
-    // TODO(WP-5): replace with the full HUD binding.
-    private func bindPet() {
+    private static func embed(_ view: NSView, in slot: NSView) {
+        view.frame = slot.bounds
+        view.autoresizingMask = [.width, .height]
+        slot.addSubview(view)
+    }
+
+    /// Renders every new snapshot: the pet's state (REQ-03 AC2), a pop-out on each new `popToken`, and the HUD.
+    private func bindSnapshot() {
         pet.setState(model.snapshot.aggregate)
-        model.onSnapshotChange = { [pet] old, new in
+        hud.render(model.snapshot)
+        model.onSnapshotChange = { [pet, hud] old, new in
             pet.setState(new.aggregate)
             if new.popToken > old.popToken { pet.popOut() }
+            hud.render(new)
         }
     }
 
