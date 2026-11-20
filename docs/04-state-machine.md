@@ -51,6 +51,7 @@ otherwise                                     → idle
 - `activeCount` = the number of live sessions (the number in the counter, REQ-04).
 - The counter colour uses `hasNeedsInput` → red, `attentionCount > 0` → orange, `activeCount > 0` → blue, otherwise grey.
 - `attentionCount` = the number of sessions that are `needsInput`, or `done && unread`. It is no longer displayed, but it still drives the counter colour, the pop-out, and "Mark all read".
+- **Status counts** (`Snapshot.statusCounts`, shown in the panel header) put each live session in exactly one bucket: `needsInput` → needsInput, `done && unread` → done, `thinking | usingTools | talking` → working, and everything else (`idle`, read `done`) → idle. The buckets add up to `activeCount`.
 - **Pop-out trigger:** fires when `attentionCount` increases, or when the aggregate enters `done` or `needsInput`. The UI sees this as a `Snapshot.popToken` counter that increments, so the trigger is edge-based and the same transition never fires twice.
 
 ## Panel order
@@ -73,6 +74,7 @@ Decode leniently. Read only the fields we need, ignore extra fields, and drop la
 - Aggregate priority, using a table-driven test.
 - The talking decay boundary (1.99 s vs 2.0 s), and `usingTools` not decaying.
 - Panel order: rank first, then the newest `lastEventAt`.
+- Status counts: one session per bucket state, and the sum equals `activeCount`.
 - Subagent `Stop` does not mark the parent done.
 - Liveness expiry, using an injected `isAlive` closure.
 - `popToken` increments exactly once per qualifying edge.

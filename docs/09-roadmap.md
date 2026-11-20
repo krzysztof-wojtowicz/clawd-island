@@ -8,9 +8,9 @@ Status values: `todo` · `in-progress` · `done` · `blocked(<reason>)`
 ```
 WP-0 ──┬──▶ WP-1 (core) ───────┬──▶ WP-4 (server+bridge+installer) ──▶ WP-6 (focus/read)
        ├──▶ WP-2 (window) ─────┤                                         │
-       └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ──▶ WP-5.1 (right wing + glow) ──▶ WP-3.1 (usingTools) ──▶ WP-5.2 (counter + sort) ──┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
+       └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ──▶ WP-5.1 (right wing + glow) ──▶ WP-3.1 (usingTools) ──▶ WP-5.2 (counter + sort) ──▶ WP-5.3 (panel counts + week) ──┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
 ```
-WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel. WP-2.1 (one new file in Window/) is ready now. It is independent of WP-6. Run it before or after WP-5.1, not at the same time, because both touch `NotchWindowController`. WP-3.1 and WP-5.2 run one after the other (both touch `Snapshot`). WP-6 can run in parallel with either.
+WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel. WP-2.1 (one new file in Window/) is ready now. It is independent of WP-6. Run it before or after WP-5.1, not at the same time, because both touch `NotchWindowController`. WP-3.1, WP-5.2, and WP-5.3 run one after another (they all touch `Snapshot`). WP-6 can run in parallel with either.
 
 ---
 
@@ -76,11 +76,16 @@ Follow the `add-pet-state` skill end to end.
 - `CountersView`: one number in an always-visible circle, vertically centred on the pet and the HP bar. Its colour follows the red / orange / blue / grey rule. Add the `badge.active` and `badge.empty` tokens.
 - AC: REQ-04 AC1–4, REQ-10 AC3.
 
+### WP-5.3 — Panel status counts and weekly usage · owner: core-engineer (Core) + macos-ui-engineer (panel) · deps: WP-5.2 · status: `todo`
+- Core: `Snapshot.statusCounts` (`04`); `UsageSnapshot` reads `rate_limits.seven_day` (`sevenDayUsedPercent?`, `sevenDayResetsAt?`). Add tests for the bucket sum and the seven_day decoding, including absent and stale cases.
+- `SessionPanelView`: the status-count row above the list, and the footer `HP 63% · resets in 1h 12m · WEEK 81%` with level-tinted percentages. The HP-bar tooltip shows the same line. `expandedExtraHeight` grows to about 182.
+- AC: REQ-04 AC1 and AC5.
+
 ### WP-6 — Focus and read tracking · owner: integration-engineer · deps: WP-4, WP-5 · status: `todo`
 - `TerminalFocusWatcher` (Terminal.app and iTerm2 tab-precise; others app-level after a 2 s dwell), and click a session → focus its terminal or tab.
 - AC: REQ-10 AC1–2.
 
-### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5.2 · status: `todo`
+### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5.3 · status: `todo`
 - Hide mode with pop-out rules, `SMAppService` launch at login, the Settings window, and persisting the config.
 - AC: REQ-05 AC1–3.
 

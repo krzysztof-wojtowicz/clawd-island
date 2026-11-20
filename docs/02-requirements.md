@@ -38,10 +38,17 @@ The compact right wing is laid out as `HP bar | pet | counter` (see the sketch i
   2. orange (`clawd.body`): any session is `done` and unread,
   3. blue (`badge.active`): sessions exist, and they are idle or working (the pet shows what they do),
   4. grey (`badge.empty`): no sessions.
-- AC1: The number equals the number of sessions in the panel, and the colour follows the rule above.
+- **panel status counts** (expanded panel, top row above the session list): four numbers in circles, always shown in this order. Together they split the live sessions:
+  - grey (`badge.empty`): idle, including `done` that was already read,
+  - blue (`badge.active`): working (`thinking`, `usingTools`, `talking`),
+  - orange (`clawd.body`): `done` and unread,
+  - red (`badge.alert`): `needsInput`.
+- a **usage line** in the panel footer: `HP 63% · resets in 1h 12m · WEEK 81%`.
+- AC1: The counter equals the number of sessions in the panel and its colour follows the rule above. The four panel status counts add up to the counter.
 - AC2: If usage is unknown (API plan, or no data yet), the HP bar is hidden or greyed. It is never fabricated.
 - AC3: When `resets_at` passes, HP shows full and is marked stale until fresh data arrives.
 - AC4: The wing is at most 72 pt wide (tuned by eye: 64 pt felt cramped). It sticks out from the notch noticeably less than the previous two 60 pt wings, and leaves visible gaps between the HP bar, the pet, and the counter.
+- AC5: `WEEK xx%` = `100 − rate_limits.seven_day.used_percentage`. It shows what is left, the same as HP. No weekly reset time is shown, because only HP has a countdown. The WEEK part is omitted when the window is absent, and after `seven_day.resets_at` passes it shows 100 % as stale (the same rule as AC3). Each percentage is tinted with the `hp.*` level colours.
 
 ## REQ-05 Hide mode
 A toggle (click or right-click menu) collapses the pet so that only a sliver (ears and eyes) peeks out from under the notch.

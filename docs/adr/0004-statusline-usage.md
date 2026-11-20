@@ -6,6 +6,8 @@
 
 **Decision:** Install `clawd-bridge statusline` as the Claude Code `statusLine` command. It forwards the JSON to the app and prints a status line. If the user already had a statusline, its command is saved and wrapped (the same stdin is piped through, and its output is printed). Never touch the Keychain, OAuth tokens, or undocumented endpoints.
 
+**Amendment (WP-5.3):** the weekly window `rate_limits.seven_day.{used_percentage,resets_at}` is read from the same payload, for the panel's `WEEK` value. It is the same field family and needs no new source.
+
 **Consequences:**
 - Data freshness is tied to active sessions. After `resets_at` passes, the HP bar shows full and is marked stale.
 - The user's own statusline keeps working through the wrapper, and uninstall restores it.

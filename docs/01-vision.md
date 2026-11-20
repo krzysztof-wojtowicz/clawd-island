@@ -6,7 +6,7 @@ A tiny, always-visible companion for Claude Code that lives in the notch.
 
 - **What Claude is doing.** Its pose and animation show this: sleeping, thinking, using tools (hammering), talking, done, or needs-you.
 - **How many sessions** are running, and, by the colour of the counter, whether any of them needs you.
-- **How much of the current 5-hour usage window is left**, drawn as a game-style HP bar.
+- **How much of the current 5-hour usage window is left**, drawn as a game-style HP bar, and, in the expanded panel, how much of the weekly limit is left.
 
 When a session finishes or asks for input, the pet pops out of the notch so you notice, even in a full-screen app or on another Space.
 
@@ -16,6 +16,6 @@ When a session finishes or asks for input, the pet pops out of the notch so you 
 - *Fully owned.* The code is written from scratch, with only native Apple frameworks and no third-party code.
 - *Safe integration.* It never slows Claude Code down and never touches credentials. Install and uninstall are clean.
 
-**Non-goals (v1):** approving permissions or starting new sessions from the notch (both planned for v2), weekly usage, Windows and Linux, multiple pets, themes, and analytics.
+**Non-goals (v1):** approving permissions or starting new sessions from the notch (both planned for v2), a weekly reset countdown, Windows and Linux, multiple pets, themes, and analytics.
 
 **Inspiration:** `rullerzhou-afk/clawd-on-desk` (concept only; none of its code is used). The Clawd character belongs to Anthropic. This is a private fan project and is not for commercial distribution.

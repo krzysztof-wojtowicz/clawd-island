@@ -62,8 +62,8 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 4. It exits 0.
 
 ## Usage / HP (ADR-0004)
-- Source: `rate_limits.five_hour.used_percentage` (0–100) and `rate_limits.five_hour.resets_at` (Unix seconds).
-- These are present only for Pro and Max subscribers, after the first API response. Each window can be absent. If they are missing, `UsageSnapshot` stays nil and the HP bar is hidden.
+- Source: `rate_limits.five_hour.used_percentage` (0–100) and `rate_limits.five_hour.resets_at` (Unix seconds) for HP, and `rate_limits.seven_day.used_percentage` / `resets_at` for the panel's `WEEK` value (REQ-04 AC5). The weekly reset is used only to detect staleness and is never displayed.
+- These are present only for Pro and Max subscribers, after the first API response. Each window can be absent. If they are missing, `UsageSnapshot` stays nil and the HP bar is hidden. If only `seven_day` is missing, the `WEEK` part is omitted.
 - The statusline refreshes on assistant messages, so the data is as fresh as the last active session.
 - **Forbidden:** the undocumented OAuth usage endpoint, and any Keychain or credentials access.
 
