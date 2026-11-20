@@ -13,6 +13,7 @@ The pet stays visible above all apps, including full-screen apps, and on every S
 - AC1: It is visible over a full-screen Safari or terminal, and over every Space in Mission Control.
 - AC2: It never takes keyboard focus. Clicking it does not deactivate the frontmost app.
 - AC3: It has no Dock icon and does not appear in the Cmd-Tab switcher.
+- AC4: Switching Spaces (a three-finger swipe or Ctrl+←/→), or entering or leaving a full-screen app, does not move or re-animate the island. It stays fixed at the top, like the menu bar (ADR-0005).
 
 ## REQ-03 State is shown by appearance
 | Aggregate state | Trigger (see `04-state-machine.md`) | Visual |

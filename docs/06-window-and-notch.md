@@ -4,7 +4,8 @@
 - The window is an `NSPanel` subclass with `styleMask: [.borderless, .nonactivatingPanel]`, `isFloatingPanel = true`, `hidesOnDeactivate = false`, `backgroundColor = .clear`, `isOpaque = false`, and `hasShadow = false`.
 - `level`: `.mainMenu + 3` (window server layer 27, above the menu bar at 24). **Spike A (WP-0):** the panel sits exactly over the built-in notch (verified with `window-info.swift`). Visibility over full-screen apps and other Spaces needs a visual check by the user, because the Screen Recording permission is missing. If it is hidden there, try `CGShieldingWindowLevel()`.
 - `constrainFrameRect(_:to:)` is overridden to return the frame unchanged. Otherwise AppKit pushes the panel below the menu bar.
-- `collectionBehavior: [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]`.
+- `collectionBehavior: [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]`. On its own, this still lets the island slide during a Space switch, so it serves only as the fallback.
+- **Space pinning (REQ-02 AC4, ADR-0005, WP-2.1):** right after the first `orderFrontRegardless()`, `SpaceAnchor.pin(panel)` adds the panel to its own SkyLight Space at a high absolute level. It loads the calls with `dlopen`/`dlsym` and skips silently if any are missing. The island then stays fixed during swipes, Ctrl+arrow and full-screen transitions.
 - `canBecomeKey` and `canBecomeMain` return `false`. The Settings window is a separate, normal window.
 - The app sets `LSUIElement = true` in Info.plist, so it has no Dock icon and does not appear in Cmd-Tab.
 

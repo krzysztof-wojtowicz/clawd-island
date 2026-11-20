@@ -10,7 +10,7 @@ WP-0 ──┬──▶ WP-1 (core) ───────┬──▶ WP-4 (serv
        ├──▶ WP-2 (window) ─────┤                                         │
        └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ──▶ WP-5.1 (right wing + glow) ──┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
 ```
-WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel.
+WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel. WP-2.1 (one new file in Window/) is ready now. It is independent of WP-6. Run it before or after WP-5.1, not at the same time, because both touch `NotchWindowController`.
 
 ---
 
@@ -34,6 +34,11 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - `NotchPanel`, `NotchWindowController`: screen choice, geometry, re-layout on screen changes, hover expand/collapse, right-click menu (items may be stubs), click-through sizing.
 - An island view with placeholder slots for the pet (left), the counters (right), and the expanded panel.
 - AC: REQ-01 AC1–3, REQ-02 AC1–3.
+
+### WP-2.1 — Pin the island across Space switches · owner: macos-ui-engineer · deps: WP-2 · status: `todo`
+The island currently slides away and back during a Space switch or a full-screen transition.
+- A new `Window/SpaceAnchor.swift` (SkyLight Space via `dlsym`, with a silent fallback; see ADR-0005), called once from `NotchWindowController` after `orderFrontRegardless()`.
+- AC: REQ-02 AC4, checked by the user by eye (swipe, Ctrl+←/→, entering and leaving full screen). Hover, right-click and the tooltip still work. `perf.sh` shows no change.
 
 ### WP-3 — Clawd pet · owner: pet-animator · deps: WP-0 · status: `done` (measured: debug demo 0.00 % CPU / 35.7 MB; release sleeping 0.16 % / 38.9 MB)
 - `PetTokens`, `PetView` (the layer tree from `07`), all 6 poses with loops, transitions, `popOut()`, `setPaused(_:)`, and Reduce Motion support.
