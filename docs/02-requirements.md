@@ -4,8 +4,8 @@ Each requirement has acceptance criteria (AC). WPs in `09-roadmap.md` reference 
 
 ## REQ-01 Lives in the notch
 The pet always lives on the **main display** (the one with the menu bar, as set in System Settings → Displays). If that display has a notch, the pet anchors to it. Otherwise it uses the top centre of the display as a virtual notch. This is the user's decision: with an external monitor set as main, the pet goes there even when the MacBook lid is open.
-- AC1: When the main display is a notched MacBook screen, the pet's wings sit flush against the left and right edges of the physical notch (±1 pt).
-- AC2: When the main display is an external monitor, the pet is centred at its top, whether the lid is open or closed.
+- AC1: When the main display is a notched MacBook screen, the island's single wing (pet, counters, HP bar) sits flush against the **right** edge of the physical notch (±1 pt). While collapsed, nothing extends left of the notch.
+- AC2: When the main display is an external monitor, the virtual notch is centred at its top and the wing sits to its right, whether the lid is open or closed.
 - AC3: A display change (plug, unplug, resolution change, or a different main display) moves the pet within 1 s, without a restart.
 
 ## REQ-02 Always on top
@@ -28,13 +28,14 @@ The pet stays visible above all apps, including full-screen apps, and on every S
 - AC3: The highest-priority state across sessions wins: `needsInput > done > talking > thinking > idle > sleeping`.
 
 ## REQ-04 Counters and HP bar
-A minimalist bubble next to the pet shows:
-- the number of **active** sessions,
-- the number of **attention** sessions (`done` unread + `needsInput`; red when any are `needsInput`),
-- an **HP bar** = `100 − rate_limits.five_hour.used_percentage`, coloured green, then yellow below 50, then red below 20. Hovering shows the exact percentage and the time until reset.
+The compact right wing is laid out as `HP bar | pet | counts` (see the sketch in `06`):
+- an **HP bar** = `100 − rate_limits.five_hour.used_percentage`. It is **vertical**, sits left of the pet, is as tall as the pet, and fills bottom-up. It is coloured green, then yellow below 50, then red below 20. Hovering shows the exact percentage and the time until reset.
+- the number of **active** sessions, shown as a plain number at the top of the counts column, always visible (including 0),
+- the number of **attention** sessions (`done` unread + `needsInput`), shown as a number in a circle badge below it, always visible. The badge is blue (`badge.calm`) at 0, orange (`clawd.body`) while only `done` sessions are unread, and red (`badge.alert`) when any session is `needsInput`.
 - AC1: The counters match the session panel exactly.
 - AC2: If usage is unknown (API plan, or no data yet), the HP bar is hidden or greyed. It is never fabricated.
 - AC3: When `resets_at` passes, HP shows full and is marked stale until fresh data arrives.
+- AC4: The wing is at most 64 pt wide (a target, tuned by eye), so the island sticks out from the notch noticeably less than the previous two 60 pt wings.
 
 ## REQ-05 Hide mode
 A toggle (click or right-click menu) collapses the pet so that only a sliver (ears and eyes) peeks out from under the notch.
@@ -67,6 +68,12 @@ A `done` session becomes *read* when any of the following happens:
 - AC1: (c) works at **tab precision** for Terminal.app and iTerm2, and at **app precision** for other terminals (focus held ≥ 2 s).
 - AC2: Clicking a session in the panel activates its terminal (and tab where supported).
 
+## REQ-11 Hover glow
+While the session panel is expanded (on hover), a soft orange (`clawd.body`) glow sits under and around it. It fades in and out with the expand and collapse. It is a nice-to-have: it ships only if it costs nothing measurable.
+- AC1: No extra CPU at rest. The glow is a static layer, and only its opacity is animated (see `06` and `08`).
+- AC2: The REQ-08 budgets still hold, measured with `perf.sh` with the panel collapsed and expanded. If they do not, the glow is removed and this REQ is marked *dropped*, with the measured numbers recorded in `08`.
+
 ## Future (v2, not in scope)
 - **REQ-V2-01**: Allow/Deny permission prompts from the notch, through a blocking `PermissionRequest` HTTP hook with a timeout and a fallback to the terminal. The architecture must not preclude this (the event server can hold a request open).
 - **REQ-V2-02**: Tab-precise focus for Ghostty, Warp, and VS Code.
+- **REQ-V2-03**: Start a new Claude Code session from the expanded panel. For example, a "New session" button opens the user's terminal in a chosen or recent project directory and runs `claude` there. It reuses the terminal-launch and focus mechanism from WP-6 (AppleScript or `open -a`), and it never edits Claude Code settings.

@@ -17,10 +17,12 @@
 6. **No logging in hot paths in release builds.** Use `os.Logger` at `.debug` level only.
 7. **Small binary.** No dependencies. Build release with `-Osize` if it is not slower in practice.
 8. **No App Nap fights.** Do not disable App Nap. The app should be naturally idle.
+9. **Cheap effects only.** The hover glow (REQ-11) is a layer shadow with an explicit `shadowPath`, and only its opacity is animated. Never use a blur filter, `NSVisualEffectView`, or a per-frame redraw for it.
 
 ## Measured
 - WP-5 (release, `perf.sh`, with one usage post): the HEAD baseline before WP-5 peaked at 37.9–40.0 MB RSS at launch. WP-5 peaks at 42.6 MB at launch and settles to 39.7 MB about 20 s later. CPU is 0.00 % idle and 0.99 % during a multi-session burst.
 - WP-8 owns this headroom. The first lever: build `SessionPanelView`'s subviews lazily on the first expand (about 1.2 MB at launch).
+- WP-5.1 (to be measured): run `perf.sh` collapsed and expanded with the glow, and compare against the WP-5 numbers above. If the glow adds measurable CPU at rest, or pushes steady RSS over 40 MB, drop it (REQ-11 AC2) and record the numbers here.
 
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

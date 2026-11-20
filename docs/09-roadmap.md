@@ -8,9 +8,9 @@ Status values: `todo` · `in-progress` · `done` · `blocked(<reason>)`
 ```
 WP-0 ──┬──▶ WP-1 (core) ───────┬──▶ WP-4 (server+bridge+installer) ──▶ WP-6 (focus/read)
        ├──▶ WP-2 (window) ─────┤                                         │
-       └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ─────────────────┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
+       └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ──▶ WP-5.1 (right wing + glow) ──┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
 ```
-WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories.
+WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel.
 
 ---
 
@@ -50,11 +50,20 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - Bind the `Snapshot` to `PetView` and the counters, the HP bar (with its tooltip and reset countdown), the expanded session list, and "mark read" / "mark all read".
 - AC: REQ-03 AC2, REQ-04 AC1–3.
 
+### WP-5.1 — Compact right-wing layout and hover glow · owner: macos-ui-engineer (pet-animator only if the pet size changes) · deps: WP-5 · status: `todo`
+A design change requested after WP-5: everything moves to the right of the notch, and the island gets more compact.
+- `IslandView`: one right wing instead of two symmetric `wingWidth` wings. The pet slot moves into the right wing, between the HP bar and the counts.
+- `NotchWindowController.islandFrame`: collapsed = notch + right wing. Expanded = centred under the notch as before, plus the glow margin.
+- `CountersView`: a vertical HP bar left of the pet, and a counts column right of it (the active number on top, the attention badge below). Both counts are always visible. The badge is blue/orange/red (REQ-04).
+- `PetTokens.badgeCalm` (`#0A84FF`).
+- The hover glow (REQ-11): a `shadowPath` shadow with an opacity fade (`06`). Measure it with `perf.sh` and drop it if it breaks the budget.
+- AC: REQ-01 AC1–2 (updated), REQ-04 AC1–4, REQ-11 AC1–2 (or a recorded drop in `08`).
+
 ### WP-6 — Focus and read tracking · owner: integration-engineer · deps: WP-4, WP-5 · status: `todo`
 - `TerminalFocusWatcher` (Terminal.app and iTerm2 tab-precise; others app-level after a 2 s dwell), and click a session → focus its terminal or tab.
 - AC: REQ-10 AC1–2.
 
-### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5 · status: `todo`
+### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5.1 · status: `todo`
 - Hide mode with pop-out rules, `SMAppService` launch at login, the Settings window, and persisting the config.
 - AC: REQ-05 AC1–3.
 
@@ -65,4 +74,5 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 ## v2 backlog
 - REQ-V2-01: approve permissions from the notch.
 - REQ-V2-02: tab-precise focus for more terminals.
+- REQ-V2-03: start a new Claude Code session from the notch panel (builds on the WP-6 terminal mechanism).
 - Possible extras: a compaction "sweeping" pose, a subagent "juggling" pose, sound cues.

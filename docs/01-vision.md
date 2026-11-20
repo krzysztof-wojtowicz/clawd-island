@@ -2,7 +2,7 @@
 
 A tiny, always-visible companion for Claude Code that lives in the notch.
 
-**What it does:** an orange, rounded, Clawd-inspired creature sits beside the MacBook notch. On an external monitor without a notch, it sits in a virtual notch at the top centre of the main display. At a glance it tells you:
+**What it does:** an orange, rounded, Clawd-inspired creature sits just to the right of the MacBook notch, in one compact wing together with its counters and HP bar. On an external monitor without a notch, it sits beside a virtual notch at the top centre of the main display. At a glance it tells you:
 
 - **What Claude is doing.** Its pose and animation show this: sleeping, thinking, talking, done, or needs-you.
 - **How many sessions** are running and how many need your attention.
@@ -16,6 +16,6 @@ When a session finishes or asks for input, the pet pops out of the notch so you 
 - *Fully owned.* The code is written from scratch, with only native Apple frameworks and no third-party code.
 - *Safe integration.* It never slows Claude Code down and never touches credentials. Install and uninstall are clean.
 
-**Non-goals (v1):** approving permissions from the notch (planned for v2), weekly usage, Windows and Linux, multiple pets, themes, and analytics.
+**Non-goals (v1):** approving permissions or starting new sessions from the notch (both planned for v2), weekly usage, Windows and Linux, multiple pets, themes, and analytics.
 
 **Inspiration:** `rullerzhou-afk/clawd-on-desk` (concept only; none of its code is used). The Clawd character belongs to Anthropic. This is a private fan project and is not for commercial distribution.
