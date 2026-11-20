@@ -21,22 +21,27 @@ The pet stays visible above all apps, including full-screen apps, and on every S
 | `sleeping` | no live sessions | eyes closed, slow breathing, "Zzz" |
 | `idle` | sessions exist, none busy or unread | blinking, small idle sway |
 | `thinking` | a turn is in progress, no output yet | thought cloud or eyes up, gentle bob |
-| `talking` | writing text or running tools | speech bubble with animated dots, mouth/body bounce |
+| `usingTools` | Claude Code is running a tool (Bash, Edit, …) | swings a hammer |
+| `talking` | writing text | speech bubble with animated dots, mouth/body bounce |
 | `done` | a session finished and is unread | one paw raised, with a pop-out on transition |
 | `needsInput` | a permission or question is pending | paw raised, red "!" badge, stronger pop-out |
+The pet shows no single session: it shows the **aggregate**, the most important state across all live sessions (AC3, `04`). One session waiting for permission raises the paw even while others are busy.
 - AC1: Each state is distinguishable at a glance, at actual notch size.
 - AC2: State changes render within 150 ms of the event reaching the app.
-- AC3: The highest-priority state across sessions wins: `needsInput > done > talking > thinking > idle > sleeping`.
+- AC3: The highest-priority state across sessions wins: `needsInput > done > usingTools > talking > thinking > idle > sleeping`.
 
-## REQ-04 Counters and HP bar
-The compact right wing is laid out as `HP bar | pet | counts` (see the sketch in `06`):
+## REQ-04 Session counter and HP bar
+The compact right wing is laid out as `HP bar | pet | counter` (see the sketch in `06`). All three are vertically centred on each other:
 - an **HP bar** = `100 − rate_limits.five_hour.used_percentage`. It is **vertical**, sits left of the pet, is as tall as the pet, and fills bottom-up. It is coloured green, then yellow below 50, then red below 20. Hovering shows the exact percentage and the time until reset.
-- the number of **active** sessions, shown as a plain number at the top of the counts column, always visible (including 0),
-- the number of **attention** sessions (`done` unread + `needsInput`), shown below it, always visible. The two numbers are centred as a group. At 0 it is a plain number like the active count, with no circle. Above 0 it sits in a circle badge: orange (`clawd.body`) while only `done` sessions are unread, and red (`badge.alert`) when any session is `needsInput`.
-- AC1: The counters match the session panel exactly.
+- one **session counter**: the number of live sessions, centred inside a circle that is always shown (including 0). The circle's colour shows the most urgent session. The first rule that matches wins:
+  1. red (`badge.alert`): any session is `needsInput`,
+  2. orange (`clawd.body`): any session is `done` and unread,
+  3. blue (`badge.active`): sessions exist, and they are idle or working (the pet shows what they do),
+  4. grey (`badge.empty`): no sessions.
+- AC1: The number equals the number of sessions in the panel, and the colour follows the rule above.
 - AC2: If usage is unknown (API plan, or no data yet), the HP bar is hidden or greyed. It is never fabricated.
 - AC3: When `resets_at` passes, HP shows full and is marked stale until fresh data arrives.
-- AC4: The wing is at most 72 pt wide (tuned by eye: 64 pt felt cramped). It sticks out from the notch noticeably less than the previous two 60 pt wings, and leaves visible gaps between the HP bar, the pet, and the counts.
+- AC4: The wing is at most 72 pt wide (tuned by eye: 64 pt felt cramped). It sticks out from the notch noticeably less than the previous two 60 pt wings, and leaves visible gaps between the HP bar, the pet, and the counter.
 
 ## REQ-05 Hide mode
 A toggle (click or right-click menu) collapses the pet so that only a sliver (ears and eyes) peeks out from under the notch.
@@ -68,6 +73,7 @@ A `done` session becomes *read* when any of the following happens:
 - (c) the user focuses the terminal hosting that session.
 - AC1: (c) works at **tab precision** for Terminal.app and iTerm2, and at **app precision** for other terminals (focus held ≥ 2 s).
 - AC2: Clicking a session in the panel activates its terminal (and tab where supported).
+- AC3: The panel lists sessions by importance (`04`, "Panel order"), so sessions that need you are never hidden behind "+n more".
 
 ## REQ-11 Hover glow
 While the session panel is expanded (on hover), a soft orange (`clawd.body`) glow sits under and around it. It fades in and out with the expand and collapse. It is a nice-to-have: it ships only if it costs nothing measurable.

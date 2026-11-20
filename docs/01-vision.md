@@ -2,10 +2,10 @@
 
 A tiny, always-visible companion for Claude Code that lives in the notch.
 
-**What it does:** an orange, rounded, Clawd-inspired creature sits just to the right of the MacBook notch, in one compact wing together with its counters and HP bar. On an external monitor without a notch, it sits beside a virtual notch at the top centre of the main display. At a glance it tells you:
+**What it does:** an orange, rounded, Clawd-inspired creature sits just to the right of the MacBook notch, in one compact wing together with its session counter and HP bar. On an external monitor without a notch, it sits beside a virtual notch at the top centre of the main display. At a glance it tells you:
 
-- **What Claude is doing.** Its pose and animation show this: sleeping, thinking, talking, done, or needs-you.
-- **How many sessions** are running and how many need your attention.
+- **What Claude is doing.** Its pose and animation show this: sleeping, thinking, using tools (hammering), talking, done, or needs-you.
+- **How many sessions** are running, and, by the colour of the counter, whether any of them needs you.
 - **How much of the current 5-hour usage window is left**, drawn as a game-style HP bar.
 
 When a session finishes or asks for input, the pet pops out of the notch so you notice, even in a full-screen app or on another Space.

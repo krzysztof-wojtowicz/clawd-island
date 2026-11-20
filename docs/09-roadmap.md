@@ -8,9 +8,9 @@ Status values: `todo` · `in-progress` · `done` · `blocked(<reason>)`
 ```
 WP-0 ──┬──▶ WP-1 (core) ───────┬──▶ WP-4 (server+bridge+installer) ──▶ WP-6 (focus/read)
        ├──▶ WP-2 (window) ─────┤                                         │
-       └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ──▶ WP-5.1 (right wing + glow) ──┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
+       └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ──▶ WP-5.1 (right wing + glow) ──▶ WP-3.1 (usingTools) ──▶ WP-5.2 (counter + sort) ──┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
 ```
-WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel. WP-2.1 (one new file in Window/) is ready now. It is independent of WP-6. Run it before or after WP-5.1, not at the same time, because both touch `NotchWindowController`.
+WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel. WP-2.1 (one new file in Window/) is ready now. It is independent of WP-6. Run it before or after WP-5.1, not at the same time, because both touch `NotchWindowController`. WP-3.1 and WP-5.2 run one after the other (both touch `Snapshot`). WP-6 can run in parallel with either.
 
 ---
 
@@ -59,15 +59,28 @@ The island currently slides away and back during a Space switch or a full-screen
 A design change requested after WP-5: everything moves to the right of the notch, and the island gets more compact.
 - `IslandView`: one right wing instead of two symmetric `wingWidth` wings. The pet slot moves into the right wing, between the HP bar and the counts.
 - `NotchWindowController.panelFrame`: collapsed = notch + right wing. Expanded = centred under the notch as before, plus the glow margin.
-- `CountersView`: a vertical HP bar left of the pet, and a counts column right of it (the active number on top, the attention badge below). Both counts are always visible. The attention count is plain at 0, and in an orange or red circle above 0 (REQ-04).
+- `CountersView`: a vertical HP bar left of the pet, and a counts column right of it (the active number on top, the attention badge below). Both counts are always visible. The attention count is plain at 0, and in an orange or red circle above 0 (superseded by WP-5.2).
 - The hover glow (REQ-11): a `shadowPath` shadow with an opacity fade (`06`). Measure it with `perf.sh` and drop it if it breaks the budget.
 - AC: REQ-01 AC1–2 (updated), REQ-04 AC1–4, REQ-11 AC1–2 (or a recorded drop in `08`).
+
+### WP-3.1 — `usingTools` state with a hammer · owner: core-engineer (state) + pet-animator (hammer) + macos-ui-engineer (panel text) · deps: WP-5.1 · status: `todo`
+Follow the `add-pet-state` skill end to end.
+- Core: a `usingTools` case in `PetState` and `SessionState` (replacing `talking(.tool)`), `PreToolUse` → `usingTools` with no decay, the new aggregate priority, and tests (`04`).
+- Pet: the hammer accessory, the pose and the strike loop, the `tool.*` tokens, and Reduce Motion (`07`).
+- HUD: the panel state text "using <tool>".
+- Simulator: a tools scenario in `scripts/simulate.sh`, and a row in the `simulate-claude-events` skill.
+- AC: REQ-03 AC1–3. `perf.sh` while hammering stays within the animating budget.
+
+### WP-5.2 — Single session counter and importance-sorted panel · owner: core-engineer (sort) + macos-ui-engineer (counter) · deps: WP-3.1 · status: `todo`
+- Core: `Snapshot.sessions` sorted by rank, then by the newest `lastEventAt` (`04` "Panel order"), with a test.
+- `CountersView`: one number in an always-visible circle, vertically centred on the pet and the HP bar. Its colour follows the red / orange / blue / grey rule. Add the `badge.active` and `badge.empty` tokens.
+- AC: REQ-04 AC1–4, REQ-10 AC3.
 
 ### WP-6 — Focus and read tracking · owner: integration-engineer · deps: WP-4, WP-5 · status: `todo`
 - `TerminalFocusWatcher` (Terminal.app and iTerm2 tab-precise; others app-level after a 2 s dwell), and click a session → focus its terminal or tab.
 - AC: REQ-10 AC1–2.
 
-### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5.1 · status: `todo`
+### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5.2 · status: `todo`
 - Hide mode with pop-out rules, `SMAppService` launch at login, the Settings window, and persisting the config.
 - AC: REQ-05 AC1–3.
 
@@ -79,4 +92,4 @@ A design change requested after WP-5: everything moves to the right of the notch
 - REQ-V2-01: approve permissions from the notch.
 - REQ-V2-02: tab-precise focus for more terminals.
 - REQ-V2-03: start a new Claude Code session from the notch panel (builds on the WP-6 terminal mechanism).
-- Possible extras: a compaction "sweeping" pose, a subagent "juggling" pose, sound cues.
+- Possible extras (`usingTools` is now in v1 as WP-3.1): a compaction "sweeping" pose, a subagent "juggling" pose, sound cues.

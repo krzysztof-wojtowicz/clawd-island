@@ -1,6 +1,6 @@
 # ClawdNotch — agent guide
 
-Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows session counters and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
+Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.

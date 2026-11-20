@@ -4,7 +4,7 @@
 | Scenario | CPU (process avg over 60 s) | RSS |
 |---|---|---|
 | sleeping (no sessions) | < 0.1 % | < 40 MB |
-| idle / thinking / talking | < 1 % | < 40 MB |
+| idle / thinking / usingTools / talking | < 1 % | < 40 MB |
 | burst: 50 hook events/s for 10 s | < 3 % | < 45 MB |
 | `clawd-bridge statusline` | < 20 ms wall time per run | — |
 
