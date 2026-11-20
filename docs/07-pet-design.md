@@ -7,7 +7,6 @@
 | `clawd.bodyShade` | `#C2643F` | bottom shading or the leg back row (optional) |
 | `clawd.eye` | `#1F1A17` | eyes |
 | `badge.alert` | `#FF3B30` | "!" badge, attention badge while any session is `needsInput` |
-| `badge.calm` | `#0A84FF` | attention badge at 0 (REQ-04) |
 | `badge.glyph` | `#FFFFFF` | the "!" on the badge |
 | `bubble.fill` | `#FFFFFF` at 92 % | speech and thought bubbles |
 | `hp.high` / `hp.mid` / `hp.low` | `#34C759` / `#FFCC00` / `#FF3B30` | HP bar at ≥ 50 / 20–49 / < 20 (REQ-04) |
@@ -41,7 +40,7 @@ All animations are `CABasicAnimation` / `CAKeyframeAnimation` added to layers. T
 - Respect **Reduce Motion** (`NSWorkspace.shared.accessibilityDisplayShouldReduceMotion`): keep the static poses but disable the loops and springs.
 
 ## Size
-The default height is 26 pt, in the island's right wing between the HP bar and the counts (`06`). WP-5.1 may reduce it to about 22 pt if the 64 pt wing-width target (REQ-04 AC4) needs it. The hide-mode sliver shows about 7 pt (eye tops and the upper body). Verify legibility at 1× and 2× using the `build-and-run` skill with screenshots.
+The default height is 26 pt, in the island's right wing between the HP bar and the counts (`06`). It fits the 72 pt wing (REQ-04 AC4) with visible gaps on both sides. The hide-mode sliver shows about 7 pt (eye tops and the upper body). Verify legibility at 1× and 2× using the `build-and-run` skill with screenshots.
 
 ## Legal note
 The look is *inspired by* Anthropic's Clawd mascot. Do not copy pixel art or assets from Anthropic or clawd-on-desk. Draw everything from the anatomy spec above.

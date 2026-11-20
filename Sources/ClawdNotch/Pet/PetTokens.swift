@@ -9,7 +9,6 @@ enum PetTokens {
     static let bodyShade = rgb(0xC2643F)
     static let eye = rgb(0x1F1A17)
     static let badgeAlert = rgb(0xFF3B30)
-    static let badgeCalm = rgb(0x0A84FF)
     /// The "!" glyph on the alert badge.
     static let badgeGlyph = rgb(0xFFFFFF)
     /// Speech bubble, thought cloud and "Zzz".

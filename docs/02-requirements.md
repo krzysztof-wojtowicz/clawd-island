@@ -32,11 +32,11 @@ The pet stays visible above all apps, including full-screen apps, and on every S
 The compact right wing is laid out as `HP bar | pet | counts` (see the sketch in `06`):
 - an **HP bar** = `100 − rate_limits.five_hour.used_percentage`. It is **vertical**, sits left of the pet, is as tall as the pet, and fills bottom-up. It is coloured green, then yellow below 50, then red below 20. Hovering shows the exact percentage and the time until reset.
 - the number of **active** sessions, shown as a plain number at the top of the counts column, always visible (including 0),
-- the number of **attention** sessions (`done` unread + `needsInput`), shown as a number in a circle badge below it, always visible. The badge is blue (`badge.calm`) at 0, orange (`clawd.body`) while only `done` sessions are unread, and red (`badge.alert`) when any session is `needsInput`.
+- the number of **attention** sessions (`done` unread + `needsInput`), shown below it, always visible. The two numbers are centred as a group. At 0 it is a plain number like the active count, with no circle. Above 0 it sits in a circle badge: orange (`clawd.body`) while only `done` sessions are unread, and red (`badge.alert`) when any session is `needsInput`.
 - AC1: The counters match the session panel exactly.
 - AC2: If usage is unknown (API plan, or no data yet), the HP bar is hidden or greyed. It is never fabricated.
 - AC3: When `resets_at` passes, HP shows full and is marked stale until fresh data arrives.
-- AC4: The wing is at most 64 pt wide (a target, tuned by eye), so the island sticks out from the notch noticeably less than the previous two 60 pt wings.
+- AC4: The wing is at most 72 pt wide (tuned by eye: 64 pt felt cramped). It sticks out from the notch noticeably less than the previous two 60 pt wings, and leaves visible gaps between the HP bar, the pet, and the counts.
 
 ## REQ-05 Hide mode
 A toggle (click or right-click menu) collapses the pet so that only a sliver (ears and eyes) peeks out from under the notch.

@@ -11,8 +11,8 @@ import AppKit
 /// expanded panel. While expanded, the view is `glowMargin` larger than the island on the sides and bottom so the
 /// glow is not clipped. Hover is reported through `onHoverChange`; the right-click menu comes from `menuProvider`.
 final class IslandView: NSView {
-    /// Width of the wing right of the notch (REQ-04 AC4: at most 64 pt).
-    static let wingWidth: CGFloat = 64
+    /// Width of the wing right of the notch (REQ-04 AC4: at most 72 pt).
+    static let wingWidth: CGFloat = 72
     /// Minimum top-row height: room for the pet slot plus 3 pt above and below.
     static let minRowHeight: CGFloat = 32
     /// How far the expanded panel reaches below the top row.
@@ -27,7 +27,9 @@ final class IslandView: NSView {
     private static let wingInset: CGFloat = 4
     private static let panelInset: CGFloat = 12
     private static let cornerRadius: CGFloat = 10
-    private static let glowOpacity: Float = 0.6
+    private static let glowOpacity: Float = 0.35
+    /// Small enough that the blur fades out well inside `glowMargin`; a clipped blur shows a hard edge.
+    private static let glowRadius: CGFloat = 9
 
     /// Container for `PetView` (WP-3). Add the pet as a subview with `autoresizingMask = [.width, .height]`.
     let petSlot = NSView()
@@ -60,8 +62,8 @@ final class IslandView: NSView {
         // Layer coordinates are bottom-up here, so "MinY" corners are the bottom ones.
         background.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         background.shadowColor = PetTokens.body
-        background.shadowRadius = 16
-        background.shadowOffset = CGSize(width: 0, height: -4)
+        background.shadowRadius = Self.glowRadius
+        background.shadowOffset = CGSize(width: 0, height: -2)
         background.shadowOpacity = 0
         layer?.addSublayer(background)
         for slot in [petSlot, countersSlot, panelSlot] {

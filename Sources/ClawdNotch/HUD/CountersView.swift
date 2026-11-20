@@ -5,7 +5,8 @@ import AppKit
 import ClawdCore
 
 /// Renders the counters of one `Snapshot`: a vertical HP bar at the left edge, filling bottom-up, and a counts column
-/// at the right edge (active count on top, attention badge below; both always visible). The HP bar is hidden while
+/// at the right edge (active count on top, attention count below; both always visible, the attention count in a
+/// coloured circle only while it is above 0). The HP bar is hidden while
 /// usage is unknown (REQ-04 AC2) and full but dimmed when stale (AC3). The tooltip text is built when AppKit asks
 /// for it, so the reset countdown needs no timer.
 final class CountersView: NSView, NSViewToolTipOwner {
@@ -53,8 +54,10 @@ final class CountersView: NSView, NSViewToolTipOwner {
         self.snapshot = snapshot
         activeLabel.stringValue = "\(snapshot.activeCount)"
         attentionLabel.stringValue = "\(snapshot.attentionCount)"
-        attentionLabel.layer?.backgroundColor = snapshot.hasNeedsInput ? PetTokens.badgeAlert
-            : snapshot.attentionCount > 0 ? PetTokens.body : PetTokens.badgeCalm
+        // At 0 the count is plain text like the active count; above 0 it sits in an orange or red circle.
+        let badge = snapshot.hasNeedsInput ? PetTokens.badgeAlert : snapshot.attentionCount > 0 ? PetTokens.body : nil
+        attentionLabel.layer?.backgroundColor = badge
+        attentionLabel.textColor = badge == nil ? .labelColor : HUDStyle.color(PetTokens.badgeGlyph)
         let hp = snapshot.usage?.hitPoints(now: now)
         barTrack.isHidden = hp == nil
         barFill.isHidden = hp == nil
@@ -69,16 +72,24 @@ final class CountersView: NSView, NSViewToolTipOwner {
     override func layout() {
         super.layout()
         let columnMidX = bounds.maxX - Self.columnWidth / 2
+        // The two counts are centred as one group, horizontally on the column and vertically on the pet.
         // Two-digit counts may be a little wider than the column; they spill evenly past both column edges.
-        let activeWidth = max(Self.columnWidth, activeLabel.intrinsicContentSize.width)
+        let active = activeLabel.intrinsicContentSize
+        let groupMinY = (bounds.height - active.height - Self.badgeSize) / 2
+        let activeWidth = max(Self.columnWidth, active.width)
         activeLabel.frame = CGRect(
             x: columnMidX - activeWidth / 2,
-            y: Self.badgeSize,
+            y: groupMinY + Self.badgeSize,
             width: activeWidth,
-            height: bounds.height - Self.badgeSize
+            height: active.height
         )
         let badgeWidth = max(Self.badgeSize, attentionLabel.intrinsicContentSize.width + 4)
-        attentionLabel.frame = CGRect(x: columnMidX - badgeWidth / 2, y: 0, width: badgeWidth, height: Self.badgeSize)
+        attentionLabel.frame = CGRect(
+            x: columnMidX - badgeWidth / 2,
+            y: groupMinY,
+            width: badgeWidth,
+            height: Self.badgeSize
+        )
         attentionLabel.layer?.cornerRadius = Self.badgeSize / 2
         let track = CGRect(x: 0, y: 0, width: Self.barWidth, height: bounds.height)
         barTrack.frame = track

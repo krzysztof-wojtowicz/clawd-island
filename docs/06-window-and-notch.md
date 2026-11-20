@@ -24,7 +24,7 @@
             ┌──── black island (extends the notch to the right) ────┐
             │     physical notch     │ ▮ ┌─────┐  2                 │  ▮ = vertical HP bar
  collapsed  │                        │ ▮ │Clawd│                    │  2 = active sessions
-            │                        │ ▯ └─────┘ (0)                │ (0) = attention badge
+            │                        │ ▯ └─────┘ (1)                │ (1) = attention badge (plain 0 when none)
             └───────────────────────────────────────────────────────┘
  expanded (hover): the island grows down by ~ 120–200 pt into a panel, centred under the notch,
  with a soft orange glow beneath it (REQ-11):
@@ -32,11 +32,11 @@
        │  proj-b   ✋ done (unread)                     [mark read]       │
        │  HP 63%  · resets in 1h 12m                    [Mark all read]   │
 ```
-- Top row: the notch plus **one wing on the right**, `max(notch height, 32 pt)` tall, so on a short virtual notch (24 pt menu bar) the island hangs a little below the menu bar. There is no left wing. The wing is flush with the notch's right edge and at most 64 pt wide (REQ-04 AC4).
+- Top row: the notch plus **one wing on the right**, `max(notch height, 32 pt)` tall, so on a short virtual notch (24 pt menu bar) the island hangs a little below the menu bar. There is no left wing. The wing is flush with the notch's right edge and 72 pt wide (REQ-04 AC4).
 - Wing contents, left to right, all vertically centred in the top row:
   - **HP bar:** vertical and continuous, 3 pt wide, as tall as the pet, filling bottom-up in `hp.*` colours. It is hidden while usage is unknown, and full and dimmed while stale. The hover tooltip shows the exact HP and the reset countdown, computed when it is shown.
   - **Clawd:** 26 pt tall (`07`). It may shrink to about 22 pt if that is needed to meet the width target.
-  - **Counts column:** the active count as a plain number on top, and the attention count in a circle badge below (each row about 12–14 pt). Both are always visible. The badge is `badge.calm` (blue) at 0, `clawd.body` (orange) while only `done` sessions are unread, and `badge.alert` (red) when any session is `needsInput`.
+  - **Counts column:** the active count on top and the attention count below, centred together horizontally and vertically (about 12–14 pt per row). Both are always visible. At 0 the attention count is plain text with no circle. Above 0 it is in a circle: `clawd.body` (orange) while only `done` sessions are unread, and `badge.alert` (red) when any session is `needsInput`.
 - The expanded panel stays centred under the notch, at least 360 pt wide (`expandedMinWidth`), so while expanded it may extend left of the notch. Only the collapsed island is one-sided. It lists up to 5 sessions (then "+n more"), with the usage line and "Mark all read" in the footer. Settings and hide live in the right-click menu (WP-7).
 - The island is black (`#000`), so it merges with the physical notch. Corners use a continuous (squircle) curve.
 - **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext`.
@@ -44,9 +44,9 @@
 - **Right-click** opens an `NSMenu` with: Hide mode toggle, Mark all read, Install/Uninstall hooks, Launch at login, Settings…, Quit.
 
 ## Hover glow (REQ-11)
-- The glow is a `CALayer` shadow on the island's background layer: colour `clawd.body`, radius about 16 pt, offset downward, with an explicit `shadowPath` equal to the island shape. Because the path is given, there is no offscreen pass and no blur filter.
-- Only `shadowOpacity` animates (0 ↔ about 0.6), in the same `NSAnimationContext` group as the expand and collapse. At rest, the glow is static and costs no CPU.
-- While expanded, the panel frame grows by the glow margin on the sides and bottom, so the shadow is not clipped. Beyond the shadow's blur, the margin is fully transparent, so clicks there probably pass through to the window below (to be confirmed by eye). It exists only while the panel is expanded. When collapsed, the frame equals the island again.
+- The glow is a `CALayer` shadow on the island's background layer: colour `clawd.body`, radius 9 pt, offset 2 pt downward, with an explicit `shadowPath` equal to the island shape. Because the path is given, there is no offscreen pass and no blur filter.
+- Only `shadowOpacity` animates (0 ↔ 0.35), in the same `NSAnimationContext` group as the expand and collapse. At rest, the glow is static and costs no CPU.
+- While expanded, the panel frame grows by the glow margin on the sides and bottom, so the shadow is not clipped. Beyond the shadow's blur, the margin is fully transparent, so clicks there probably pass through to the window below (to be confirmed by eye). It exists only while the panel is expanded. When collapsed, the frame equals the island again. The blur radius must stay well below the 24 pt margin. Otherwise the clipped blur shows a hard edge, which was the case at radius 16.
 - `NotchPanel` keeps `hasShadow = false`: the glow is our layer, not the window shadow.
 - If `perf.sh` shows that the glow breaks the budget, remove it and mark REQ-11 as dropped (`08`).
 
