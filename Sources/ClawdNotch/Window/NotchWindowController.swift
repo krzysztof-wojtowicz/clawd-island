@@ -32,6 +32,7 @@ final class NotchWindowController {
         island.onHoverChange = { [weak self] inside in self?.hoverChanged(inside) }
         layout(animated: false)
         panel.orderFrontRegardless()
+        SpaceAnchor.pin(panel)
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
             object: nil,

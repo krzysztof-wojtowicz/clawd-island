@@ -35,7 +35,7 @@ Goal: a buildable skeleton, and answers to the risky unknowns.
 - An island view with placeholder slots for the pet (left), the counters (right), and the expanded panel.
 - AC: REQ-01 AC1–3, REQ-02 AC1–3.
 
-### WP-2.1 — Pin the island across Space switches · owner: macos-ui-engineer · deps: WP-2 · status: `todo`
+### WP-2.1 — Pin the island across Space switches · owner: macos-ui-engineer · deps: WP-2 · status: `done` (build, tests and perf unchanged; Space-switch behaviour still to be checked by eye)
 The island currently slides away and back during a Space switch or a full-screen transition.
 - A new `Window/SpaceAnchor.swift` (SkyLight Space via `dlsym`, with a silent fallback; see ADR-0005), called once from `NotchWindowController` after `orderFrontRegardless()`.
 - AC: REQ-02 AC4, checked by the user by eye (swipe, Ctrl+←/→, entering and leaving full screen). Hover, right-click and the tooltip still work. `perf.sh` shows no change.
