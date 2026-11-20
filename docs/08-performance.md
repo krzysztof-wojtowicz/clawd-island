@@ -22,7 +22,8 @@
 ## Measured
 - WP-5 (release, `perf.sh`, with one usage post): the HEAD baseline before WP-5 peaked at 37.9–40.0 MB RSS at launch. WP-5 peaks at 42.6 MB at launch and settles to 39.7 MB about 20 s later. CPU is 0.00 % idle and 0.99 % during a multi-session burst.
 - WP-8 owns this headroom. The first lever: build `SessionPanelView`'s subviews lazily on the first expand (about 1.2 MB at launch).
-- WP-5.1 (to be measured): run `perf.sh` collapsed and expanded with the glow, and compare against the WP-5 numbers above. If the glow adds measurable CPU at rest, or pushes steady RSS over 40 MB, drop it (REQ-11 AC2) and record the numbers here.
+- WP-5.1 (release, `perf.sh`, one usage post, collapsed): launch peak 37.6 MB, steady 33.9 MB, sleeping 0.03 % avg, thinking 0.00 %. That is below WP-5, so the launch-RSS overshoot above is gone. At rest the glow has opacity 0 and no animation.
+- WP-5.1 expanded with the glow is **not yet measured**, because a hover cannot be scripted. Run `perf.sh 30` with the mouse resting on the expanded panel. If CPU at rest rises measurably, or steady RSS goes over 40 MB, drop the glow (REQ-11 AC2) and record the numbers here.
 
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

@@ -46,7 +46,7 @@
 ## Hover glow (REQ-11)
 - The glow is a `CALayer` shadow on the island's background layer: colour `clawd.body`, radius about 16 pt, offset downward, with an explicit `shadowPath` equal to the island shape. Because the path is given, there is no offscreen pass and no blur filter.
 - Only `shadowOpacity` animates (0 ↔ about 0.6), in the same `NSAnimationContext` group as the expand and collapse. At rest, the glow is static and costs no CPU.
-- While expanded, the panel frame grows by the glow margin on the sides and bottom, so the shadow is not clipped. The margin catches clicks, but only while the panel is expanded (the mouse is already over it). When collapsed, the frame equals the island again.
+- While expanded, the panel frame grows by the glow margin on the sides and bottom, so the shadow is not clipped. Beyond the shadow's blur, the margin is fully transparent, so clicks there probably pass through to the window below (to be confirmed by eye). It exists only while the panel is expanded. When collapsed, the frame equals the island again.
 - `NotchPanel` keeps `hasShadow = false`: the glow is our layer, not the window shadow.
 - If `perf.sh` shows that the glow breaks the budget, remove it and mark REQ-11 as dropped (`08`).
 

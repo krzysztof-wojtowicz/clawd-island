@@ -1,34 +1,44 @@
 // IslandView.swift
-// The black island around the notch, with slot containers for the pet, the counters and the expanded panel.
+// The black island: the notch plus one right wing (HP bar, pet, counts), the expanded panel and its hover glow.
 
 import AppKit
 
-/// Content view of the notch panel (docs/06, "Layout").
+/// Content view of the notch panel (docs/06, "Layout" and "Hover glow").
 ///
-/// The top row spans the notch width and is at least `minRowHeight` tall, so on a short virtual notch it hangs a little
-/// below the menu bar. The pet slot sits in the left wing and the counters slot in the right wing, both flush with the
-/// notch edges and vertically centred in the row. Anything below the top row is the expanded panel. Hover is reported through
-/// `onHoverChange`; the right-click menu comes from `menuProvider`.
+/// The top row is the notch, at least `minRowHeight` tall, so on a short virtual notch it hangs a little below the
+/// menu bar. One wing sits flush with the notch's right edge: the counters slot spans it, and the pet slot sits
+/// between the HP bar and the counts column, below the counters in z-order. Anything below the top row is the
+/// expanded panel. While expanded, the view is `glowMargin` larger than the island on the sides and bottom so the
+/// glow is not clipped. Hover is reported through `onHoverChange`; the right-click menu comes from `menuProvider`.
 final class IslandView: NSView {
-    /// Width of each black wing beside the notch.
-    static let wingWidth: CGFloat = 60
+    /// Width of the wing right of the notch (REQ-04 AC4: at most 64 pt).
+    static let wingWidth: CGFloat = 64
     /// Minimum top-row height: room for the pet slot plus 3 pt above and below.
     static let minRowHeight: CGFloat = 32
-    /// Height of the pet and counters slots; the pet is 26 pt tall in the collapsed island (docs/07).
-    private static let slotHeight = PetTokens.collapsedHeight
-    private static let slotHorizontalInset: CGFloat = 6
+    /// How far the expanded panel reaches below the top row.
+    static let expandedExtraHeight: CGFloat = 160
+    /// Room for the glow beside and below the expanded island.
+    static let glowMargin: CGFloat = 24
+    /// The pet is 26 pt tall in the collapsed island (docs/07); its width follows the unit box.
+    private static let petSize = CGSize(
+        width: PetTokens.collapsedHeight * PetTokens.unitBox.width / PetTokens.unitBox.height,
+        height: PetTokens.collapsedHeight
+    )
+    private static let wingInset: CGFloat = 4
     private static let panelInset: CGFloat = 12
     private static let cornerRadius: CGFloat = 10
+    private static let glowOpacity: Float = 0.6
 
     /// Container for `PetView` (WP-3). Add the pet as a subview with `autoresizingMask = [.width, .height]`.
     let petSlot = NSView()
-    /// Container for the active/attention counters and the HP bar (WP-5).
+    /// Container for the HP bar and the counts (WP-5): it spans the wing, with the bar at its left edge and the counts
+    /// column (`CountersView.columnWidth`) at its right edge; the pet shows through the gap.
     let countersSlot = NSView()
     /// Container for the expanded session panel (WP-5). Hidden while the island is collapsed.
     let panelSlot = NSView()
 
-    /// Size of the top row: the notch width by `max(notch height, minRowHeight)`. Set by the window controller.
-    var topRowSize: CGSize = .zero {
+    /// The top row (notch x and width, row height) in screen coordinates. Set by the window controller.
+    var topRow: CGRect = .zero {
         didSet { needsLayout = true }
     }
 
@@ -38,16 +48,22 @@ final class IslandView: NSView {
     /// Builds the right-click menu on demand; building it at launch costs about 4 MB of peak RSS.
     var menuProvider: (() -> NSMenu)?
 
+    /// The black island shape and the glow's shadow; a sublayer, so it can be smaller than the view.
+    private let background = CALayer()
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        if let layer {
-            layer.backgroundColor = PetTokens.islandBackground
-            layer.cornerRadius = Self.cornerRadius
-            layer.cornerCurve = .continuous
-            // Layer coordinates are bottom-up here, so "MinY" corners are the bottom ones.
-            layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        }
+        background.backgroundColor = PetTokens.islandBackground
+        background.cornerRadius = Self.cornerRadius
+        background.cornerCurve = .continuous
+        // Layer coordinates are bottom-up here, so "MinY" corners are the bottom ones.
+        background.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        background.shadowColor = PetTokens.body
+        background.shadowRadius = 16
+        background.shadowOffset = CGSize(width: 0, height: -4)
+        background.shadowOpacity = 0
+        layer?.addSublayer(background)
         for slot in [petSlot, countersSlot, panelSlot] {
             addSubview(slot)
         }
@@ -62,24 +78,56 @@ final class IslandView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// Fades the glow in or out; call it inside the expand/collapse animation group with the same duration.
+    func setGlowVisible(_ visible: Bool, duration: TimeInterval) {
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(duration)
+        // A zero duration on a standalone layer would still get the implicit 0.25 s fade.
+        CATransaction.setDisableActions(duration == 0)
+        background.shadowOpacity = visible ? Self.glowOpacity : 0
+        CATransaction.commit()
+    }
+
     override func layout() {
         super.layout()
-        let rowY = bounds.maxY - topRowSize.height
-        let leftWing = CGRect(
-            x: bounds.midX - topRowSize.width / 2 - Self.wingWidth,
-            y: rowY,
-            width: Self.wingWidth,
-            height: topRowSize.height
+        let origin = window?.frame.origin ?? .zero
+        let row = topRow.offsetBy(dx: -origin.x, dy: -origin.y)
+        // The window frame interpolates linearly while it resizes, so growing the margin with the height keeps
+        // the island edges moving in step with the frame instead of jumping at either end.
+        let progress = min(max((bounds.height - row.height) / (Self.expandedExtraHeight + Self.glowMargin), 0), 1)
+        let margin = Self.glowMargin * progress
+        let island = CGRect(x: margin, y: margin, width: bounds.width - 2 * margin, height: bounds.height - margin)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        background.frame = island
+        background.shadowPath = CGPath(
+            roundedRect: CGRect(origin: .zero, size: island.size),
+            cornerWidth: Self.cornerRadius,
+            cornerHeight: Self.cornerRadius,
+            transform: nil
         )
-        let rightWing = leftWing.offsetBy(dx: Self.wingWidth + topRowSize.width, dy: 0)
-        let verticalInset = (topRowSize.height - Self.slotHeight) / 2
-        petSlot.frame = leftWing.insetBy(dx: Self.slotHorizontalInset, dy: verticalInset)
-        countersSlot.frame = rightWing.insetBy(dx: Self.slotHorizontalInset, dy: verticalInset)
-        panelSlot.isHidden = rowY <= 2 * Self.panelInset
+        CATransaction.commit()
+        layoutWing(CGRect(x: row.maxX, y: row.minY, width: Self.wingWidth, height: row.height))
+        let panelHeight = row.minY - island.minY
+        panelSlot.isHidden = panelHeight <= 2 * Self.panelInset
         if !panelSlot.isHidden {
-            panelSlot.frame = CGRect(x: 0, y: 0, width: bounds.width, height: rowY)
+            panelSlot.frame = CGRect(x: island.minX, y: island.minY, width: island.width, height: panelHeight)
                 .insetBy(dx: Self.panelInset, dy: Self.panelInset)
         }
+    }
+
+    /// Places the counters across the wing and the pet centred between the HP bar and the counts column.
+    private func layoutWing(_ wing: CGRect) {
+        let content = wing.insetBy(dx: Self.wingInset, dy: (wing.height - Self.petSize.height) / 2)
+        countersSlot.frame = content
+        let gapMinX = content.minX + CountersView.barWidth
+        let gapMaxX = content.maxX - CountersView.columnWidth
+        petSlot.frame = CGRect(
+            x: (gapMinX + gapMaxX - Self.petSize.width) / 2,
+            y: content.minY,
+            width: Self.petSize.width,
+            height: Self.petSize.height
+        )
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {

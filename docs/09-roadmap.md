@@ -55,10 +55,10 @@ The island currently slides away and back during a Space switch or a full-screen
 - Bind the `Snapshot` to `PetView` and the counters, the HP bar (with its tooltip and reset countdown), the expanded session list, and "mark read" / "mark all read".
 - AC: REQ-03 AC2, REQ-04 AC1–3.
 
-### WP-5.1 — Compact right-wing layout and hover glow · owner: macos-ui-engineer (pet-animator only if the pet size changes) · deps: WP-5 · status: `todo`
+### WP-5.1 — Compact right-wing layout and hover glow · owner: macos-ui-engineer (pet-animator only if the pet size changes) · deps: WP-5 · status: `done` (wing 64 pt, pet 26 pt; collapsed perf in `08`; expanded glow perf and visuals still to be checked by eye)
 A design change requested after WP-5: everything moves to the right of the notch, and the island gets more compact.
 - `IslandView`: one right wing instead of two symmetric `wingWidth` wings. The pet slot moves into the right wing, between the HP bar and the counts.
-- `NotchWindowController.islandFrame`: collapsed = notch + right wing. Expanded = centred under the notch as before, plus the glow margin.
+- `NotchWindowController.panelFrame`: collapsed = notch + right wing. Expanded = centred under the notch as before, plus the glow margin.
 - `CountersView`: a vertical HP bar left of the pet, and a counts column right of it (the active number on top, the attention badge below). Both counts are always visible. The badge is blue/orange/red (REQ-04).
 - `PetTokens.badgeCalm` (`#0A84FF`).
 - The hover glow (REQ-11): a `shadowPath` shadow with an opacity fade (`06`). Measure it with `perf.sh` and drop it if it breaks the budget.

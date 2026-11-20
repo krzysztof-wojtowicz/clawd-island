@@ -9,7 +9,6 @@ import ClawdCore
 @MainActor
 final class NotchWindowController {
     private static let expandedMinWidth: CGFloat = 360
-    private static let expandedExtraHeight: CGFloat = 160
     private static let expandDelay: Duration = .milliseconds(150)
     private static let collapseDelay: Duration = .milliseconds(300)
     private static let resizeDuration: TimeInterval = 0.25
@@ -74,25 +73,37 @@ final class NotchWindowController {
         ).frame
         let rowHeight = max(notch.height, IslandView.minRowHeight)
         let topRow = CGRect(x: notch.minX, y: notch.maxY - rowHeight, width: notch.width, height: rowHeight)
-        island.topRowSize = topRow.size
-        let frame = islandFrame(around: topRow)
+        island.topRow = topRow
+        let frame = panelFrame(around: topRow)
+        let duration = animated ? Self.resizeDuration : 0
         // Always go through the animator: a plain setFrame could be overwritten by an in-flight resize animation.
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = animated ? Self.resizeDuration : 0
+            context.duration = duration
             panel.animator().setFrame(frame, display: true)
+            island.setGlowVisible(isExpanded, duration: duration)
         }
         if !animated {
             hoverChanged(frame.contains(NSEvent.mouseLocation))
         }
     }
 
-    /// The island in screen coordinates: the top row plus one wing per side, grown downward when expanded.
-    private func islandFrame(around topRow: CGRect) -> CGRect {
-        let collapsed = topRow.insetBy(dx: -IslandView.wingWidth, dy: 0)
-        guard isExpanded else { return collapsed }
-        let width = max(collapsed.width, Self.expandedMinWidth)
-        let height = topRow.height + Self.expandedExtraHeight
-        return CGRect(x: topRow.midX - width / 2, y: topRow.maxY - height, width: width, height: height)
+    /// The panel in screen coordinates. Collapsed, it is exactly the island: the top row plus the right wing.
+    /// Expanded, it is the island centred under the notch and grown downward, plus the glow margin on the sides
+    /// and bottom.
+    private func panelFrame(around topRow: CGRect) -> CGRect {
+        guard isExpanded else {
+            return CGRect(x: topRow.minX, y: topRow.minY, width: topRow.width + IslandView.wingWidth, height: topRow.height)
+        }
+        // Wide enough to keep the right wing inside the centred island.
+        let width = max(topRow.width + 2 * IslandView.wingWidth, Self.expandedMinWidth)
+        let height = topRow.height + IslandView.expandedExtraHeight
+        let margin = IslandView.glowMargin
+        return CGRect(
+            x: topRow.midX - width / 2 - margin,
+            y: topRow.maxY - height - margin,
+            width: width + 2 * margin,
+            height: height + margin
+        )
     }
 
     /// The right-click menu from docs/06. Items without an action are disabled stubs until their WP lands.
