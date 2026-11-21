@@ -81,7 +81,7 @@ Follow the `add-pet-state` skill end to end.
 - `SessionPanelView`: the status-count row above the list, and the footer `HP 63% · resets in 1h 12m · WEEK 81%` with level-tinted percentages. The HP-bar tooltip shows the same line. `expandedExtraHeight` grows to about 182.
 - AC: REQ-04 AC1 and AC5.
 
-### WP-6 — Focus and read tracking · owner: integration-engineer · deps: WP-4, WP-5 · status: `todo`
+### WP-6 — Focus and read tracking · owner: integration-engineer · deps: WP-4, WP-5 · status: `done` (build + review; Automation prompt, tab-precise read and click-to-focus still to be checked by eye)
 - `TerminalFocusWatcher` (Terminal.app and iTerm2 tab-precise; others app-level after a 2 s dwell), and click a session → focus its terminal or tab.
 - AC: REQ-10 AC1–2.
 
