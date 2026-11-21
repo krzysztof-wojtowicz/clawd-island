@@ -106,9 +106,9 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - Can run in parallel with WP-5.4 (worktree; one shared line in `HUDController`).
 - AC: REQ-10 AC2.
 
-### WP-7.1 — Half-hidden hide mode and smooth transitions · owner: macos-ui-engineer (frames) + pet-animator (tilt, spring) · deps: WP-5.4 · status: `todo`
-- Hidden frame: notch width, notch height + about 15 pt. The pet peeks about halfway, tilted −8…−10°, under the right part of the notch.
-- `PetView`: a placement API (frame + tilt, animated with the pop-out spring), used for hidden / wing / expanded, replacing the width-driven slide and the 7 pt sliver constants.
+### WP-7.1 — Half-hidden hide mode and smooth transitions · owner: macos-ui-engineer (frames) + pet-animator (tilt, spring) · deps: WP-5.4 · status: `done` (hidden 185×48, popped 261×32; release 0.00 % CPU / 36–39 MB settled; peek look, tilt and transitions still to be checked by eye)
+- Hidden frame: notch width, notch height + about 16 pt. The pet peeks about halfway, tilted −9°, under the right part of the notch.
+- Placement: `IslandView.setPetPlacement` computes the screen-space target and `PetView.setPlacement` animates the offset and tilt (pop-out spring), used for hidden / wing / expanded, replacing the width-driven slide and the 7 pt sliver constants.
 - AC: REQ-05 AC1–4. `perf.sh` hidden idle and during a pop-out stays within budget.
 
 ## v1 checks left for a human

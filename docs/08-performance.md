@@ -44,5 +44,10 @@
 - Known exception, Settings window: it is plain AppKit, created on open and released on close (`windowWillClose` drops every reference). In debug, opening it raised RSS from 42 to 60 MB and closing left 55 MB. `footprint` said about 18 MB, so most of that is shared framework pages (AppKit control and window machinery) that stay resident. The window is opened rarely, so this is accepted and not worked on further. It was not re-measured on a release build, because opening it cannot be scripted.
 - TODO (human): measure the expanded panel with the hover glow. Run `perf.sh 30` with the mouse resting on the expanded panel, and record CPU and RSS here.
 
+### WP-5.4 / WP-7.1 (release bundle)
+- Hide mode off, after `start` + `think` (10 s): 0.00 % CPU settled, 39.0 MB. Hidden idle: 0.00 %, 37.5 MB. Hidden after a pop-out: 0.00 %, 36.4 MB.
+- Rule learned: no full-window `CALayer.mask`. A first version tucked the hidden pet with an even-odd `CAShapeLayer` mask, which made Core Animation render offscreen in-process (RenderBox loaded), at +45 MB RSS and a CPU spike on every state change. An opaque black notch-cover layer above the pet does the same job at no cost.
+- `ps %cpu` is a decaying average: read it at least 30 s after a launch or a state change.
+
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

@@ -118,6 +118,7 @@ final class NotchWindowController {
         let rowHeight = max(notch.height, IslandView.minRowHeight)
         let topRow = CGRect(x: notch.minX, y: notch.maxY - rowHeight, width: notch.width, height: rowHeight)
         island.topRow = topRow
+        island.setPetPlacement(IslandView.petPlacement(topRow: topRow, hidden: isTucked), animated: animated)
         let frame = panelFrame(around: topRow)
         let duration = animated ? Self.resizeDuration : 0
         // Always go through the animator: a plain setFrame could be overwritten by an in-flight resize animation.
@@ -135,7 +136,7 @@ final class NotchWindowController {
     /// Expanded, it is the island centred under the notch and grown downward, plus the glow margin on the sides
     /// and bottom.
     private func panelFrame(around topRow: CGRect) -> CGRect {
-        let sliver = IslandView.sliverHeight
+        let sliver = IslandView.peekHeight
         guard !isTucked else {
             return CGRect(x: topRow.minX, y: topRow.minY - sliver, width: topRow.width, height: topRow.height + sliver)
         }

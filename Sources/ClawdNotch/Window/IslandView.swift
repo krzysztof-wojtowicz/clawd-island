@@ -25,10 +25,12 @@ final class IslandView: NSView {
     static let expandedExtraHeight: CGFloat = 164
     /// Room for the glow beside and below the expanded island.
     static let glowMargin: CGFloat = 24
-    /// How far Clawd peeks out below the notch in hide mode (REQ-05, docs/07).
-    static let sliverHeight: CGFloat = 7
+    /// How far the hidden window reaches below the notch; Clawd peeks out of this transparent strip (REQ-05, docs/06).
+    static let peekHeight: CGFloat = 16
     /// Hidden Clawd's distance from the notch's right edge to its right edge.
     private static let hiddenPetInset: CGFloat = 12
+    /// Hidden Clawd leans out toward the right wing (clockwise, so negative), in degrees.
+    private static let hiddenTilt: CGFloat = -9
     /// The pet is 26 pt tall in the collapsed island (docs/07); its width follows the unit box.
     static let petSize = CGSize(
         width: PetTokens.collapsedHeight * PetTokens.unitBox.width / PetTokens.unitBox.height,
@@ -45,6 +47,9 @@ final class IslandView: NSView {
     /// Container for the counters and the HP bar (WP-5): it spans the whole row; `CountersView` places everything
     /// relative to the notch, and the pet shows through the gap right of the bar.
     let countersSlot = NSView()
+    /// Where Clawd is, in screen coordinates (centre) and degrees of tilt. Set through `setPetPlacement`.
+    private(set) var petPlacement: (center: CGPoint, tilt: CGFloat) = (.zero, 0)
+
     /// Container for the expanded session panel (WP-5). Hidden while the island is collapsed.
     let panelSlot = NSView()
 
@@ -63,6 +68,10 @@ final class IslandView: NSView {
     var menuProvider: (() -> NSMenu)?
 
     private var counters: CountersView? { countersSlot.subviews.first as? CountersView }
+
+    /// Opaque black over the notch rect, above the pet: a hidden Clawd looks tucked behind the notch's bottom edge.
+    /// A mask would do the same, but a full-window mask makes Core Animation render offscreen in-process (+45 MB).
+    private let notchCover = CALayer()
 
     /// The black island shape and the glow's shadow; a sublayer, so it can be smaller than the view.
     private let background = CALayer()
@@ -83,6 +92,12 @@ final class IslandView: NSView {
         for slot in [petSlot, countersSlot, panelSlot] {
             addSubview(slot)
         }
+        notchCover.backgroundColor = PetTokens.islandBackground
+        notchCover.cornerRadius = Self.cornerRadius
+        notchCover.cornerCurve = .continuous
+        notchCover.maskedCorners = background.maskedCorners
+        notchCover.zPosition = 1
+        layer?.addSublayer(notchCover)
         // .activeAlways: the app is never active, so the default (.activeInKeyWindow) would never fire.
         addTrackingArea(NSTrackingArea(
             rect: .zero,
@@ -107,6 +122,29 @@ final class IslandView: NSView {
         CATransaction.commit()
     }
 
+    /// The pet's target for a mode, in screen coordinates (docs/06): `hidden` peeks under the right part of the notch,
+    /// tilted; otherwise it sits in the right wing, upright. Expanded keeps the top row's right wing too.
+    static func petPlacement(topRow: CGRect, hidden: Bool) -> (center: CGPoint, tilt: CGFloat) {
+        if hidden {
+            // One point under the notch's bottom edge puts about 55 % of the 26 pt pet in the 16 pt peek strip.
+            return (CGPoint(x: topRow.maxX - hiddenPetInset - petSize.width / 2, y: topRow.minY - 1), hiddenTilt)
+        }
+        let x = topRow.maxX + CountersView.barInset + CountersView.barWidth + CountersView.barPetGap + petSize.width / 2
+        return (CGPoint(x: x, y: topRow.midY), 0)
+    }
+
+    /// Moves and tilts the pet to `placement`. The slot's frame is recomputed from screen coordinates on every
+    /// layout, so it stays put while the window frame interpolates; `PetView` animates only the offset from the old
+    /// placement.
+    func setPetPlacement(_ placement: (center: CGPoint, tilt: CGFloat), animated: Bool) {
+        let old = petPlacement
+        petPlacement = placement
+        needsLayout = true
+        let offset = CGSize(width: old.center.x - placement.center.x, height: old.center.y - placement.center.y)
+        (petSlot.subviews.first as? PetView)?
+            .setPlacement(tilt: placement.tilt, from: offset, tiltChange: old.tilt - placement.tilt, animated: animated)
+    }
+
     override func layout() {
         super.layout()
         let origin = window?.frame.origin ?? .zero
@@ -115,10 +153,10 @@ final class IslandView: NSView {
         // the island edges moving in step with the frame instead of jumping at either end.
         let progress = min(max((bounds.height - row.height) / (Self.expandedExtraHeight + Self.glowMargin), 0), 1)
         let margin = Self.glowMargin * progress
-        // Hidden, the panel is notch-wide and reaches `sliverHeight` below the black row, where only the pet shows.
-        // The same width-driven progress slides the pet between its hidden and wing positions.
+        // Hidden, the panel is notch-wide and reaches `peekHeight` below the black row, where only the pet shows.
+        // The same width-driven progress fades the counters and the HP bar in with the wings.
         let wingProgress = min(max((bounds.width - row.width) / (Self.leftWingWidth + Self.rightWingWidth), 0), 1)
-        let sliver = Self.sliverHeight * (1 - wingProgress)
+        let sliver = Self.peekHeight * (1 - wingProgress)
         let island = CGRect(x: margin, y: margin + sliver, width: bounds.width - 2 * margin, height: bounds.height - margin - sliver)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -131,11 +169,18 @@ final class IslandView: NSView {
         )
         CATransaction.commit()
         layoutWing(row)
-        let hiddenPet = CGPoint(x: row.maxX - Self.hiddenPetInset - Self.petSize.width, y: row.minY - Self.petSize.height)
-        petSlot.frame.origin = CGPoint(
-            x: hiddenPet.x + (petSlot.frame.minX - hiddenPet.x) * wingProgress,
-            y: hiddenPet.y + (petSlot.frame.minY - hiddenPet.y) * wingProgress
+        countersSlot.alphaValue = wingProgress
+        let size = Self.petSize
+        petSlot.frame = CGRect(
+            x: petPlacement.center.x - origin.x - size.width / 2,
+            y: petPlacement.center.y - origin.y - size.height / 2,
+            width: size.width,
+            height: size.height
         )
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        notchCover.frame = row
+        CATransaction.commit()
         let panelHeight = row.minY - island.minY
         panelSlot.isHidden = panelHeight <= 2 * Self.panelInset
         if !panelSlot.isHidden {
@@ -149,17 +194,11 @@ final class IslandView: NSView {
         }
     }
 
-    /// Spans the counters across the row and puts the pet in the right wing, right of the HP bar.
+    /// Spans the counters across the row.
     private func layoutWing(_ row: CGRect) {
         let y = row.minY + (row.height - Self.petSize.height) / 2
         countersSlot.frame = CGRect(x: 0, y: y, width: bounds.width, height: Self.petSize.height)
         counters?.notch = row.minX...row.maxX
-        petSlot.frame = CGRect(
-            x: row.maxX + CountersView.barInset + CountersView.barWidth + CountersView.barPetGap,
-            y: y,
-            width: Self.petSize.width,
-            height: Self.petSize.height
-        )
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {
