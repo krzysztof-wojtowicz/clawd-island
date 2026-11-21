@@ -14,10 +14,10 @@ final class HUDController {
     private var snapshot: Snapshot?
     private var resetTimer: Timer?
 
-    init(model: AppModel) {
+    init(model: AppModel, focus: @escaping (Session) -> Void) {
         panel.onSelect = { [model] id in
             model.markRead(id)
-            // TODO(WP-6): focus the session's terminal (REQ-10 AC2).
+            if let session = model.snapshot.sessions.first(where: { $0.id == id }) { focus(session) }
         }
         panel.onMarkAllRead = { [model] in model.markAllRead() }
     }

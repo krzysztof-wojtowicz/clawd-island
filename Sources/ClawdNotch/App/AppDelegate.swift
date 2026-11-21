@@ -15,8 +15,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let pet = PetView(frame: .zero)
     /// The session model every UI piece reads from.
     let model = AppModel()
-    private lazy var hud = HUDController(model: model)
+    private lazy var hud = HUDController(model: model, focus: { [unowned self] in focusWatcher.focus($0) })
     private var server: EventServer?
+    private lazy var focusWatcher = TerminalFocusWatcher(
+        sessions: { [model] in model.snapshot.sessions }, markRead: { [model] in model.markRead($0) })
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let controller = NotchWindowController()
@@ -30,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pausePetWhileUnseen()
         bindSnapshot()
         startServer()
+        focusWatcher.start()
     }
 
     private static func embed(_ view: NSView, in slot: NSView) {
