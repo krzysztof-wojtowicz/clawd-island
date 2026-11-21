@@ -8,13 +8,14 @@ Claude Code hooks give no explicit "thinking" signal, so the phases are **inferr
 ## Transitions
 | Hook event (`hook_event_name`) | Condition | New state | Side effects |
 |---|---|---|---|
+| `/session-meta` with `source: "statusline"` | — | unchanged | Attach or refresh `meta` (and the project name). Create the session as `idle` if unknown. |
 | `SessionStart` (via bridge `/session-meta`) | — | `idle` | Create the session if unknown. The `source` may be startup, resume, clear, compact, or fork. Arrives through the bridge, because `SessionStart` has no http hooks. |
 | `UserPromptSubmit` | — | `thinking` | `unread = false`, `failed = false` |
 | `PreToolUse` | — | `usingTools` | Store `tool_name` (shown in the panel, for example "using Bash"). |
 | `MessageDisplay` | — | `talking` | High-frequency event; the aggregate is debounced. |
 | `PostToolUse`, `PostToolBatch`, `PostToolUseFailure` | — | `thinking` | |
 | `PreCompact` | — | `thinking` | |
-| `PermissionRequest` | — | `needsInput` | |
+| `PermissionRequest` | — | `needsInput` | If the app holds the request (REQ-V2-01), add a `PendingPermission` with the input summary. Any later state-changing event for the session, or the reply, removes it. |
 | `Notification` | `notification_type` ∈ {`permission_prompt`, `elicitation_dialog`, `agent_needs_input`} | `needsInput` | |
 | `Notification` | `idle_prompt` | unchanged | If the session is `done`, it stays `done`. |
 | `PermissionDenied` | state == `needsInput` | `thinking` | |

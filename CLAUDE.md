@@ -11,7 +11,7 @@ Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual
 
 ## Invariants (reviewer blocks on these)
 - `ClawdCore` imports only Foundation and CoreGraphics (geometry types). No AppKit/SwiftUI/Network there — it must stay unit-testable.
-- Hooks **never block or slow Claude Code**: HTTP hooks have a short timeout, the bridge never waits on the app, failures are silent.
+- Hooks **never block or slow Claude Code**: HTTP hooks have a short timeout, the bridge never waits on the app, failures are silent. Sole exception: a `PermissionRequest` held while the notch shows Allow/Deny (ADR-0006); the terminal dialog runs in parallel, so the user is never blocked.
 - No reading Keychain, OAuth tokens or `~/.claude/.credentials*`. Usage comes only from the statusline `rate_limits` payload (ADR-0004).
 - Event server binds to `127.0.0.1` only and checks the `X-Clawd-Token` header.
 - Performance budget in `docs/08-performance.md` (idle CPU < 0.3 %, RSS < 40 MB, no polling except 30 s liveness, pet animated with Core Animation only).

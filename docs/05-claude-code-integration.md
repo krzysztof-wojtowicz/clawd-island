@@ -28,8 +28,8 @@ The installer recognises its own entries by their URL (`http://127.0.0.1:<any po
 ```
 
 ### Hard rules
-- **The response body must be empty with status 200** for every hook. A JSON body on `PreToolUse` or `PermissionRequest` could be read as a decision (allow, deny, or block). In v1 we never decide anything.
-- `timeout: 2` (seconds). If the app is not running, the connection is refused immediately (verified in WP-0, see ADR-0002): there is no measurable delay, and every event fails silently except `SessionEnd`. That one prints a single `SessionEnd hook [...] failed: connect ECONNREFUSED` line as the session exits. This is accepted.
+- **The response body must be empty with status 200** for every hook, with one exception: a `PermissionRequest` answered from the notch (REQ-V2-01, ADR-0006). A JSON body on `PreToolUse` or any other event could be read as a decision, so it is never sent.
+- `timeout: 2` (seconds) for every hook except `PermissionRequest`, which gets `timeout: 120` so the notch can hold it (ADR-0006). The installer updates the timeout of an already installed hook (idempotent). If the app is not running, the connection is refused immediately (verified in WP-0, see ADR-0002): there is no measurable delay, and every event fails silently except `SessionEnd`. That one prints a single `SessionEnd hook [...] failed: connect ECONNREFUSED` line as the session exits. This is accepted.
 - Claude Code (axios) sends `Content-Type: application/json`, a `Content-Length`, our custom header, and `Connection: keep-alive`. The server must reply with `Content-Length: 0` and `Connection: close`.
 - Port `47474` is the default and can be changed in the config. If the port is busy, the app shows an error in its menu and does not silently move to another port, because hooks are written with a fixed URL.
 
@@ -58,6 +58,7 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 ### `statusline`
 1. Reads stdin fully.
 2. Fires a POST of the raw JSON to `/statusline` with a 300 ms timeout, without waiting on the app beyond that.
+2a. Also runs the same process walk as `hook session-start` and POSTs a `SessionMeta` with `source: "statusline"` to `/session-meta`, concurrently with step 2 (same 300 ms timeout), using `session_id` and `workspace.current_dir` (or `cwd`) from the statusline payload. The app attaches such meta to the session (creating it as `idle` if unknown) **without changing its state** (`04`). This is how sessions that started before the app launched get their terminal, tty and pid (REQ-10 AC1a).
 3. If the config holds an `originalStatusLine` command, the bridge runs it through `/bin/sh -c`, pipes the same stdin, and prints its stdout. Otherwise it prints a minimal line, for example `◆ <model> · HP 63%`.
 4. It exits 0.
 
@@ -85,4 +86,28 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - **Terminal.app and iTerm2:** run AppleScript to get the selected tab's tty (`tty of selected tab of front window` / `tty of current session of current window`) and mark sessions with a matching `meta.tty` as read. This needs the Automation permission, requested on first use. If it is denied, fall back to app level.
 - **Other terminals:** if the app stays frontmost for ≥ 2 s, mark all `done` sessions whose `terminalBundleID` matches as read.
 - **Panel click on a session:** activate the terminal app; in Terminal.app or iTerm2, also select the tab with that tty. After a successful focus, mark the session read unless the focus-read mode is `off` (REQ-10 AC2). A failed focus (unknown or quit terminal, script error) marks nothing.
-- AppleScript runs only on an activation event, never on a timer.
+- **Finished while watched:** when a session becomes `done` and its `terminalBundleID` is the frontmost app, run the selected-tab check once; a tty match marks it read (REQ-10 AC1). An app-level terminal marks it read after the usual 2 s dwell.
+- AppleScript runs only on an activation event, a panel click, a "done while frontmost" edge, or a new-session launch, never on a timer.
+- The Automation permission belongs to the app's code signature. An ad-hoc signed development build gets a new signature on every rebuild, so macOS may ask again (or silently keep an old denial; reset with `tccutil reset AppleEvents dev.clawdnotch.ClawdNotch`).
+
+## Permissions from the notch (REQ-V2-01, ADR-0006)
+- `PermissionRequest` arrives on `/hook` with `tool_name`, `tool_input` and optional `permission_suggestions`. The decoder keeps a **summary** only: `tool_input.command` (Bash), `file_path` (Edit, Write, Read), `url` (WebFetch), `pattern` (Grep, Glob), otherwise the tool name; at most 120 characters. Nothing else from `tool_input` is stored.
+- With "Approve permissions from the notch" on, `EventServer` does **not** reply at once. It keeps the connection, and the app shows the card. The reply is one of:
+  - Allow: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}`
+  - Deny: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdNotch"}}}`
+  - No decision (empty 200): after 110 s, when the session receives any other state-changing event (it was answered in the terminal), or when the setting is off.
+- If Claude Code closes the connection first, the card is dropped. A reply to a request that was already answered in the terminal is harmless.
+- **Verified** (2026-11-22, `claude` with scratch `--settings`, a hook server holding 8 s): the terminal dialog appeared 0.2 s after the hook request, without waiting for it; the hook's `allow` 8 s later applied and closed the dialog. Answering in the terminal first also works while the hook is held.
+- The 64 KiB body cap stays. A larger `PermissionRequest` (for example a big `Write`) gets 413, which Claude Code treats as a non-blocking error, so it simply uses the terminal dialog.
+
+## Focus for the VS Code family (REQ-V2-02)
+- Bundle IDs: `com.microsoft.VSCode`, `com.microsoft.VSCodeInsiders`, `com.vscodium`, `com.todesktop.230313mzl4w4u92` (Cursor), `com.exafunction.windsurf`.
+- Click: `AXUIElementCreateApplication(pid)` → `kAXWindowsAttribute`, pick the first window whose `kAXTitleAttribute` contains the session's project name, `AXRaise` it, then activate the app. Activation: read `kAXFocusedWindowAttribute`'s title and mark matching sessions read.
+- `AXIsProcessTrustedWithOptions` with the prompt option is called once, on first use. Without the permission, fall back to app level. Like Automation, the grant is tied to the code signature.
+- Ghostty and Warp have no API to select or read a tab or window: app level only.
+
+## New session (REQ-V2-03)
+- Terminal.app: `tell application "Terminal"` → `do script "cd <dir> && claude"` and `activate`.
+- iTerm2: `tell application "iTerm2"` → `create window with default profile`, then `write text "cd <dir> && claude"` to its current session, and `activate`.
+- `<dir>` is single-quoted for the shell (`'` → `'\''`), then the whole command is escaped for an AppleScript string (`\` and `"`). Nothing else is ever interpolated.
+- `recentProjects` (config.json, max 5) is updated from each session's `cwd` when it is first seen.

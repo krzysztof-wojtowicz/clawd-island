@@ -111,6 +111,35 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - Placement: `IslandView.setPetPlacement` computes the screen-space target and `PetView.setPlacement` animates the offset and tilt (pop-out spring), used for hidden / wing / expanded, replacing the width-driven slide and the 7 pt sliver constants.
 - AC: REQ-05 AC1–4. `perf.sh` hidden idle and during a pop-out stays within budget.
 
+### WP-5.5 — Panel polish · owner: macos-ui-engineer · deps: WP-7.1 · status: `todo`
+- Footer `WK 81% · HP 63% · resets in 1h 12m` (WK first, tints kept; tooltip the same).
+- Blue state dot for working sessions (`badge.active`), next to the existing orange and red ones.
+- Right wing about 56 pt so the hammer swing is never clipped.
+- AC: REQ-04 AC4–AC5, `06` state dot.
+
+### WP-7.2 — Upside-down corner peek · owner: macos-ui-engineer (+ pet-animator) · deps: WP-5.5 · status: `todo`
+- Hidden: the pet hangs upside down from the notch's bottom-right corner, rotated about 150° clockwise, legs behind the notch cover, head and arms out; loops keep running. The hidden window grows right and down to fit (`06`).
+- Keep the WP-7.1 spring transitions (short way round).
+- AC: REQ-05 AC1–4.
+
+### WP-6.2 — Focus that survives app restarts · owner: integration-engineer (+ core-engineer for the meta rule) · deps: WP-6.1 · status: `todo`
+- Bridge `statusline` also POSTs `SessionMeta` with `source: "statusline"`; Core attaches it without changing the state (test).
+- "Done while frontmost": when a session becomes `done` and its terminal is in front, check the selected tab once.
+- AC: REQ-10 AC1, AC1a. Fixes iTerm2 read/focus for sessions started before the app.
+
+### WP-9 — Permissions from the notch · owner: core-engineer (decode, pending model, server hold, installer timeout) + macos-ui-engineer (cards, setting) · deps: WP-6.2 · status: `todo`
+- ADR-0006. Core: input summary, `PendingPermission`, removal rules, tests. Server: hold `PermissionRequest`, reply allow / deny / empty, 110 s cap, connection-close detection. Installer: `timeout: 120` for `PermissionRequest`, updating existing installs, tests.
+- UI: permission cards with Allow / Deny, the `notchPermissions` setting.
+- AC: REQ-V2-01 AC1–5, verified end-to-end with `claude` and scratch `--settings`.
+
+### WP-10 — Window-level focus for the VS Code family · owner: integration-engineer · deps: WP-6.2 · status: `todo`
+- Accessibility window match by project name for click and activation; app-level fallback.
+- AC: REQ-V2-02 AC1–3.
+
+### WP-11 — New session from the panel · owner: integration-engineer (launch, recent projects) + macos-ui-engineer (button, menu) · deps: WP-9 · status: `todo`
+- "+ New" footer button, recent-projects menu and "Choose Folder…", Terminal.app / iTerm2 launch with safe quoting, `recentProjects` in config.
+- AC: REQ-V2-03 AC1–2.
+
 ## v1 checks left for a human
 Each item is in the WP status above. They need eyes or a hover, so no agent can do them:
 - WP-2 / WP-2.1: physical-notch fit, full-screen hover, right-click without focus, no slide on Space switch.
@@ -120,7 +149,7 @@ Each item is in the WP status above. They need eyes or a hover, so no agent can 
 - WP-7: the hide-mode sliver and pop-out, the menu checkmarks, Settings, launch at login (install to /Applications first).
 - WP-8 / REQ-11: `scripts/perf.sh 30` with the mouse on the expanded panel (glow); drop the glow if it breaks the budget.
 
-## v2 backlog
+## v2 backlog (REQ-V2-01…03 are now WP-9, WP-10, WP-11)
 - REQ-V2-01: approve permissions from the notch.
 - REQ-V2-02: tab-precise focus for more terminals.
 - REQ-V2-03: start a new Claude Code session from the notch panel (builds on the WP-6 terminal mechanism).

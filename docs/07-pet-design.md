@@ -40,12 +40,12 @@ All animations are `CABasicAnimation` / `CAKeyframeAnimation` added to layers. T
 
 - **Transitions:** cross-fade the accessories (150 ms), and move pose parts with an implicit `CATransaction`, 200 ms, ease-out.
 - **Pop-out:** a spring on the container's position and scale (`CASpringAnimation`, damping 12, stiffness 180), with a small hop of 3 u on the body.
-- **Placement moves** (hide mode peek ↔ right wing ↔ expanded, `06`): the container's position and rotation animate together with the same spring. Reduce Motion: a straight 200 ms ease-out move.
+- **Placement moves** (hide mode peek ↔ right wing ↔ expanded, `06`): the container's position and rotation animate together with the same spring. The upside-down peek turns the pet through about 150°, always the short way round, so popping out reads as the pet flipping up into the wing. Reduce Motion: a straight 200 ms ease-out move.
 - **Paused** (screen asleep, session locked, or the pet hidden off-screen): set `layer.speed = 0` on the root layer and restore the time offset when resuming.
 - Respect **Reduce Motion** (`NSWorkspace.shared.accessibilityDisplayShouldReduceMotion`): keep the static poses but disable the loops and springs (`usingTools` shows a still, raised hammer).
 
 ## Size
-The default height is 26 pt, in the island's right wing next to the HP bar (`06`), which is about 48 pt wide (REQ-04 AC4). In hide mode the pet keeps its size and peeks out about halfway below the notch (roughly 55–60 % visible, eyes showing), tilted about −8…−10°. Verify legibility at 1× and 2× using the `build-and-run` skill with screenshots.
+The default height is 26 pt, in the island's right wing next to the HP bar (`06`), which is about 56 pt wide so the hammer swing fits (REQ-04 AC4). In hide mode the pet keeps its size and hangs upside down from the notch's bottom-right corner, rotated about 150° clockwise (180° − 30°), legs hidden behind the notch, head and arms out; its loops keep running. Verify legibility at 1× and 2× using the `build-and-run` skill with screenshots.
 
 ## Legal note
 The look is *inspired by* Anthropic's Clawd mascot. Do not copy pixel art or assets from Anthropic or clawd-on-desk. Draw everything from the anatomy spec above.
