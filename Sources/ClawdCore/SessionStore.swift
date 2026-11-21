@@ -29,11 +29,14 @@ public struct SessionStore: Sendable {
         sessions[index].apply(event, now: now)
     }
 
-    /// Applies the bridge's SessionStart metadata: the session becomes (or is created) `idle`.
+    /// Applies the bridge's session metadata. SessionStart makes the session (or a new one) `idle`; metadata
+    /// from the statusline (`source == "statusline"`) only attaches or refreshes `meta` and `projectName`, so a
+    /// session that began before the app launched becomes focusable without its state being touched.
     public mutating func apply(meta: SessionMeta, now: Date) {
         let index = indexCreatingIfNeeded(meta.sessionID, cwd: meta.cwd, now: now)
         sessions[index].meta = meta
         sessions[index].projectName = Session.projectName(for: meta.cwd)
+        if meta.source == "statusline" { return }
         sessions[index].state = .idle
         sessions[index].unread = false
         sessions[index].failed = false
