@@ -26,12 +26,11 @@ final class IslandView: NSView {
     static let expandedExtraHeight: CGFloat = 164
     /// Room for the glow beside and below the expanded island.
     static let glowMargin: CGFloat = 24
-    /// How far the hidden window reaches below the notch; Clawd peeks out of this transparent strip (REQ-05, docs/06).
-    static let peekHeight: CGFloat = 16
-    /// Hidden Clawd's distance from the notch's right edge to its right edge.
-    private static let hiddenPetInset: CGFloat = 12
-    /// Hidden Clawd leans out toward the right wing (clockwise, so negative), in degrees.
-    private static let hiddenTilt: CGFloat = -9
+    /// How far the hidden window reaches right of and below the notch's bottom-right corner; Clawd hangs from that
+    /// corner inside this transparent area (REQ-05, docs/06). Tuned by eye.
+    static let hiddenExtra = CGSize(width: 24, height: 22)
+    /// Hidden Clawd hangs upside down, rotated 150 degrees clockwise (180 - 30), so its legs sit behind the notch.
+    private static let hiddenTilt: CGFloat = -150
     /// The pet is 26 pt tall in the collapsed island (docs/07); its width follows the unit box.
     static let petSize = CGSize(
         width: PetTokens.collapsedHeight * PetTokens.unitBox.width / PetTokens.unitBox.height,
@@ -123,12 +122,13 @@ final class IslandView: NSView {
         CATransaction.commit()
     }
 
-    /// The pet's target for a mode, in screen coordinates (docs/06): `hidden` peeks under the right part of the notch,
-    /// tilted; otherwise it sits in the right wing, upright. Expanded keeps the top row's right wing too.
+    /// The pet's target for a mode, in screen coordinates (docs/06): `hidden` hangs upside down from the notch's
+    /// bottom-right corner; otherwise it sits in the right wing, upright. Expanded keeps the top row's right wing too.
     static func petPlacement(topRow: CGRect, hidden: Bool) -> (center: CGPoint, tilt: CGFloat) {
         if hidden {
-            // One point under the notch's bottom edge puts about 55 % of the 26 pt pet in the 16 pt peek strip.
-            return (CGPoint(x: topRow.maxX - hiddenPetInset - petSize.width / 2, y: topRow.minY - 1), hiddenTilt)
+            // The head axis points down-right (sin 30 deg, cos 30 deg); a little along it from the corner leaves the legs
+            // behind the notch cover and the head, eyes and arms out.
+            return (CGPoint(x: topRow.maxX + 1, y: topRow.minY - 1.7), hiddenTilt)
         }
         let x = topRow.maxX + CountersView.barInset + CountersView.barWidth + CountersView.barPetGap + petSize.width / 2
         return (CGPoint(x: x, y: topRow.midY), 0)
@@ -154,11 +154,14 @@ final class IslandView: NSView {
         // the island edges moving in step with the frame instead of jumping at either end.
         let progress = min(max((bounds.height - row.height) / (Self.expandedExtraHeight + Self.glowMargin), 0), 1)
         let margin = Self.glowMargin * progress
-        // Hidden, the panel is notch-wide and reaches `peekHeight` below the black row, where only the pet shows.
-        // The same width-driven progress fades the counters and the HP bar in with the wings.
-        let wingProgress = min(max((bounds.width - row.width) / (Self.leftWingWidth + Self.rightWingWidth), 0), 1)
-        let sliver = Self.peekHeight * (1 - wingProgress)
-        let island = CGRect(x: margin, y: margin + sliver, width: bounds.width - 2 * margin, height: bounds.height - margin - sliver)
+        // Hidden, the window reaches `hiddenExtra` past the notch's bottom-right corner and only the notch is black.
+        // The width-driven progress grows the black from the notch to the wings and fades the counters and the HP bar in.
+        let hiddenWidth = row.width + Self.hiddenExtra.width
+        let wingProgress = min(max((bounds.width - hiddenWidth) / (Self.leftWingWidth + Self.rightWingWidth - Self.hiddenExtra.width), 0), 1)
+        let sliver = Self.hiddenExtra.height * (1 - wingProgress)
+        let minX = row.minX * (1 - wingProgress) + margin * wingProgress
+        let maxX = row.maxX * (1 - wingProgress) + (bounds.maxX - margin) * wingProgress
+        let island = CGRect(x: minX, y: margin + sliver, width: maxX - minX, height: bounds.height - margin - sliver)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         background.frame = island

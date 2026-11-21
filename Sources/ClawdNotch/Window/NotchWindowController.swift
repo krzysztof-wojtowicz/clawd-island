@@ -136,9 +136,14 @@ final class NotchWindowController {
     /// Expanded, it is the island centred under the notch and grown downward, plus the glow margin on the sides
     /// and bottom.
     private func panelFrame(around topRow: CGRect) -> CGRect {
-        let sliver = IslandView.peekHeight
         guard !isTucked else {
-            return CGRect(x: topRow.minX, y: topRow.minY - sliver, width: topRow.width, height: topRow.height + sliver)
+            let extra = IslandView.hiddenExtra
+            return CGRect(
+                x: topRow.minX,
+                y: topRow.minY - extra.height,
+                width: topRow.width + extra.width,
+                height: topRow.height + extra.height
+            )
         }
         guard isExpanded else {
             return CGRect(

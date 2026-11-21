@@ -117,7 +117,7 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - Right wing about 56 pt so the hammer swing is never clipped.
 - AC: REQ-04 AC4–AC5, `06` state dot.
 
-### WP-7.2 — Upside-down corner peek · owner: macos-ui-engineer (+ pet-animator) · deps: WP-5.5 · status: `todo`
+### WP-7.2 — Upside-down corner peek · owner: macos-ui-engineer (+ pet-animator) · deps: WP-5.5 · status: `done` (hidden 209×54, popped 269×32; release settled 0.00 % CPU / 35 MB; the corner hang and flip still to be checked by eye)
 - Hidden: the pet hangs upside down from the notch's bottom-right corner, rotated about 150° clockwise, legs behind the notch cover, head and arms out; loops keep running. The hidden window grows right and down to fit (`06`).
 - Keep the WP-7.1 spring transitions (short way round).
 - AC: REQ-05 AC1–4.
