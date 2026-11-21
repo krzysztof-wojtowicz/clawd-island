@@ -136,7 +136,7 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - Accessibility window match by project name for click and activation; app-level fallback.
 - AC: REQ-V2-02 AC1–3.
 
-### WP-11 — New session from the panel · owner: integration-engineer (launch, recent projects) + macos-ui-engineer (button, menu) · deps: WP-9 · status: `todo`
+### WP-11 — New session from the panel · owner: integration-engineer (launch, recent projects) + macos-ui-engineer (button, menu) · deps: WP-9 · status: `done` (quoting rejects control characters and relative paths, tested; release idle 0.00 % / 37.7 MB; the menu and a real Terminal / iTerm2 launch still to be checked by eye)
 - "+ New" footer button, recent-projects menu and "Choose Folder…", Terminal.app / iTerm2 launch with safe quoting, `recentProjects` in config.
 - AC: REQ-V2-03 AC1–2.
 

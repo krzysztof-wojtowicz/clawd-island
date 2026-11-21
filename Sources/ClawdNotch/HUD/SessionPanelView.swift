@@ -18,12 +18,19 @@ final class SessionPanelView: NSView {
     var onSelect: ((String) -> Void)?
     /// Called with a permission id and `true` for Allow, `false` for Deny.
     var onDecide: ((UUID, Bool) -> Void)?
+    /// The recent project paths for the "+ New" menu, newest first; asked when the menu opens.
+    var recentProjects: () -> [String] = { [] }
+    /// Called with a project directory picked from the "+ New" menu.
+    var onNewSession: ((URL) -> Void)?
+    /// Called when "Choose Folder…" is picked.
+    var onChooseFolder: (() -> Void)?
     /// Called when "Mark all read" is clicked.
     var onMarkAllRead: (() -> Void)?
 
     private let rows = NSStackView()
     private let usageLabel = HUDStyle.label(size: 11, color: .secondaryLabelColor)
     private let markAllRead = ClickableStack()
+    private let newSession = ClickableStack()
     private var snapshot: Snapshot?
     /// The cards on screen, newest first; rebuilt only when the pending permissions change.
     private var cards: [(permission: PendingPermission, view: NSView)] = []
@@ -44,8 +51,16 @@ final class SessionPanelView: NSView {
         markAllRead.setAccessibilityLabel("Mark all read")
         markAllRead.setAccessibilityRole(.button)
         markAllRead.autoresizingMask = [.minXMargin, .maxYMargin]
+        let newLabel = HUDStyle.label(size: 11, weight: .medium)
+        newLabel.stringValue = "+ New"
+        newLabel.setAccessibilityElement(false)
+        newSession.addArrangedSubview(newLabel)
+        newSession.onClick = { [weak self] in self?.showNewMenu() }
+        newSession.setAccessibilityLabel("New session")
+        newSession.setAccessibilityRole(.button)
+        newSession.autoresizingMask = [.minXMargin, .maxYMargin]
         usageLabel.autoresizingMask = [.width, .maxYMargin]
-        for view in [rows, usageLabel, markAllRead] {
+        for view in [rows, usageLabel, markAllRead, newSession] {
             addSubview(view)
         }
     }
@@ -68,9 +83,12 @@ final class SessionPanelView: NSView {
     override func layout() {
         super.layout()
         let footerHeight: CGFloat = 16
+        newSession.frame.size = newSession.fittingSize
+        newSession.frame.origin = CGPoint(x: bounds.maxX - newSession.frame.width, y: 0)
         markAllRead.frame.size = markAllRead.fittingSize
-        markAllRead.frame.origin = CGPoint(x: bounds.maxX - markAllRead.frame.width, y: 0)
-        usageLabel.frame = CGRect(x: 0, y: 0, width: markAllRead.frame.minX - 8, height: footerHeight)
+        markAllRead.frame.origin = CGPoint(x: newSession.frame.minX - 10 - markAllRead.frame.width, y: 0)
+        let leftmost = markAllRead.isHidden ? newSession.frame.minX : markAllRead.frame.minX
+        usageLabel.frame = CGRect(x: 0, y: 0, width: leftmost - 8, height: footerHeight)
         // Shorten "resets in" to "resets" when the full line does not fit beside the button.
         if let usage = snapshot?.usage {
             let full = HUDStyle.usageLine(usage, now: footerDate)
@@ -112,6 +130,33 @@ final class SessionPanelView: NSView {
             rows.addArrangedSubview(note)
         }
         needsLayout = true
+    }
+
+    /// Opens the "+ New" menu: recent projects, then "Choose Folder…" (REQ-V2-03). It pops up below the button.
+    private func showNewMenu() {
+        let menu = NSMenu()
+        let recents = recentProjects()
+        if recents.isEmpty {
+            menu.addItem(withTitle: "No recent projects", action: nil, keyEquivalent: "").isEnabled = false
+        }
+        for path in recents {
+            let title = (path as NSString).lastPathComponent
+            let item = menu.addItem(withTitle: title, action: #selector(pickRecent(_:)), keyEquivalent: "")
+            item.target = self
+            item.toolTip = path
+            item.representedObject = path
+        }
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Choose Folder…", action: #selector(chooseFolder), keyEquivalent: "").target = self
+        menu.popUp(positioning: nil, at: CGPoint(x: newSession.frame.minX, y: newSession.frame.minY), in: self)
+    }
+
+    @objc private func pickRecent(_ sender: NSMenuItem) {
+        if let path = sender.representedObject as? String { onNewSession?(URL(fileURLWithPath: path, isDirectory: true)) }
+    }
+
+    @objc private func chooseFolder() {
+        onChooseFolder?()
     }
 
     private func card(for permission: PendingPermission) -> NSView {
