@@ -11,7 +11,7 @@ public struct Snapshot: Equatable, Sendable {
     /// Sessions that are `needsInput`, or `done` and unread.
     public let attentionCount: Int
     public let hasNeedsInput: Bool
-    /// Sessions in arrival order, with talking decay already applied.
+    /// Sessions in panel order (rank, then newest `lastEventAt`), with talking decay already applied.
     public let sessions: [Session]
     public let usage: UsageSnapshot?
     /// Increments once per pop-out edge; the UI pops the pet when it sees a new value.

@@ -31,6 +31,14 @@ enum HUDStyle {
         }
     }
 
+    /// The session counter circle (docs/06, first match wins): red for needs-input, orange for an unread `done`,
+    /// blue while sessions exist, grey otherwise.
+    static func counterColor(_ snapshot: Snapshot) -> CGColor {
+        if snapshot.hasNeedsInput { return PetTokens.badgeAlert }
+        if snapshot.attentionCount > 0 { return PetTokens.body }
+        return snapshot.activeCount > 0 ? PetTokens.badgeActive : PetTokens.badgeEmpty
+    }
+
     /// One line on the 5-hour window, e.g. "HP 63% · resets in 1h 12m". Computed at `now`, never ticking.
     static func usageLine(_ usage: UsageSnapshot?, now: Date) -> String {
         guard let usage, let hp = usage.hitPoints(now: now) else { return "Usage unknown" }

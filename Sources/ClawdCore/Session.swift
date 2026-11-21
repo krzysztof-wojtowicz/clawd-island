@@ -32,7 +32,7 @@ public struct Session: Equatable, Sendable, Identifiable {
     /// When the session last entered or refreshed `talking`; drives talking decay.
     var lastTalkingAt: Date?
 
-    /// Counts toward the attention badge: waiting for the user, or finished and not yet seen.
+    /// Waiting for the user, or finished and not yet seen; drives the pop-out, the orange counter and "Mark all read".
     public var needsAttention: Bool {
         state == .needsInput || (state == .done && unread)
     }
@@ -50,6 +50,19 @@ public struct Session: Equatable, Sendable, Identifiable {
         lhs.id == rhs.id && lhs.projectName == rhs.projectName && lhs.state == rhs.state
             && lhs.unread == rhs.unread && lhs.failed == rhs.failed && lhs.meta == rhs.meta
             && lhs.toolName == rhs.toolName && lhs.activeSubagents == rhs.activeSubagents
+    }
+
+    /// Sort key for the panel, lower first: `needsInput`, unread `done`, `usingTools`, `talking`, `thinking`, then everything else.
+    /// Read `done` ranks as idle, matching the status buckets.
+    var panelRank: Int {
+        switch state {
+        case .needsInput: 0
+        case .done where unread: 1
+        case .usingTools: 2
+        case .talking: 3
+        case .thinking: 4
+        case .idle, .done: 5
+        }
     }
 
     static func projectName(for cwd: String) -> String {

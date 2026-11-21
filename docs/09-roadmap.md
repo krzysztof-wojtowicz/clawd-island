@@ -71,7 +71,7 @@ Follow the `add-pet-state` skill end to end.
 - Simulator: a tools scenario in `scripts/simulate.sh`, and a row in the `simulate-claude-events` skill.
 - AC: REQ-03 AC1–3. `perf.sh` while hammering stays within the animating budget.
 
-### WP-5.2 — Single session counter and importance-sorted panel · owner: core-engineer (sort) + macos-ui-engineer (counter) · deps: WP-3.1 · status: `todo`
+### WP-5.2 — Single session counter and importance-sorted panel · owner: core-engineer (sort) + macos-ui-engineer (counter) · deps: WP-3.1 · status: `done` (idle perf 0.00 % CPU / 39.0 MB; counter colours still to be checked by eye)
 - Core: `Snapshot.sessions` sorted by rank, then by the newest `lastEventAt` (`04` "Panel order"), with a test.
 - `CountersView`: one number in an always-visible circle, vertically centred on the pet and the HP bar. Its colour follows the red / orange / blue / grey rule. Add the `badge.active` and `badge.empty` tokens.
 - AC: REQ-04 AC1–4, REQ-10 AC3.

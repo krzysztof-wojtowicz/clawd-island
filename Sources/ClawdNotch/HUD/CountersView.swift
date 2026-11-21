@@ -4,21 +4,18 @@
 import AppKit
 import ClawdCore
 
-/// Renders the counters of one `Snapshot`: a vertical HP bar at the left edge, filling bottom-up, and a counts column
-/// at the right edge (active count on top, attention count below; both always visible, the attention count in a
-/// coloured circle only while it is above 0). The HP bar is hidden while
-/// usage is unknown (REQ-04 AC2) and full but dimmed when stale (AC3). The tooltip text is built when AppKit asks
-/// for it, so the reset countdown needs no timer.
+/// Renders the counters of one `Snapshot`: a vertical HP bar at the left edge, filling bottom-up, and ONE session
+/// counter (`activeCount`) at the right edge, centred in a circle that is always shown, also at 0 (REQ-04 AC1).
+/// The circle colour comes from `HUDStyle.counterColor`. The HP bar is hidden while usage is unknown (AC2) and full
+/// but dimmed when stale (AC3). The tooltip text is built when AppKit asks for it, so the reset countdown needs no timer.
 final class CountersView: NSView, NSViewToolTipOwner {
     /// Width of the vertical HP bar at the left edge.
     static let barWidth: CGFloat = 3
-    /// Width of the counts column at the right edge.
-    static let columnWidth: CGFloat = 14
-    private static let badgeSize: CGFloat = 14
+    /// Width of the counter column at the right edge, equal to the circle diameter.
+    static let columnWidth: CGFloat = 16
     private static let staleOpacity: Float = 0.4
 
-    private let activeLabel = HUDStyle.label(size: 11, weight: .semibold)
-    private let attentionLabel = HUDStyle.label(size: 10, weight: .bold, color: HUDStyle.color(PetTokens.badgeGlyph))
+    private let countLabel = HUDStyle.label(size: 10, weight: .bold, color: HUDStyle.color(PetTokens.badgeGlyph))
     private let barTrack = CALayer()
     private let barFill = CALayer()
     private var snapshot: Snapshot?
@@ -27,15 +24,12 @@ final class CountersView: NSView, NSViewToolTipOwner {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        activeLabel.alignment = .center
-        attentionLabel.alignment = .center
-        attentionLabel.wantsLayer = true
-        attentionLabel.layer?.cornerCurve = .continuous
-        for label in [activeLabel, attentionLabel] {
-            // The container speaks for the counters as a whole.
-            label.setAccessibilityElement(false)
-            addSubview(label)
-        }
+        countLabel.alignment = .center
+        countLabel.wantsLayer = true
+        countLabel.layer?.cornerCurve = .continuous
+        // The container speaks for the counters as a whole.
+        countLabel.setAccessibilityElement(false)
+        addSubview(countLabel)
         barTrack.backgroundColor = PetTokens.bubbleFill
         barTrack.opacity = 0.2
         barTrack.cornerRadius = Self.barWidth / 2
@@ -52,12 +46,8 @@ final class CountersView: NSView, NSViewToolTipOwner {
     /// Shows `snapshot`; `now` decides whether the usage window has already reset.
     func render(_ snapshot: Snapshot, now: Date) {
         self.snapshot = snapshot
-        activeLabel.stringValue = "\(snapshot.activeCount)"
-        attentionLabel.stringValue = "\(snapshot.attentionCount)"
-        // At 0 the count is plain text like the active count; above 0 it sits in an orange or red circle.
-        let badge = snapshot.hasNeedsInput ? PetTokens.badgeAlert : snapshot.attentionCount > 0 ? PetTokens.body : nil
-        attentionLabel.layer?.backgroundColor = badge
-        attentionLabel.textColor = badge == nil ? .labelColor : HUDStyle.color(PetTokens.badgeGlyph)
+        countLabel.stringValue = "\(snapshot.activeCount)"
+        countLabel.layer?.backgroundColor = HUDStyle.counterColor(snapshot)
         let hp = snapshot.usage?.hitPoints(now: now)
         barTrack.isHidden = hp == nil
         barFill.isHidden = hp == nil
@@ -71,26 +61,16 @@ final class CountersView: NSView, NSViewToolTipOwner {
 
     override func layout() {
         super.layout()
-        let columnMidX = bounds.maxX - Self.columnWidth / 2
-        // The two counts are centred as one group, horizontally on the column and vertically on the pet.
-        // Two-digit counts may be a little wider than the column; they spill evenly past both column edges.
-        let active = activeLabel.intrinsicContentSize
-        let groupMinY = (bounds.height - active.height - Self.badgeSize) / 2
-        let activeWidth = max(Self.columnWidth, active.width)
-        activeLabel.frame = CGRect(
-            x: columnMidX - activeWidth / 2,
-            y: groupMinY + Self.badgeSize,
-            width: activeWidth,
-            height: active.height
+        // A two-digit count widens the circle into a pill, growing evenly to the left and right of the column centre.
+        let size = Self.columnWidth
+        let width = max(size, countLabel.intrinsicContentSize.width + 6)
+        countLabel.frame = CGRect(
+            x: bounds.maxX - size / 2 - width / 2,
+            y: (bounds.height - size) / 2,
+            width: width,
+            height: size
         )
-        let badgeWidth = max(Self.badgeSize, attentionLabel.intrinsicContentSize.width + 4)
-        attentionLabel.frame = CGRect(
-            x: columnMidX - badgeWidth / 2,
-            y: groupMinY,
-            width: badgeWidth,
-            height: Self.badgeSize
-        )
-        attentionLabel.layer?.cornerRadius = Self.badgeSize / 2
+        countLabel.layer?.cornerRadius = size / 2
         let track = CGRect(x: 0, y: 0, width: Self.barWidth, height: bounds.height)
         barTrack.frame = track
         barFill.frame = CGRect(x: track.minX, y: track.minY, width: track.width, height: track.height * hpFraction)

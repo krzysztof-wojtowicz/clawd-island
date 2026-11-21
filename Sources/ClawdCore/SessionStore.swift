@@ -80,7 +80,10 @@ public struct SessionStore: Sendable {
     /// Builds the snapshot at `now`, applying talking decay and advancing `popToken` on a pop-out edge.
     /// Mutating because pop-out edges are measured against the previously built snapshot.
     public mutating func snapshot(now: Date) -> Snapshot {
-        let visible = sessions.map { decayed($0, now: now) }
+        // Sorted after decay so a decayed talking session ranks as thinking.
+        let visible = sessions.map { decayed($0, now: now) }.sorted { lhs, rhs in
+            lhs.panelRank != rhs.panelRank ? lhs.panelRank < rhs.panelRank : lhs.lastEventAt > rhs.lastEventAt
+        }
         let aggregate = PetState(aggregating: visible)
         let attentionCount = visible.filter(\.needsAttention).count
         let enteredUrgent = aggregate != lastAggregate && (aggregate == .done || aggregate == .needsInput)

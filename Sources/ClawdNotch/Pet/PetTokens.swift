@@ -9,7 +9,11 @@ enum PetTokens {
     static let bodyShade = rgb(0xC2643F)
     static let eye = rgb(0x1F1A17)
     static let badgeAlert = rgb(0xFF3B30)
-    /// The "!" glyph on the alert badge.
+    /// Session counter and panel "working" count while sessions exist.
+    static let badgeActive = rgb(0x0A84FF)
+    /// Session counter at 0 sessions, and the panel "idle" count.
+    static let badgeEmpty = rgb(0x8E8E93)
+    /// The "!" glyph on the alert badge, and the session counter digits.
     static let badgeGlyph = rgb(0xFFFFFF)
     /// Speech bubble, thought cloud and "Zzz".
     static let bubbleFill = rgb(0xFFFFFF, alpha: 0.92)
