@@ -28,21 +28,26 @@ public struct AppConfig: Codable, Equatable, Sendable {
         case off
     }
 
+    /// Hold `PermissionRequest` hooks so the notch can allow or deny them (REQ-V2-01). Off means every hook gets an empty reply.
+    public var notchPermissions: Bool
+
     public init(
         port: Int = AppConfig.defaultPort,
         token: String,
         originalStatusLine: String? = nil,
         hideMode: Bool = false,
-        focusReadMode: FocusReadMode = .tab
+        focusReadMode: FocusReadMode = .tab,
+        notchPermissions: Bool = true
     ) {
         self.port = port
         self.token = token
         self.originalStatusLine = originalStatusLine
         self.hideMode = hideMode
         self.focusReadMode = focusReadMode
+        self.notchPermissions = notchPermissions
     }
 
-    /// Files written before hide mode existed lack its keys, so they decode to the defaults.
+    /// Files written before a key existed lack it, so they decode to the defaults.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         port = try container.decode(Int.self, forKey: .port)
@@ -50,6 +55,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         originalStatusLine = try container.decodeIfPresent(String.self, forKey: .originalStatusLine)
         hideMode = try container.decodeIfPresent(Bool.self, forKey: .hideMode) ?? false
         focusReadMode = try container.decodeIfPresent(FocusReadMode.self, forKey: .focusReadMode) ?? .tab
+        notchPermissions = try container.decodeIfPresent(Bool.self, forKey: .notchPermissions) ?? true
     }
 
     /// A fresh config with the default port and a random token.

@@ -82,6 +82,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     // main.async keeps arrival order, which the state machine depends on.
                     DispatchQueue.main.async { MainActor.assumeIsolated { model.receive(message) } }
                 },
+                onPermission: { [model] event, responder in
+                    DispatchQueue.main.async { MainActor.assumeIsolated { model.receive(permission: event, responder: responder) } }
+                },
+                onPermissionClosed: { [model] id in
+                    DispatchQueue.main.async { MainActor.assumeIsolated { model.permissionClosed(id) } }
+                },
                 onFailure: { [model] error in
                     let text = "Port \(config.port) unavailable: \(error.localizedDescription)"
                     DispatchQueue.main.async { MainActor.assumeIsolated { model.serverError = text } }

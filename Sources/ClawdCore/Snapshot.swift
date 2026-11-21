@@ -42,6 +42,8 @@ public struct Snapshot: Equatable, Sendable {
     public let usage: UsageSnapshot?
     /// Increments once per pop-out edge; the UI pops the pet when it sees a new value.
     public let popToken: Int
+    /// Permission prompts held open for a notch decision, newest first (REQ-V2-01).
+    public let pendingPermissions: [PendingPermission]
 }
 
 extension PetState {
