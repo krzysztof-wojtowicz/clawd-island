@@ -3,10 +3,11 @@
 
 import AppKit
 import ApplicationServices
+import ClawdCore
 
 /// Finds and raises editor windows by project name. Without the Accessibility grant every call returns
-/// nil/false, so callers fall back to app level.
-@MainActor
+/// nil/false, so callers fall back to app level. The AX lookups can block on a busy editor, so they are
+/// `nonisolated` and callers run them off the main thread.
 enum EditorWindows {
     /// VS Code, Insiders, VSCodium, Cursor and Windsurf.
     static let bundleIDs: Set<String> = [
@@ -14,40 +15,47 @@ enum EditorWindows {
         "com.todesktop.230313mzl4w4u92", "com.exafunction.windsurf",
     ]
 
-    private static var asked = false
+    private static let timeout: Float = 0.2
 
-    /// Whether Accessibility is granted. The system prompt is shown at most once per launch, on the first call.
-    static func isTrusted() -> Bool {
+    /// Whether Accessibility is granted, without any prompt (the activation path).
+    static func isTrusted() -> Bool { AXIsProcessTrusted() }
+
+    /// Whether Accessibility is granted, showing the system prompt if not. Prompts at most once per launch,
+    /// so call it only from a user click, never on a plain app switch.
+    @MainActor
+    static func requestTrust() -> Bool {
         if asked { return AXIsProcessTrusted() }
         asked = true
         // The literal is `kAXTrustedCheckOptionPrompt`, which Swift 6 rejects as a mutable global.
         return AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
     }
 
-    /// Raises the first window of `app` whose title contains `project`. Returns whether one was found.
-    static func raise(project: String, in app: NSRunningApplication) -> Bool {
-        guard isTrusted() else { return false }
-        let element = AXUIElementCreateApplication(app.processIdentifier)
-        AXUIElementSetMessagingTimeout(element, 0.5)
+    @MainActor private static var asked = false
+
+    /// Raises the best window of `pid` for `project` (see `WindowTitle`). Returns whether one was raised.
+    nonisolated static func raise(project: String, pid: pid_t) -> Bool {
+        let element = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(element, timeout)
         var value: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXWindowsAttribute as CFString, &value) == .success,
-              let windows = value as? [AXUIElement],
-              let match = windows.first(where: { title(of: $0)?.contains(project) == true }) else { return false }
-        return AXUIElementPerformAction(match, kAXRaiseAction as CFString) == .success
+              let windows = value as? [AXUIElement] else { return false }
+        let titles = windows.map { title(of: $0) ?? "" }
+        guard let index = WindowTitle.bestMatch(project: project, in: titles) else { return false }
+        return AXUIElementPerformAction(windows[index], kAXRaiseAction as CFString) == .success
     }
 
-    /// The title of the app's focused window, or nil without trust or a focused window.
-    static func focusedWindowTitle(of app: NSRunningApplication) -> String? {
-        guard isTrusted() else { return nil }
-        let element = AXUIElementCreateApplication(app.processIdentifier)
-        AXUIElementSetMessagingTimeout(element, 0.5)
+    /// The title of the app's focused window, or nil without one.
+    nonisolated static func focusedWindowTitle(pid: pid_t) -> String? {
+        let element = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(element, timeout)
         var value: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXFocusedWindowAttribute as CFString, &value) == .success,
               let window = value, CFGetTypeID(window) == AXUIElementGetTypeID() else { return nil }
-        return title(of: window as! AXUIElement)
+        // safe: type id checked above
+        return title(of: unsafeDowncast(window, to: AXUIElement.self))
     }
 
-    private static func title(of window: AXUIElement) -> String? {
+    nonisolated private static func title(of window: AXUIElement) -> String? {
         var value: CFTypeRef?
         guard AXUIElementCopyAttributeValue(window, kAXTitleAttribute as CFString, &value) == .success else { return nil }
         return value as? String
