@@ -1,0 +1,148 @@
+// TerminalFocusWatcher.swift
+// Marks sessions read when their terminal comes to the front, and focuses a session's terminal on click (REQ-10).
+
+import AppKit
+import ClawdCore
+import os
+
+/// Observes app activation (no polling). Terminal.app and iTerm2 report the selected tab's tty through
+/// AppleScript, so only that tab's session is marked read; if Automation is denied, or for any other terminal,
+/// the app staying frontmost for `dwell` seconds marks its `done` sessions read.
+@MainActor
+final class TerminalFocusWatcher {
+    nonisolated private static let logger = Logger(subsystem: "dev.clawdnotch", category: "focus")
+    private static let dwell: TimeInterval = 2
+    private static let terminalApp = "com.apple.Terminal"
+    private static let iTerm = "com.googlecode.iterm2"
+
+    private let sessions: () -> [Session]
+    private let markRead: (String) -> Void
+    private var dwellTimer: Timer?
+    private var observer: NSObjectProtocol?
+    /// Scripts run here, never on the main thread; they can block on the Automation prompt.
+    private let scriptQueue = DispatchQueue(label: "dev.clawdnotch.applescript", qos: .utility)
+
+    /// - Parameters:
+    ///   - sessions: The current sessions, read when an activation arrives.
+    ///   - markRead: Marks one session read by id.
+    init(sessions: @escaping () -> [Session], markRead: @escaping (String) -> Void) {
+        self.sessions = sessions
+        self.markRead = markRead
+    }
+
+    /// Starts observing activations. Idempotent.
+    func start() {
+        guard observer == nil else { return }
+        observer = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let bundleID = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
+            MainActor.assumeIsolated { self?.didActivate(bundleID) }
+        }
+    }
+
+    /// Activates the session's terminal and, in Terminal.app or iTerm2, selects its tab.
+    func focus(_ session: Session) {
+        guard let bundleID = session.meta?.terminalBundleID else { return }
+        NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first?.activate()
+        guard let tty = session.meta?.tty, Self.isSafe(tty),
+              let source = Self.selectScript(bundleID: bundleID, tty: tty) else { return }
+        runScript(source) { _ in }
+    }
+
+    private func didActivate(_ bundleID: String?) {
+        dwellTimer?.invalidate()
+        dwellTimer = nil
+        guard let bundleID, sessions().contains(where: { $0.meta?.terminalBundleID == bundleID }) else { return }
+        guard let source = Self.currentTTYScript(bundleID: bundleID) else {
+            startDwell(bundleID)
+            return
+        }
+        runScript(source) { [weak self] result in
+            guard let self else { return }
+            if let tty = result, !tty.isEmpty {
+                for session in sessions() where session.meta?.tty == tty { markRead(session.id) }
+            } else {
+                startDwell(bundleID)
+            }
+        }
+    }
+
+    private func startDwell(_ bundleID: String) {
+        let timer = Timer(timeInterval: Self.dwell, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.dwellElapsed(bundleID) }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        dwellTimer = timer
+    }
+
+    private func dwellElapsed(_ bundleID: String) {
+        dwellTimer = nil
+        guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bundleID else { return }
+        for session in sessions() where session.state == .done && session.meta?.terminalBundleID == bundleID {
+            markRead(session.id)
+        }
+    }
+
+    /// Runs AppleScript on `scriptQueue` and calls `completion` on the main actor with the string result,
+    /// or nil when the script failed (for example, Automation was denied).
+    private func runScript(_ source: String, completion: @escaping @MainActor (String?) -> Void) {
+        scriptQueue.async {
+            var error: NSDictionary?
+            let output = NSAppleScript(source: source)?.executeAndReturnError(&error)
+            if let error { Self.logger.info("applescript failed: \(error[NSAppleScript.errorNumber] as? Int ?? 0)") }
+            let text = error == nil ? output?.stringValue : nil
+            DispatchQueue.main.async { MainActor.assumeIsolated { completion(text) } }
+        }
+    }
+
+    /// A tty is interpolated into script source, so only accept plain device paths.
+    nonisolated private static func isSafe(_ tty: String) -> Bool {
+        tty.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "/") }
+    }
+
+    nonisolated private static func currentTTYScript(bundleID: String) -> String? {
+        switch bundleID {
+        case terminalApp: "tell application \"Terminal\" to return tty of selected tab of front window"
+        case iTerm: "tell application \"iTerm2\" to return tty of current session of current window"
+        default: nil
+        }
+    }
+
+    nonisolated private static func selectScript(bundleID: String, tty: String) -> String? {
+        switch bundleID {
+        case terminalApp:
+            """
+            tell application "Terminal"
+                repeat with w in windows
+                    repeat with t in tabs of w
+                        if tty of t is "\(tty)" then
+                            set selected of t to true
+                            set index of w to 1
+                            return
+                        end if
+                    end repeat
+                end repeat
+            end tell
+            """
+        case iTerm:
+            """
+            tell application "iTerm2"
+                repeat with w in windows
+                    repeat with t in tabs of w
+                        repeat with s in sessions of t
+                            if tty of s is "\(tty)" then
+                                select w
+                                select t
+                                select s
+                                return
+                            end if
+                        end repeat
+                    end repeat
+                end repeat
+            end tell
+            """
+        default: nil
+        }
+    }
+}

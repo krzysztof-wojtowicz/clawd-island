@@ -26,6 +26,7 @@ cat > "$app/Contents/Info.plist" <<'EOF'
     <key>CFBundleVersion</key><string>1</string>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSUIElement</key><true/>
+    <key>NSAppleEventsUsageDescription</key><string>ClawdNotch asks Terminal and iTerm2 which tab is in front, so it can mark that tab's Claude Code session as read, and focuses a session's tab when you click it.</string>
 </dict>
 </plist>
 EOF
