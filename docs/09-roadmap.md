@@ -101,7 +101,7 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - `SessionPanelView`: drop the status-count row; `expandedExtraHeight` about 158.
 - AC: REQ-01 AC1–2, REQ-04 AC1 and AC4. `perf.sh` unchanged.
 
-### WP-6.1 — Click focuses the session · owner: integration-engineer · deps: WP-6 · status: `todo`
+### WP-6.1 — Click focuses the session · owner: integration-engineer · deps: WP-6 · status: `done` (build + tests; the tab focus and read on click still to be checked by eye)
 - `HUDController.onSelect` only focuses; `TerminalFocusWatcher.focus` marks read after a successful focus, unless the focus-read mode is `off`.
 - Can run in parallel with WP-5.4 (worktree; one shared line in `HUDController`).
 - AC: REQ-10 AC2.

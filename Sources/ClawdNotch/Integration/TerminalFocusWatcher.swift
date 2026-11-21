@@ -48,15 +48,25 @@ final class TerminalFocusWatcher {
         }
     }
 
-    /// Activates the session's terminal and, in Terminal.app or iTerm2, selects its tab.
+    /// Activates the session's terminal and, in Terminal.app or iTerm2, selects its tab. After a successful
+    /// focus the session is marked read, unless the focus-read mode is `off` (REQ-10 AC2): selecting a tab in a
+    /// terminal that is already frontmost fires no activation, so the watcher would not see it.
     func focus(_ session: Session) {
         // A `tell` to a terminal that has quit would relaunch it, so only focus running ones.
         guard let bundleID = session.meta?.terminalBundleID,
               let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
         app.activate()
+        let id = session.id
         guard let tty = session.meta?.tty, Self.isSafe(tty),
-              let source = Self.selectScript(bundleID: bundleID, tty: tty) else { return }
-        runScript(source) { _ in }
+              let source = Self.selectScript(bundleID: bundleID, tty: tty) else {
+            // App-level terminal: bringing its app forward is the whole focus.
+            if mode() != .off { markRead(id) }
+            return
+        }
+        runScript(source) { [weak self] result in
+            guard let self, result == "selected", mode() != .off else { return }
+            markRead(id)
+        }
     }
 
     private func didActivate(_ bundleID: String?) {
@@ -131,7 +141,7 @@ final class TerminalFocusWatcher {
                         if tty of t is "\(tty)" then
                             set selected of t to true
                             set index of w to 1
-                            return
+                            return "selected"
                         end if
                     end repeat
                 end repeat
@@ -147,7 +157,7 @@ final class TerminalFocusWatcher {
                                 select w
                                 select t
                                 select s
-                                return
+                                return "selected"
                             end if
                         end repeat
                     end repeat

@@ -25,8 +25,8 @@ final class HUDController {
     /// Builds the session panel, draws the latest snapshot into it and returns it. Called once, on the first expand.
     func makePanel() -> SessionPanelView {
         let panel = SessionPanelView()
+        // A click only focuses; the watcher marks the session read once its tab is in front (REQ-10 AC2).
         panel.onSelect = { [model, focus] id in
-            model.markRead(id)
             if let session = model.snapshot.sessions.first(where: { $0.id == id }) { focus(session) }
         }
         panel.onMarkAllRead = { [model] in model.markAllRead() }
