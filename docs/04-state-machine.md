@@ -31,7 +31,7 @@ Notes:
 - **Unknown sessions:** any event for an unknown `session_id` creates the session (the app may have started mid-session).
 
 ## Read tracking (REQ-10)
-`unread` is cleared by `UserPromptSubmit`, by `markRead(id)` (a panel click), by `markAllRead()`, or by `TerminalFocusWatcher` (see `05`). Clearing `unread` on a `done` session makes it `idle`.
+`unread` is cleared by `UserPromptSubmit`, by `markAllRead()`, or by `TerminalFocusWatcher` (see `05`), including right after a panel click has focused the session's tab (REQ-10 AC2). A panel click alone does not mark read. Clearing `unread` on a `done` session makes it `idle`.
 
 ## Liveness
 - The bridge supplies `pid` (the Claude Code process). Every 30 s the app calls `kill(pid, 0)`. If that returns `ESRCH`, the session is removed.
@@ -51,7 +51,7 @@ otherwise                                     → idle
 - `activeCount` = the number of live sessions (the number in the counter, REQ-04).
 - The counter colour uses `hasNeedsInput` → red, `attentionCount > 0` → orange, `activeCount > 0` → blue, otherwise grey.
 - `attentionCount` = the number of sessions that are `needsInput`, or `done && unread`. It is no longer displayed, but it still drives the counter colour, the pop-out, and "Mark all read".
-- **Status counts** (`Snapshot.statusCounts`, shown in the panel header) put each live session in exactly one bucket: `needsInput` → needsInput, `done && unread` → done, `thinking | usingTools | talking` → working, and everything else (`idle`, read `done`) → idle. The buckets add up to `activeCount`.
+- **Status counts** (`Snapshot.statusCounts`, shown as the three expanded counters; the UI adds idle + working into the first one) put each live session in exactly one bucket: `needsInput` → needsInput, `done && unread` → done, `thinking | usingTools | talking` → working, and everything else (`idle`, read `done`) → idle. The buckets add up to `activeCount`.
 - **Pop-out trigger:** fires when `attentionCount` increases, or when the aggregate enters `done` or `needsInput`. The UI sees this as a `Snapshot.popToken` counter that increments, so the trigger is edge-based and the same transition never fires twice.
 
 ## Panel order

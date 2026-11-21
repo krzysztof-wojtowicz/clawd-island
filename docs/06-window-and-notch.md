@@ -21,26 +21,26 @@
 
 ## Layout ("island")
 ```
-            ┌──── black island (extends the notch to the right) ────┐
-            │     physical notch     │ ▮ ┌─────┐                    │  ▮ = vertical HP bar
- collapsed  │                        │ ▮ │Clawd│ (3)                │ (3) = session counter, circle colour =
-            │                        │ ▯ └─────┘                    │       red / orange / blue / grey
-            └───────────────────────────────────────────────────────┘
- expanded (hover): the island grows down by ~ 120–200 pt into a panel, centred under the notch,
- with a soft orange glow beneath it (REQ-11):
-       │  (2) (1) (1) (0)   = idle · working · done · needs input         │
+              ┌──── black island: two asymmetric wings around the notch ────┐
+ collapsed    │ (3) │        physical notch        │ ▮ ┌─────┐               │  (3) = session counter, circle colour =
+              │     │                              │ ▮ │Clawd│               │        red / orange / blue / grey
+              └─────┘                              └─▯─└─────┘───────────────┘  ▮ = vertical HP bar
+ expanded (hover): the top row keeps the notch height; the counter morphs into three counters, and the island
+ grows down into a panel, centred under the notch, with a soft orange glow beneath it (REQ-11):
+       │ (2)(1)(1) │        physical notch        │ ▮ Clawd  │   = idle+working · done · needs input
        │  proj-b   ● done (unread)                                        │
        │  proj-a     using Bash                                           │
        │  HP 63% · resets in 1h 12m · WEEK 81%          [Mark all read]   │
 ```
-- Top row: the notch plus **one wing on the right**, `max(notch height, 32 pt)` tall, so on a short virtual notch (24 pt menu bar) the island hangs a little below the menu bar. There is no left wing. The wing is flush with the notch's right edge and 72 pt wide (REQ-04 AC4).
-- Wing contents, left to right, all vertically centred in the top row:
-  - **HP bar:** vertical and continuous, 3 pt wide, as tall as the pet, filling bottom-up in `hp.*` colours. It is hidden while usage is unknown, and full and dimmed while stale. The hover tooltip shows the exact HP and the reset countdown, computed when it is shown.
+- Top row: the notch plus **two wings**, `max(notch height, 32 pt)` tall, so on a short virtual notch (24 pt menu bar) the island hangs a little below the menu bar. The wings are asymmetric and only as wide as their content (REQ-04 AC4): the **left wing** (about 28 pt) is flush with the notch's left edge, the **right wing** (about 48 pt) with its right edge.
+- **Left wing: session counter.** The number of live sessions, centred inside a 16 pt circle that is always shown and vertically centred in the top row. A two-digit count widens the circle into a pill. Colour, first match wins: `badge.alert` (red) if any session is `needsInput`, `clawd.body` (orange) if any is `done` and unread, `badge.active` (blue) if any sessions exist, otherwise `badge.empty` (grey).
+- **Right wing: HP bar, then Clawd**, vertically centred in the top row.
+  - **HP bar:** vertical and continuous, 3 pt wide, as tall as the pet, filling bottom-up in `hp.*` colours. It is hidden while usage is unknown, and full and dimmed while stale. The hover tooltip shows the same line as the panel footer, computed when it is shown.
   - **Clawd:** 26 pt tall (`07`). It may shrink to about 22 pt if that is needed to meet the width target.
-  - **Session counter:** the number of live sessions, centred inside a 14–16 pt circle that is always shown. The circle is vertically centred on the pet and the HP bar. A two-digit count widens the circle into a pill. Colour, first match wins: `badge.alert` (red) if any session is `needsInput`, `clawd.body` (orange) if any is `done` and unread, `badge.active` (blue) if any sessions exist, otherwise `badge.empty` (grey).
-- The expanded panel stays centred under the notch, at least 360 pt wide (`expandedMinWidth`), so while expanded it may extend left of the notch. Only the collapsed island is one-sided. It lists up to 5 sessions, sorted by importance (`04`, "Panel order"), then "+n more", with the usage line and "Mark all read" in the footer. The panel reaches about 182 pt below the top row.
-  - **Status-count row (top):** four 16 pt circles, left-aligned in the order grey (idle), blue (working), orange (done, unread), red (needs input), using `badge.empty`, `badge.active`, `clawd.body`, and `badge.alert`. All four are always shown, so the layout never jumps, and a 0 is drawn at 35 % opacity. There are no captions. Each circle has a tooltip and an accessibility label ("2 idle", "1 working", …).
-  - **Usage footer:** `HP 63% · resets in 1h 12m · WEEK 81%`. Each percentage is tinted with its `hp.*` level colour, and the rest is secondary text. If the line does not fit beside "Mark all read", "resets in" shortens to "resets". WEEK has no countdown and is omitted when unknown. The wing's HP-bar tooltip shows the same line. Settings and hide live in the right-click menu (WP-7).
+- **Expanded counters (REQ-04):** on expand, three 16 pt circles slide out of the single counter's position into the top row, left of the notch, in the order: idle + working (`badge.empty` at 0, otherwise `badge.active`), done and unread (`clawd.body`), needs input (`badge.alert`). Position and opacity animate in the same `NSAnimationContext` group as the expand; on collapse they merge back into the single circle. All three are always shown, so the layout never jumps; a 0 in the orange or red circle is drawn at 35 % opacity. There are no captions; each circle has a tooltip and an accessibility label ("2 idle or working", "1 done", …).
+- The expanded panel stays centred under the notch, at least 360 pt wide (`expandedMinWidth`). It lists up to 5 sessions, sorted by importance (`04`, "Panel order"), then "+n more", with the usage line and "Mark all read" in the footer. There is no status-count row any more, so the panel reaches about 158 pt below the top row (`expandedExtraHeight`).
+  - **Usage footer:** `HP 63% · resets in 1h 12m · WEEK 81%`. Each percentage is tinted with its `hp.*` level colour, and the rest is secondary text. If the line does not fit beside "Mark all read", "resets in" shortens to "resets". WEEK has no countdown and is omitted when unknown. Settings and hide live in the right-click menu (WP-7).
+  - **Clicking a session row** focuses its terminal and tab (REQ-10 AC2, `05`); it does not mark the session read by itself.
 - The island is black (`#000`), so it merges with the physical notch. Corners use a continuous (squircle) curve.
 - **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext`.
 - Hover uses `NSTrackingArea` and expands after 150 ms of hover. It collapses 300 ms after the mouse leaves.
@@ -54,8 +54,10 @@
 - If `perf.sh` shows that the glow breaks the budget, remove it and mark REQ-11 as dropped (`08`).
 
 ## Hide mode (REQ-05)
-- **Hidden:** the wing collapses, the island is the width of the notch only, and Clawd slides under the right part of the notch so that only the top 6–8 pt (ear tips and eyes) peek out below the notch edge. On a virtual notch, the sliver hangs below the right part of the black pill.
-- **Pop-out:** on `Snapshot.popToken` change, or on any aggregate change, the island expands to its collapsed-visible form with a spring (response 0.35, damping 0.7). It stays for 4 s (one-shot task, no polling) and then retracts. While the state is `needsInput`, it stays out. Hovering the sliver expands the island as usual. The panel is notch-wide and 7 pt taller than the notch; the pet hangs from the notch edge so the window clips all but its top 7 pt. The pet's slide is driven by the panel width during the resize animation. The setting is `hideMode` in config.json; it is toggled from the right-click menu or Settings.
+- **Hidden:** both wings are gone and the island is exactly the notch. The window is notch-wide and extends about 15 pt below the notch; that extra strip is transparent, so the pet hangs over whatever is below. Clawd sits under the right part of the notch, about halfway hidden behind its bottom edge (roughly 55–60 % visible, eyes showing), tilted about −8…−10° (leaning out toward where the right wing appears). On a virtual notch, it hangs below the right part of the black pill the same way.
+- **Pop-out:** on `Snapshot.popToken` change, or on any aggregate change, the wings appear and Clawd moves from its peek spot into the right wing, upright. It stays for 4 s (one-shot task, no polling) and then retracts. While the state is `needsInput`, it stays out. Hovering the peeking pet expands the island as usual (counters morph, panel opens), and collapsing goes back to the peek.
+- **Transitions (REQ-05 AC4):** the pet has a target frame and tilt per mode (hidden / wing / expanded). On every mode change, including hide mode switched on or off while popped or expanded, the pet's position and rotation animate with Core Animation (the pop-out spring from `07`), over the same duration as the panel resize. The pet is placed in screen-stable coordinates, so it does not jitter while the window frame interpolates. Reduce Motion: a straight 200 ms move, no spring.
+- The setting is `hideMode` in config.json; it is toggled from the right-click menu or Settings.
 
 ## Settings window (AppKit)
 A plain AppKit window (WP-7), built when opened and released on close: SwiftUI would cost too much RSS (docs/08). It activates the app while open. It currently holds hide mode, focus-read mode (`tab` / `app` / `off`) and launch at login; port and hook status are not built yet. The full set:

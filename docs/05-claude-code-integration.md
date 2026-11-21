@@ -84,5 +84,5 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - `TerminalFocusWatcher` observes `NSWorkspace.didActivateApplicationNotification`.
 - **Terminal.app and iTerm2:** run AppleScript to get the selected tab's tty (`tty of selected tab of front window` / `tty of current session of current window`) and mark sessions with a matching `meta.tty` as read. This needs the Automation permission, requested on first use. If it is denied, fall back to app level.
 - **Other terminals:** if the app stays frontmost for ≥ 2 s, mark all `done` sessions whose `terminalBundleID` matches as read.
-- **Panel click on a session:** activate the terminal app. In Terminal.app or iTerm2, also select the tab with that tty.
+- **Panel click on a session:** activate the terminal app; in Terminal.app or iTerm2, also select the tab with that tty. After a successful focus, mark the session read unless the focus-read mode is `off` (REQ-10 AC2). A failed focus (unknown or quit terminal, script error) marks nothing.
 - AppleScript runs only on an activation event, never on a timer.

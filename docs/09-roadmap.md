@@ -10,7 +10,7 @@ WP-0 ──┬──▶ WP-1 (core) ───────┬──▶ WP-4 (serv
        ├──▶ WP-2 (window) ─────┤                                         │
        └──▶ WP-3 (pet) ────────┴──▶ WP-5 (HUD + wiring) ──▶ WP-5.1 (right wing + glow) ──▶ WP-3.1 (usingTools) ──▶ WP-5.2 (counter + sort) ──▶ WP-5.3 (panel counts + week) ──┴──▶ WP-7 (hide/autostart/settings) ──▶ WP-8 (perf pass)
 ```
-WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel. WP-2.1 (one new file in Window/) is ready now. It is independent of WP-6. Run it before or after WP-5.1, not at the same time, because both touch `NotchWindowController`. WP-3.1, WP-5.2, and WP-5.3 run one after another (they all touch `Snapshot`). WP-6 can run in parallel with either.
+WP-1, WP-2, and WP-3 run **in parallel** because they touch disjoint directories. WP-5.1 (Window/, HUD/) and WP-6 (Integration/) can also run in parallel. WP-2.1 (one new file in Window/) is ready now. It is independent of WP-6. Run it before or after WP-5.1, not at the same time, because both touch `NotchWindowController`. WP-3.1, WP-5.2, and WP-5.3 run one after another (they all touch `Snapshot`). WP-6 can run in parallel with either. After v1: WP-5.4 and WP-6.1 run in parallel; WP-7.1 follows WP-5.4 (same window files).
 
 ---
 
@@ -92,6 +92,24 @@ Follow the `add-pet-state` skill end to end.
 ### WP-8 — Performance pass · owner: reviewer (audit) + owners (fixes) · deps: WP-7 · status: `done` (release table in `08`; launch peak at the 40 MB line, post-burst 41–44 MB and Settings RSS recorded as known exceptions; expanded-glow run needs a human hover)
 - Run every scenario in `08`, fix the regressions, and record the measured numbers in `08`.
 - AC: REQ-08 AC1–2.
+
+### WP-5.4 — Split wings and expanding counters · owner: macos-ui-engineer · deps: WP-8 · status: `todo`
+A design change after v1: the counter moves left of the notch, and the panel's status row moves into the top row.
+- `IslandView`: a left wing slot for the counter; the top row is left wing | notch | right wing (HP bar · pet), each wing sized to its content.
+- `NotchWindowController.panelFrame`: asymmetric collapsed frame; expanded stays centred (`expandedMinWidth` 360).
+- `CountersView`: the single counter plus the three expanded counters and the morph between them, driven by the expand state. The HP bar moves to the right wing.
+- `SessionPanelView`: drop the status-count row; `expandedExtraHeight` about 158.
+- AC: REQ-01 AC1–2, REQ-04 AC1 and AC4. `perf.sh` unchanged.
+
+### WP-6.1 — Click focuses the session · owner: integration-engineer · deps: WP-6 · status: `todo`
+- `HUDController.onSelect` only focuses; `TerminalFocusWatcher.focus` marks read after a successful focus, unless the focus-read mode is `off`.
+- Can run in parallel with WP-5.4 (worktree; one shared line in `HUDController`).
+- AC: REQ-10 AC2.
+
+### WP-7.1 — Half-hidden hide mode and smooth transitions · owner: macos-ui-engineer (frames) + pet-animator (tilt, spring) · deps: WP-5.4 · status: `todo`
+- Hidden frame: notch width, notch height + about 15 pt. The pet peeks about halfway, tilted −8…−10°, under the right part of the notch.
+- `PetView`: a placement API (frame + tilt, animated with the pop-out spring), used for hidden / wing / expanded, replacing the width-driven slide and the 7 pt sliver constants.
+- AC: REQ-05 AC1–4. `perf.sh` hidden idle and during a pop-out stays within budget.
 
 ## v1 checks left for a human
 Each item is in the WP status above. They need eyes or a hover, so no agent can do them:

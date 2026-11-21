@@ -7,14 +7,14 @@
 | `clawd.bodyShade` | `#C2643F` | bottom shading or the leg back row (optional) |
 | `clawd.eye` | `#1F1A17` | eyes |
 | `badge.alert` | `#FF3B30` | "!" badge; session counter while any session is `needsInput` |
-| `badge.active` | `#0A84FF` | session counter while sessions exist and none needs you |
-| `badge.empty` | `#8E8E93` | session counter at 0 sessions |
+| `badge.active` | `#0A84FF` | session counter while sessions exist and none needs you; first expanded counter at ≥ 1 |
+| `badge.empty` | `#8E8E93` | session counter at 0 sessions; first expanded counter at 0 |
 | `badge.glyph` | `#FFFFFF` | the "!" on the badge |
 | `bubble.fill` | `#FFFFFF` at 92 % | speech and thought bubbles |
 | `tool.handle` / `tool.head` | `#8B5A2B` / `#8E8E93` | hammer handle and head (`usingTools`) |
 | `hp.high` / `hp.mid` / `hp.low` | `#34C759` / `#FFCC00` / `#FF3B30` | HP bar at ≥ 50 / 20–49 / < 20 (REQ-04) |
 | `island.bg` | `#000000` | island |
-Define these once, in `Sources/ClawdNotch/Pet/PetTokens.swift`. Any colour literal anywhere else is a review finding. The session counter is orange (`clawd.body`) while a `done` session is unread, and the hover glow (REQ-11) also reuses `clawd.body`, so neither needs a token of its own. `badge.empty` (grey) and `badge.active` (blue) are also used by the panel status counts, for idle and working.
+Define these once, in `Sources/ClawdNotch/Pet/PetTokens.swift`. Any colour literal anywhere else is a review finding. The session counter is orange (`clawd.body`) while a `done` session is unread, and the hover glow (REQ-11) also reuses `clawd.body`, so neither needs a token of its own. `badge.empty` (grey) and `badge.active` (blue) are also used by the first expanded counter (idle + working).
 HUD text has no token: it uses the system label colours (`labelColor`, `secondaryLabelColor`), which the panel's forced `.darkAqua` appearance resolves to light text on the black island.
 
 ## Anatomy
@@ -40,11 +40,12 @@ All animations are `CABasicAnimation` / `CAKeyframeAnimation` added to layers. T
 
 - **Transitions:** cross-fade the accessories (150 ms), and move pose parts with an implicit `CATransaction`, 200 ms, ease-out.
 - **Pop-out:** a spring on the container's position and scale (`CASpringAnimation`, damping 12, stiffness 180), with a small hop of 3 u on the body.
+- **Placement moves** (hide mode peek ↔ right wing ↔ expanded, `06`): the container's position and rotation animate together with the same spring. Reduce Motion: a straight 200 ms ease-out move.
 - **Paused** (screen asleep, session locked, or the pet hidden off-screen): set `layer.speed = 0` on the root layer and restore the time offset when resuming.
 - Respect **Reduce Motion** (`NSWorkspace.shared.accessibilityDisplayShouldReduceMotion`): keep the static poses but disable the loops and springs (`usingTools` shows a still, raised hammer).
 
 ## Size
-The default height is 26 pt, in the island's right wing between the HP bar and the session counter (`06`). It fits the 72 pt wing (REQ-04 AC4) with visible gaps on both sides. The hide-mode sliver shows about 7 pt (eye tops and the upper body). Verify legibility at 1× and 2× using the `build-and-run` skill with screenshots.
+The default height is 26 pt, in the island's right wing next to the HP bar (`06`), which is about 48 pt wide (REQ-04 AC4). In hide mode the pet keeps its size and peeks out about halfway below the notch (roughly 55–60 % visible, eyes showing), tilted about −8…−10°. Verify legibility at 1× and 2× using the `build-and-run` skill with screenshots.
 
 ## Legal note
 The look is *inspired by* Anthropic's Clawd mascot. Do not copy pixel art or assets from Anthropic or clawd-on-desk. Draw everything from the anatomy spec above.

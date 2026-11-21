@@ -4,8 +4,8 @@ Each requirement has acceptance criteria (AC). WPs in `09-roadmap.md` reference 
 
 ## REQ-01 Lives in the notch
 The pet always lives on the **main display** (the one with the menu bar, as set in System Settings → Displays). If that display has a notch, the pet anchors to it. Otherwise it uses the top centre of the display as a virtual notch. This is the user's decision: with an external monitor set as main, the pet goes there even when the MacBook lid is open.
-- AC1: When the main display is a notched MacBook screen, the island's single wing (pet, counters, HP bar) sits flush against the **right** edge of the physical notch (±1 pt). While collapsed, nothing extends left of the notch.
-- AC2: When the main display is an external monitor, the virtual notch is centred at its top and the wing sits to its right, whether the lid is open or closed.
+- AC1: When the main display is a notched MacBook screen, the island has two asymmetric wings, each only as wide as its content: a **left wing** (the session counter) flush against the notch's left edge, and a **right wing** (HP bar and pet) flush against its right edge (±1 pt).
+- AC2: When the main display is an external monitor, the virtual notch is centred at its top and the wings sit on either side of it, whether the lid is open or closed.
 - AC3: A display change (plug, unplug, resolution change, or a different main display) moves the pet within 1 s, without a restart.
 
 ## REQ-02 Always on top
@@ -31,30 +31,30 @@ The pet shows no single session: it shows the **aggregate**, the most important 
 - AC3: The highest-priority state across sessions wins: `needsInput > done > usingTools > talking > thinking > idle > sleeping`.
 
 ## REQ-04 Session counter and HP bar
-The compact right wing is laid out as `HP bar | pet | counter` (see the sketch in `06`). All three are vertically centred on each other:
+The collapsed island is laid out as `counter | notch | HP bar · pet` (see the sketch in `06`). Everything is vertically centred in the top row:
 - an **HP bar** = `100 − rate_limits.five_hour.used_percentage`. It is **vertical**, sits left of the pet, is as tall as the pet, and fills bottom-up. It is coloured green, then yellow below 50, then red below 20. Hovering shows the exact percentage and the time until reset.
 - one **session counter**: the number of live sessions, centred inside a circle that is always shown (including 0). The circle's colour shows the most urgent session. The first rule that matches wins:
   1. red (`badge.alert`): any session is `needsInput`,
   2. orange (`clawd.body`): any session is `done` and unread,
   3. blue (`badge.active`): sessions exist, and they are idle or working (the pet shows what they do),
   4. grey (`badge.empty`): no sessions.
-- **panel status counts** (expanded panel, top row above the session list): four numbers in circles, always shown in this order. Together they split the live sessions:
-  - grey (`badge.empty`): idle, including `done` that was already read,
-  - blue (`badge.active`): working (`thinking`, `usingTools`, `talking`),
-  - orange (`clawd.body`): `done` and unread,
-  - red (`badge.alert`): `needsInput`.
+- **expanded counters**: when the island expands (hover), the single counter morphs into three circles in the top row (at notch / menu-bar height), left of the notch. They replace the old status-count row in the panel, which frees vertical space. Always shown, in this order, together they split the live sessions:
+  1. idle + working (`idle`, read `done`, `thinking`, `usingTools`, `talking`): grey (`badge.empty`) when the number is 0, blue (`badge.active`) when it is 1 or more,
+  2. orange (`clawd.body`): `done` and unread,
+  3. red (`badge.alert`): `needsInput`.
 - a **usage line** in the panel footer: `HP 63% · resets in 1h 12m · WEEK 81%`.
-- AC1: The counter equals the number of sessions in the panel and its colour follows the rule above. The four panel status counts add up to the counter.
+- AC1: The counter equals the number of sessions in the panel and its colour follows the rule above. The three expanded counters add up to the collapsed counter.
 - AC2: If usage is unknown (API plan, or no data yet), the HP bar is hidden or greyed. It is never fabricated.
 - AC3: When `resets_at` passes, HP shows full and is marked stale until fresh data arrives.
-- AC4: The wing is at most 72 pt wide (tuned by eye: 64 pt felt cramped). It sticks out from the notch noticeably less than the previous two 60 pt wings, and leaves visible gaps between the HP bar, the pet, and the counter.
+- AC4: The wings are asymmetric and sized to their content: the left wing (counter) is about 28 pt or less, the right wing (HP bar and pet) about 48 pt or less (tuned by eye). There is a visible gap between the HP bar and the pet.
 - AC5: `WEEK xx%` = `100 − rate_limits.seven_day.used_percentage`. It shows what is left, the same as HP. No weekly reset time is shown, because only HP has a countdown. The WEEK part is omitted when the window is absent, and after `seven_day.resets_at` passes it shows 100 % as stale (the same rule as AC3). Each percentage is tinted with the `hp.*` level colours.
 
 ## REQ-05 Hide mode
-A toggle (click or right-click menu) collapses the pet so that only a sliver (ears and eyes) peeks out from under the notch.
-- AC1: In hide mode, any aggregate state change makes the pet pop out for about 4 s, then retract.
+A toggle (right-click menu or Settings) hides the wings and tucks the whole pet about halfway under the notch: roughly 55–60 % of it hangs below the notch's bottom edge (enough that the eyes show), under the right part of the notch, tilted about 8–10° as if peeking out.
+- AC1: In hide mode, any aggregate state change makes the pet pop out (wings shown) for about 4 s, then retract.
 - AC2: `needsInput` stays popped out until it is resolved.
-- AC3: Hovering over the sliver expands the pet temporarily.
+- AC3: Hovering over the peeking pet expands the island temporarily.
+- AC4: Every transition (hidden ↔ popped ↔ expanded, and switching hide mode on or off in any of them) moves the pet continuously: its position and tilt animate together with the island resize, with no jumps.
 
 ## REQ-06 Clawd-inspired design
 Orange (`#D97757` family), a rounded-rectangle body, two tall dark eyes, little side arms and four stubby legs, with smooth corners and richer animation than the pixel original.
@@ -76,10 +76,11 @@ See `08-performance.md`.
 ## REQ-10 Attention / read tracking
 A `done` session becomes *read* when any of the following happens:
 - (a) a new prompt is submitted in that session,
-- (b) the user clicks the session in the panel, or clicks "mark all read",
+- (b) the user clicks "mark all read",
 - (c) the user focuses the terminal hosting that session.
 - AC1: (c) works at **tab precision** for Terminal.app and iTerm2, and at **app precision** for other terminals (focus held ≥ 2 s).
-- AC2: Clicking a session in the panel activates its terminal (and tab where supported).
+- AC2: Clicking a session in the panel focuses its terminal app (and tab where supported); it does not mark the session read by itself. The session becomes read through (c), because its tab is now focused. That is applied right after a successful focus (selecting a tab in a terminal that is already frontmost fires no activation event), and it follows the focus-read mode (with `off`, the click only focuses). If the terminal is unknown or has quit, the click does nothing.
+  - Why focus rather than "open/resume the session": the session is already running in that tab; resuming it elsewhere would start a second Claude Code process on the same session.
 - AC3: The panel lists sessions by importance (`04`, "Panel order"), so sessions that need you are never hidden behind "+n more".
 
 ## REQ-11 Hover glow
