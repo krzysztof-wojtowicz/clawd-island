@@ -27,6 +27,9 @@ final class AppModel {
     @ObservationIgnored private var decayTimer: Timer?
     @ObservationIgnored private var livenessTimer: Timer?
     @ObservationIgnored private var paused = false
+    /// Held `PermissionRequest` connections by `PendingPermission.id`; an entry exists exactly while its card does.
+    @ObservationIgnored private var responders: [UUID: PermissionResponder] = [:]
+    @ObservationIgnored private var permissionTimer: Timer?
 
     init() {
         var store = SessionStore()
@@ -42,6 +45,29 @@ final class AppModel {
         } else {
             publish()
         }
+    }
+
+    /// Applies a held `PermissionRequest`: the event moves the session to `needsInput` and a card appears.
+    func receive(permission event: ClawdEvent, responder: PermissionResponder) {
+        store.apply(event, now: .now)
+        store.addPermission(id: responder.id, for: event)
+        responders[responder.id] = responder
+        publish()
+    }
+
+    /// Answers a card from the notch (REQ-V2-01): allow or deny, once. Unknown or already closed ids are ignored.
+    func decide(permissionID: UUID, allow: Bool) {
+        guard let responder = responders.removeValue(forKey: permissionID) else { return }
+        responder.reply(allow ? .allow : .deny)
+        store.resolvePermission(permissionID)
+        publish()
+    }
+
+    /// The client of a held request hung up, so its card is stale.
+    func permissionClosed(_ id: UUID) {
+        guard responders.removeValue(forKey: id) != nil else { return }
+        store.resolvePermission(id)
+        publish()
     }
 
     /// Marks one session read (a panel click or terminal focus).
@@ -75,7 +101,10 @@ final class AppModel {
 
     private func publish() {
         let now = Date.now
+        store.expirePermissions(now: now)
         let next = store.snapshot(now: now)
+        releaseStaleResponders(keeping: next.pendingPermissions)
+        schedulePermissionExpiry(now: now)
         if next != snapshot {
             let old = snapshot
             snapshot = next
@@ -84,6 +113,23 @@ final class AppModel {
         }
         scheduleDecay(now: now)
         updateLivenessTimer()
+    }
+
+    /// Replies empty to held requests whose card the store dropped (session moved on, ended, or the 110 s cap).
+    private func releaseStaleResponders(keeping pending: [PendingPermission]) {
+        guard !responders.isEmpty else { return }
+        let live = Set(pending.map(\.id))
+        for id in responders.keys where !live.contains(id) {
+            responders.removeValue(forKey: id)?.reply(.none)
+        }
+    }
+
+    /// One shared one-shot timer for the oldest pending permission's cap; no polling.
+    private func schedulePermissionExpiry(now: Date) {
+        permissionTimer?.invalidate()
+        permissionTimer = store.nextPermissionDeadline().map { deadline in
+            Self.schedule(after: max(0, deadline.timeIntervalSince(now)), repeats: false) { [weak self] in self?.publish() }
+        }
     }
 
     /// Replaces the single one-shot timer that re-evaluates the snapshot when talking decays to thinking.

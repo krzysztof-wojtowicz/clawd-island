@@ -15,6 +15,15 @@ struct AppConfigTests {
         #expect(AppConfig.load(from: url) == config)
     }
 
+    @Test("notchPermissions defaults to on for old files and round-trips when off")
+    func notchPermissions() throws {
+        let old = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port":1,"token":"t"}"#.utf8))
+        #expect(old.notchPermissions)
+        let url = FileManager.default.temporaryDirectory.appending(path: "clawd-\(UUID().uuidString)/config.json")
+        try AppConfig(token: "t", notchPermissions: false).write(to: url)
+        #expect(AppConfig.load(from: url)?.notchPermissions == false)
+    }
+
     @Test("Missing file loads as nil")
     func missing() {
         #expect(AppConfig.load(from: URL(filePath: "/nonexistent/clawd/config.json")) == nil)

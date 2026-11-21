@@ -91,11 +91,11 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - The Automation permission belongs to the app's code signature. An ad-hoc signed development build gets a new signature on every rebuild, so macOS may ask again (or silently keep an old denial; reset with `tccutil reset AppleEvents dev.clawdnotch.ClawdNotch`).
 
 ## Permissions from the notch (REQ-V2-01, ADR-0006)
-- `PermissionRequest` arrives on `/hook` with `tool_name`, `tool_input` and optional `permission_suggestions`. The decoder keeps a **summary** only: `tool_input.command` (Bash), `file_path` (Edit, Write, Read), `url` (WebFetch), `pattern` (Grep, Glob), otherwise the tool name; at most 120 characters. Nothing else from `tool_input` is stored.
+- `PermissionRequest` arrives on `/hook` with `tool_name`, `tool_input` and optional `permission_suggestions`. The decoder keeps a **summary** only: `tool_input.command` (Bash; the same summary is decoded for `PostToolUse`, `PostToolUseFailure` and `PermissionDenied` to match cards), `file_path` (Edit, Write, Read), `url` (WebFetch), `pattern` (Grep, Glob), otherwise the tool name; at most 120 characters. Nothing else from `tool_input` is stored.
 - With "Approve permissions from the notch" on, `EventServer` does **not** reply at once. It keeps the connection, and the app shows the card. The reply is one of:
   - Allow: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}`
   - Deny: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdNotch"}}}`
-  - No decision (empty 200): after 110 s, when the session receives any other state-changing event (it was answered in the terminal), or when the setting is off.
+  - No decision (empty 200): after 110 s, when the same tool with the same input summary finishes (`PostToolUse`, `PostToolUseFailure`, `PermissionDenied`; it was answered in the terminal), when the session gets `UserPromptSubmit`, `Stop`, `StopFailure` or `SessionEnd`, or when the setting is off.
 - If Claude Code closes the connection first, the card is dropped. A reply to a request that was already answered in the terminal is harmless.
 - **Verified** (2026-11-22, `claude` with scratch `--settings`, a hook server holding 8 s): the terminal dialog appeared 0.2 s after the hook request, without waiting for it; the hook's `allow` 8 s later applied and closed the dialog. Answering in the terminal first also works while the hook is held.
 - The 64 KiB body cap stays. A larger `PermissionRequest` (for example a big `Write`) gets 413, which Claude Code treats as a non-blocking error, so it simply uses the terminal dialog.

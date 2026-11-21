@@ -15,6 +15,10 @@ public enum HookSettings {
         "SubagentStop", "Stop", "StopFailure", "PreCompact", "SessionEnd",
     ]
 
+    /// The one event the server may hold open for a notch decision, so its hook timeout outlasts the 110 s cap.
+    static let permissionEvent = "PermissionRequest"
+    static let permissionTimeout = 120
+
     /// Result of `install`: the new settings, plus the user's own statusLine command if install replaced one.
     public struct Installed {
         public let settings: [String: Any]
@@ -42,11 +46,13 @@ public enum HookSettings {
     public static func install(into settings: [String: Any], port: Int, token: String, bridgePath: String) -> Installed {
         var result = removingHooks(from: settings)
         var hooks = result["hooks"] as? [String: Any] ?? [:]
-        let http: [String: Any] = [
-            "type": "http", "url": "http://127.0.0.1:\(port)/hook",
-            "headers": ["X-Clawd-Token": token], "timeout": 2,
-        ]
-        for event in httpEvents { hooks[event] = groups(hooks[event]) + [["hooks": [http]]] }
+        for event in httpEvents {
+            let http: [String: Any] = [
+                "type": "http", "url": "http://127.0.0.1:\(port)/hook",
+                "headers": ["X-Clawd-Token": token], "timeout": event == permissionEvent ? permissionTimeout : 2,
+            ]
+            hooks[event] = groups(hooks[event]) + [["hooks": [http]]]
+        }
         let sessionStart: [String: Any] = [
             "type": "command", "command": "\(shellQuoted(bridgePath)) hook session-start", "async": true,
         ]

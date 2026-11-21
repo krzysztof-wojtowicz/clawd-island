@@ -15,7 +15,7 @@ Claude Code hooks give no explicit "thinking" signal, so the phases are **inferr
 | `MessageDisplay` | — | `talking` | High-frequency event; the aggregate is debounced. |
 | `PostToolUse`, `PostToolBatch`, `PostToolUseFailure` | — | `thinking` | |
 | `PreCompact` | — | `thinking` | |
-| `PermissionRequest` | — | `needsInput` | If the app holds the request (REQ-V2-01), add a `PendingPermission` with the input summary. Any later state-changing event for the session, or the reply, removes it. |
+| `PermissionRequest` | — | `needsInput` | If the app holds the request (REQ-V2-01), add a `PendingPermission` with the input summary. The card is removed by: a `PostToolUse` / `PostToolUseFailure` of the same session with the same `tool_name` and input summary (a `PermissionDenied` likewise, or for the whole session when it has no summary); `UserPromptSubmit`, `Stop`, `StopFailure` or `SessionEnd` of the session; the reply, a hang-up, the 110 s cap or session removal. `PreToolUse`, `MessageDisplay`, `PreCompact`, `Notification` and `Subagent*` leave it, because tools run in parallel. |
 | `Notification` | `notification_type` ∈ {`permission_prompt`, `elicitation_dialog`, `agent_needs_input`} | `needsInput` | |
 | `Notification` | `idle_prompt` | unchanged | If the session is `done`, it stays `done`. |
 | `PermissionDenied` | state == `needsInput` | `thinking` | |

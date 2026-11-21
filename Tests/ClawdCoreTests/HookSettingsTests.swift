@@ -81,6 +81,29 @@ struct HookSettingsTests {
         #expect(start.first?["async"] as? Bool == true)
     }
 
+    @Test("PermissionRequest gets a 120 s timeout, every other event 2 s; reinstalling fixes an old timeout")
+    func timeouts() throws {
+        func timeouts(_ s: [String: Any]) throws -> [String: Int] {
+            let hooks = try #require(s["hooks"] as? [String: [[String: Any]]])
+            return Dictionary(uniqueKeysWithValues: HookSettings.httpEvents.compactMap { event in
+                (hooks[event]?.first?["hooks"] as? [[String: Any]])?.first?["timeout"].flatMap { $0 as? Int }.map { (event, $0) }
+            })
+        }
+        let first = try timeouts(install(try settings("{}")).settings)
+        #expect(first["PermissionRequest"] == 120)
+        #expect(first.filter { $0.key != "PermissionRequest" }.allSatisfy { $0.value == 2 })
+        #expect(first.count == HookSettings.httpEvents.count)
+        // An entry from before this change (timeout 2 everywhere) is replaced, not duplicated.
+        var old = install(try settings("{}")).settings
+        var hooks = try #require(old["hooks"] as? [String: Any])
+        hooks["PermissionRequest"] = [["hooks": [["type": "http", "url": "http://127.0.0.1:47474/hook",
+                                                   "headers": ["X-Clawd-Token": "tok"], "timeout": 2]]]]
+        old["hooks"] = hooks
+        let again = install(old).settings
+        #expect(try timeouts(again)["PermissionRequest"] == 120)
+        #expect(((again["hooks"] as? [String: [Any]])?["PermissionRequest"])?.count == 1)
+    }
+
     @Test("A localhost hook without our token header is not ours")
     func foreignLocalhostHook() throws {
         let s = try settings(#"{"hooks":{"Stop":[{"hooks":[{"type":"http","url":"http://127.0.0.1:9000/hook"}]}]}}"#)

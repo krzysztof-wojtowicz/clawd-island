@@ -33,7 +33,15 @@ public struct ClawdEvent: Equatable, Sendable {
     public let notificationType: String?
     /// Present when the event comes from a subagent rather than the main session.
     public let agentID: String?
+    /// For `PermissionRequest`, `PostToolUse`, `PostToolUseFailure` and `PermissionDenied`: a short description of what the tool wants to do. Never the full `tool_input`.
+    public var inputSummary: String? = nil
     public let receivedAt: Date
+
+    /// Kinds that carry an `inputSummary`, so a finished tool can be matched to its pending permission card.
+    static let summarisedKinds: Set<Kind> = [.permissionRequest, .postToolUse, .postToolUseFailure, .permissionDenied]
+
+    /// Longest `inputSummary`, in characters.
+    public static let maxSummaryLength = 120
 }
 
 extension ClawdEvent {
@@ -44,14 +52,29 @@ extension ClawdEvent {
               let name = object["hook_event_name"] as? String,
               let sessionID = object["session_id"] as? String, !sessionID.isEmpty
         else { return nil }
+        let kind = Kind(rawValue: name) ?? .unknown
+        let toolName = object["tool_name"] as? String
         self.init(
             sessionID: sessionID,
-            kind: Kind(rawValue: name) ?? .unknown,
+            kind: kind,
             cwd: object["cwd"] as? String,
-            toolName: object["tool_name"] as? String,
+            toolName: toolName,
             notificationType: object["notification_type"] as? String,
             agentID: object["agent_id"] as? String,
+            inputSummary: Self.summarisedKinds.contains(kind)
+                ? Self.summary(of: object["tool_input"] as? [String: Any], toolName: toolName) : nil,
             receivedAt: receivedAt
         )
+    }
+
+    /// The first of `command`, `file_path`, `url`, `pattern` that is a non-empty string (newlines flattened,
+    /// cut to `maxSummaryLength`), else the tool name.
+    private static func summary(of input: [String: Any]?, toolName: String?) -> String? {
+        for key in ["command", "file_path", "url", "pattern"] {
+            guard let text = input?[key] as? String, !text.isEmpty else { continue }
+            let flat = text.split(whereSeparator: \.isNewline).joined(separator: " ")
+            return String(flat.prefix(maxSummaryLength))
+        }
+        return toolName.map { String($0.prefix(maxSummaryLength)) }
     }
 }

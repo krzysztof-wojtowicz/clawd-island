@@ -11,7 +11,11 @@ public struct SessionStore: Sendable {
     /// Sessions without a pid are dropped after this long with no events.
     public static let silentExpiry: TimeInterval = 6 * 60 * 60
 
+    /// A held permission request is dropped after this long, safely inside the hook's 120 s timeout.
+    public static let permissionCap: TimeInterval = 110
+
     var sessions: [Session] = []
+    var permissions: [PendingPermission] = []
     var usage: UsageSnapshot?
     private var popToken = 0
     private var lastAggregate = PetState.sleeping
@@ -23,10 +27,53 @@ public struct SessionStore: Sendable {
     public mutating func apply(_ event: ClawdEvent, now: Date) {
         if event.kind == .sessionEnd {
             sessions.removeAll { $0.id == event.sessionID }
+            permissions.removeAll { $0.sessionID == event.sessionID }
             return
         }
+        dropAnsweredPermissions(for: event)
         let index = indexCreatingIfNeeded(event.sessionID, cwd: event.cwd, now: now)
         sessions[index].apply(event, now: now)
+    }
+
+    /// Tools run in parallel, so one tool's events must not drop another tool's card. A card goes away when the
+    /// same tool with the same input ran, failed or was denied (so it was answered in the terminal), or when the
+    /// turn ends or restarts. `PreToolUse`, `MessageDisplay`, `PreCompact`, `Notification` and `Subagent*` keep cards.
+    private mutating func dropAnsweredPermissions(for event: ClawdEvent) {
+        switch event.kind {
+        case .userPromptSubmit, .stop, .stopFailure:
+            permissions.removeAll { $0.sessionID == event.sessionID }
+        case .postToolUse, .postToolUseFailure, .permissionDenied:
+            permissions.removeAll { card in
+                card.sessionID == event.sessionID
+                    && (event.inputSummary == nil || (card.toolName == event.toolName && card.summary == event.inputSummary))
+            }
+        default:
+            break
+        }
+    }
+
+    /// Records a held `PermissionRequest` (apply the event first so the session exists). Other events are ignored.
+    public mutating func addPermission(id: UUID, for event: ClawdEvent) {
+        guard event.kind == .permissionRequest,
+              let session = sessions.first(where: { $0.id == event.sessionID }) else { return }
+        permissions.append(PendingPermission(
+            id: id, sessionID: session.id, projectName: session.projectName, toolName: event.toolName,
+            summary: event.inputSummary ?? event.toolName ?? "", receivedAt: event.receivedAt))
+    }
+
+    /// Removes one pending permission, for example after the user decided.
+    public mutating func resolvePermission(_ id: UUID) {
+        permissions.removeAll { $0.id == id }
+    }
+
+    /// Drops permissions held for `permissionCap` or longer.
+    public mutating func expirePermissions(now: Date) {
+        permissions.removeAll { now.timeIntervalSince($0.receivedAt) >= Self.permissionCap }
+    }
+
+    /// When the oldest pending permission expires, so the app can schedule one one-shot timer. Nil when none.
+    public func nextPermissionDeadline() -> Date? {
+        permissions.map { $0.receivedAt.addingTimeInterval(Self.permissionCap) }.min()
     }
 
     /// Applies the bridge's SessionStart metadata: the session becomes (or is created) `idle`.
@@ -63,6 +110,7 @@ public struct SessionStore: Sendable {
             if let pid = session.meta?.pid { return !isAlive(pid) }
             return now.timeIntervalSince(session.lastEventAt) >= Self.silentExpiry
         }
+        permissions.removeAll { permission in !sessions.contains { $0.id == permission.sessionID } }
     }
 
     /// The earliest future moment a talking session decays, so the app can schedule one one-shot
@@ -98,7 +146,8 @@ public struct SessionStore: Sendable {
             hasNeedsInput: visible.contains { $0.state == .needsInput },
             sessions: visible,
             usage: usage,
-            popToken: popToken
+            popToken: popToken,
+            pendingPermissions: permissions.reversed()
         )
     }
 
