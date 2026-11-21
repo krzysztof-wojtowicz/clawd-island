@@ -122,7 +122,7 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - Keep the WP-7.1 spring transitions (short way round).
 - AC: REQ-05 AC1–4.
 
-### WP-6.2 — Focus that survives app restarts · owner: integration-engineer (+ core-engineer for the meta rule) · deps: WP-6.1 · status: `todo`
+### WP-6.2 — Focus that survives app restarts · owner: integration-engineer (+ core-engineer for the meta rule) · deps: WP-6.1 · status: `done (statusline meta, done-while-frontmost; needs a human check with iTerm2)`
 - Bridge `statusline` also POSTs `SessionMeta` with `source: "statusline"`; Core attaches it without changing the state (test).
 - "Done while frontmost": when a session becomes `done` and its terminal is in front, check the selected tab once.
 - AC: REQ-10 AC1, AC1a. Fixes iTerm2 read/focus for sessions started before the app.

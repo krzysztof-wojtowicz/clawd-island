@@ -10,8 +10,22 @@ func sessionMeta(hookInput: Data) -> Data? {
     guard let hook = try? JSONSerialization.jsonObject(with: hookInput) as? [String: Any],
           let sessionID = hook["session_id"] as? String, let cwd = hook["cwd"] as? String
     else { return nil }
+    return sessionMeta(sessionID: sessionID, cwd: cwd, source: hook["source"] as? String)
+}
+
+/// Returns the `source: "statusline"` `SessionMeta` JSON for a statusline payload, or nil without a session id or
+/// directory. Lets the app learn the terminal of sessions that started before it launched (REQ-10 AC1a).
+func sessionMeta(statusLineInput input: Data) -> Data? {
+    guard let json = try? JSONSerialization.jsonObject(with: input) as? [String: Any],
+          let sessionID = json["session_id"] as? String,
+          let cwd = (json["workspace"] as? [String: Any])?["current_dir"] as? String ?? json["cwd"] as? String
+    else { return nil }
+    return sessionMeta(sessionID: sessionID, cwd: cwd, source: "statusline")
+}
+
+private func sessionMeta(sessionID: String, cwd: String, source: String?) -> Data? {
     var meta: [String: Any] = ["session_id": sessionID, "cwd": cwd]
-    meta["source"] = hook["source"] as? String
+    meta["source"] = source
     meta["term_program"] = ProcessInfo.processInfo.environment["TERM_PROGRAM"]
     let walk = ProcessWalk(from: getppid())
     meta["pid"] = walk.claudePID.map { Int($0) }

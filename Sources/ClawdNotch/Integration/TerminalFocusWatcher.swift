@@ -48,6 +48,17 @@ final class TerminalFocusWatcher {
         }
     }
 
+    /// Handles "finished while watched": when a session just became `done` and its terminal is already
+    /// frontmost no activation will fire, so run the same check an activation would (REQ-10 AC1).
+    func snapshotChanged(from old: [Session], to new: [Session]) {
+        guard let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else { return }
+        let wasDone = Set(old.filter { $0.state == .done }.map(\.id))
+        let justFinished = new.contains {
+            $0.state == .done && !wasDone.contains($0.id) && $0.meta?.terminalBundleID == front
+        }
+        if justFinished { didActivate(front) }
+    }
+
     /// Activates the session's terminal and, in Terminal.app or iTerm2, selects its tab. After a successful
     /// focus the session is marked read, unless the focus-read mode is `off` (REQ-10 AC2): selecting a tab in a
     /// terminal that is already frontmost fires no activation, so the watcher would not see it.

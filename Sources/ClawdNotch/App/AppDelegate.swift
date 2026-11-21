@@ -61,7 +61,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func bindSnapshot(_ controller: NotchWindowController) {
         pet.setState(model.snapshot.aggregate)
         hud.render(model.snapshot)
-        model.onSnapshotChange = { [pet, hud, controller] old, new in
+        model.onSnapshotChange = { [pet, hud, controller, focusWatcher] old, new in
+            focusWatcher.snapshotChanged(from: old.sessions, to: new.sessions)
             pet.setState(new.aggregate)
             if new.popToken > old.popToken { pet.popOut() }
             if new.aggregate != old.aggregate || new.popToken > old.popToken {

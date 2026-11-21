@@ -106,6 +106,24 @@ struct SessionStoreTests {
         #expect(snapshot.attentionCount == 0)
     }
 
+    @Test("Statusline meta attaches without touching state; unknown sessions are created idle (REQ-10 AC1a)")
+    func statuslineMeta() {
+        var store = SessionStore()
+        store.apply(event(.userPromptSubmit, session: "busy"), now: t0)
+        let later = t0.addingTimeInterval(5)
+        for id in ["busy", "new"] {
+            store.apply(meta: SessionMeta(sessionID: id, cwd: "/p/app", source: "statusline", pid: 7, tty: "/dev/ttys001",
+                                          terminalBundleID: "com.googlecode.iterm2", termProgram: nil), now: later)
+        }
+        let busy = store.sessions.first { $0.id == "busy" }
+        #expect(busy?.state == .thinking)
+        #expect(busy?.lastEventAt == t0)
+        #expect(busy?.meta?.tty == "/dev/ttys001")
+        let new = store.sessions.first { $0.id == "new" }
+        #expect(new?.state == .idle)
+        #expect(new?.projectName == "app")
+    }
+
     @Test("Liveness: dead pids are removed, live ones kept, pid-less sessions expire after 6 h")
     func livenessExpiry() {
         var store = SessionStore()

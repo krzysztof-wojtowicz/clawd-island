@@ -54,8 +54,13 @@ case ["hook", "session-start"]:
 case ["statusline"]:
     let input = FileHandle.standardInput.readDataToEndOfFile()
     let sent = config.map { post(input, to: "/statusline", config: $0) }
+    // Both POSTs are in flight while the statusline prints, so the process walk adds little wall time.
+    let metaSent = config.flatMap { config in
+        sessionMeta(statusLineInput: input).map { post($0, to: "/session-meta", config: config) }
+    }
     printStatusLine(input: input, original: config?.originalStatusLine)
     _ = sent?.wait(timeout: deadline)
+    _ = metaSent?.wait(timeout: deadline)
 default:
     break
 }
