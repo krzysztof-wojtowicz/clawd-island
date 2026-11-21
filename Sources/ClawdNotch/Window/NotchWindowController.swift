@@ -124,14 +124,14 @@ final class NotchWindowController {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = duration
             panel.animator().setFrame(frame, display: true)
-            island.setGlowVisible(isExpanded, duration: duration)
+            island.setExpanded(isExpanded, duration: duration)
         }
         if !animated {
             hoverChanged(frame.contains(NSEvent.mouseLocation))
         }
     }
 
-    /// The panel in screen coordinates. Collapsed, it is exactly the island: the top row plus the right wing.
+    /// The panel in screen coordinates. Collapsed, it is exactly the island: the top row plus both wings.
     /// Expanded, it is the island centred under the notch and grown downward, plus the glow margin on the sides
     /// and bottom.
     private func panelFrame(around topRow: CGRect) -> CGRect {
@@ -140,10 +140,15 @@ final class NotchWindowController {
             return CGRect(x: topRow.minX, y: topRow.minY - sliver, width: topRow.width, height: topRow.height + sliver)
         }
         guard isExpanded else {
-            return CGRect(x: topRow.minX, y: topRow.minY, width: topRow.width + IslandView.wingWidth, height: topRow.height)
+            return CGRect(
+                x: topRow.minX - IslandView.leftWingWidth,
+                y: topRow.minY,
+                width: IslandView.leftWingWidth + topRow.width + IslandView.rightWingWidth,
+                height: topRow.height
+            )
         }
-        // Wide enough to keep the right wing inside the centred island.
-        let width = max(topRow.width + 2 * IslandView.wingWidth, Self.expandedMinWidth)
+        // Wide enough to keep both wings, and the three expanded counters, inside the centred island.
+        let width = max(topRow.width + 2 * IslandView.expandedWingWidth, Self.expandedMinWidth)
         let height = topRow.height + IslandView.expandedExtraHeight
         let margin = IslandView.glowMargin
         return CGRect(

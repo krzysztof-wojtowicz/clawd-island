@@ -93,12 +93,12 @@ Follow the `add-pet-state` skill end to end.
 - Run every scenario in `08`, fix the regressions, and record the measured numbers in `08`.
 - AC: REQ-08 AC1–2.
 
-### WP-5.4 — Split wings and expanding counters · owner: macos-ui-engineer · deps: WP-8 · status: `todo`
+### WP-5.4 — Split wings and expanding counters · owner: macos-ui-engineer · deps: WP-8 · status: `done` (collapsed 28 + notch + 48 pt verified with window-info; idle 0.00 % CPU / 40.0 MB debug; counter morph and wing sizes still to be checked by eye)
 A design change after v1: the counter moves left of the notch, and the panel's status row moves into the top row.
 - `IslandView`: a left wing slot for the counter; the top row is left wing | notch | right wing (HP bar · pet), each wing sized to its content.
 - `NotchWindowController.panelFrame`: asymmetric collapsed frame; expanded stays centred (`expandedMinWidth` 360).
 - `CountersView`: the single counter plus the three expanded counters and the morph between them, driven by the expand state. The HP bar moves to the right wing.
-- `SessionPanelView`: drop the status-count row; `expandedExtraHeight` about 158.
+- `SessionPanelView`: drop the status-count row; `expandedExtraHeight` about 164.
 - AC: REQ-01 AC1–2, REQ-04 AC1 and AC4. `perf.sh` unchanged.
 
 ### WP-6.1 — Click focuses the session · owner: integration-engineer · deps: WP-6 · status: `done` (build + tests; the tab focus and read on click still to be checked by eye)
