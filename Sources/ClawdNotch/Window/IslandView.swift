@@ -19,6 +19,10 @@ final class IslandView: NSView {
     static let expandedExtraHeight: CGFloat = 182
     /// Room for the glow beside and below the expanded island.
     static let glowMargin: CGFloat = 24
+    /// How far Clawd peeks out below the notch in hide mode (REQ-05, docs/07).
+    static let sliverHeight: CGFloat = 7
+    /// Hidden Clawd's distance from the notch's right edge to its right edge.
+    private static let hiddenPetInset: CGFloat = 12
     /// The pet is 26 pt tall in the collapsed island (docs/07); its width follows the unit box.
     private static let petSize = CGSize(
         width: PetTokens.collapsedHeight * PetTokens.unitBox.width / PetTokens.unitBox.height,
@@ -98,7 +102,11 @@ final class IslandView: NSView {
         // the island edges moving in step with the frame instead of jumping at either end.
         let progress = min(max((bounds.height - row.height) / (Self.expandedExtraHeight + Self.glowMargin), 0), 1)
         let margin = Self.glowMargin * progress
-        let island = CGRect(x: margin, y: margin, width: bounds.width - 2 * margin, height: bounds.height - margin)
+        // Hidden, the panel is notch-wide and reaches `sliverHeight` below the black row, where only the pet shows.
+        // The same width-driven progress slides the pet between its hidden and wing positions.
+        let wingProgress = min(max((bounds.width - row.width) / Self.wingWidth, 0), 1)
+        let sliver = Self.sliverHeight * (1 - wingProgress)
+        let island = CGRect(x: margin, y: margin + sliver, width: bounds.width - 2 * margin, height: bounds.height - margin - sliver)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         background.frame = island
@@ -110,6 +118,11 @@ final class IslandView: NSView {
         )
         CATransaction.commit()
         layoutWing(CGRect(x: row.maxX, y: row.minY, width: Self.wingWidth, height: row.height))
+        let hiddenPet = CGPoint(x: row.maxX - Self.hiddenPetInset - Self.petSize.width, y: row.minY - Self.petSize.height)
+        petSlot.frame.origin = CGPoint(
+            x: hiddenPet.x + (petSlot.frame.minX - hiddenPet.x) * wingProgress,
+            y: hiddenPet.y + (petSlot.frame.minY - hiddenPet.y) * wingProgress
+        )
         let panelHeight = row.minY - island.minY
         panelSlot.isHidden = panelHeight <= 2 * Self.panelInset
         if !panelSlot.isHidden {

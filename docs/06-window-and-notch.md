@@ -55,10 +55,10 @@
 
 ## Hide mode (REQ-05)
 - **Hidden:** the wing collapses, the island is the width of the notch only, and Clawd slides under the right part of the notch so that only the top 6–8 pt (ear tips and eyes) peek out below the notch edge. On a virtual notch, the sliver hangs below the right part of the black pill.
-- **Pop-out:** on `Snapshot.popToken` change, or on any aggregate change, the island expands to its collapsed-visible form with a spring (response 0.35, damping 0.7). It stays for 4 s and then retracts. While the state is `needsInput`, it stays out.
+- **Pop-out:** on `Snapshot.popToken` change, or on any aggregate change, the island expands to its collapsed-visible form with a spring (response 0.35, damping 0.7). It stays for 4 s (one-shot task, no polling) and then retracts. While the state is `needsInput`, it stays out. Hovering the sliver expands the island as usual. The panel is notch-wide and 7 pt taller than the notch; the pet hangs from the notch edge so the window clips all but its top 7 pt. The pet's slide is driven by the panel width during the resize animation. The setting is `hideMode` in config.json; it is toggled from the right-click menu or Settings.
 
-## Settings window (SwiftUI)
-These settings are not in scope for WP-2. The full set:
+## Settings window (AppKit)
+A plain AppKit window (WP-7), built when opened and released on close: SwiftUI would cost too much RSS (docs/08). It activates the app while open. It currently holds hide mode, focus-read mode (`tab` / `app` / `off`) and launch at login; port and hook status are not built yet. The full set:
 - Port.
 - Hide mode default.
 - Focus-read mode: tab, app, or off.

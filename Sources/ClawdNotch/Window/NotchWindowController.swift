@@ -12,6 +12,8 @@ final class NotchWindowController {
     private static let expandDelay: Duration = .milliseconds(150)
     private static let collapseDelay: Duration = .milliseconds(300)
     private static let resizeDuration: TimeInterval = 0.25
+    /// How long a hidden island stays out after a state change (REQ-05 AC1).
+    private static let popDuration: Duration = .seconds(4)
 
     /// The island content view; its `petSlot`, `countersSlot` and `panelSlot` are the integration points.
     let island = IslandView()
@@ -23,6 +25,33 @@ final class NotchWindowController {
     private let panel: NotchPanel
     private var isExpanded = false
     private var hoverTask: Task<Void, Never>?
+    private var retractTask: Task<Void, Never>?
+    /// Whether hide mode has the island out (a state change, or a pending `needsInput`).
+    private var isPopped = false
+
+    /// Hide mode (REQ-05): Clawd tucks under the notch unless popped out or hovered.
+    var hideMode = false {
+        didSet {
+            guard hideMode != oldValue else { return }
+            retractTask?.cancel()
+            isPopped = false
+            // AC2: a pending needsInput stays out even when hide mode is switched on.
+            if hideMode, needsInput() { popOut(hold: true) } else { layout(animated: true) }
+        }
+    }
+    /// Whether the aggregate state is `needsInput`.
+    var needsInput: () -> Bool = { false }
+    /// Why the event server is not listening, shown as a disabled top menu item.
+    var serverError: () -> String? = { nil }
+    /// Called by the "Hide Mode" menu item.
+    var onToggleHideMode: (() -> Void)?
+    /// Called by the "Launch at Login" and "Settings…" menu items.
+    var onToggleLaunchAtLogin: (() -> Void)?
+    var onOpenSettings: (() -> Void)?
+    /// Whether launch at login is on, for the menu checkmark.
+    var launchAtLoginEnabled: () -> Bool = { false }
+
+    private var isTucked: Bool { hideMode && !isExpanded && !isPopped }
 
     init() {
         panel = NotchPanel(contentRect: .zero)
@@ -59,6 +88,21 @@ final class NotchWindowController {
         }
     }
 
+    /// Pops a hidden island out for 4 s (REQ-05 AC1), or until the next call when `hold` is set (AC2: `needsInput`).
+    func popOut(hold: Bool) {
+        guard hideMode else { return }
+        retractTask?.cancel()
+        isPopped = true
+        layout(animated: true)
+        guard !hold else { return }
+        retractTask = Task { [weak self] in
+            try? await Task.sleep(for: Self.popDuration)
+            guard !Task.isCancelled, let self else { return }
+            isPopped = false
+            layout(animated: true)
+        }
+    }
+
     /// Recomputes the notch on the target screen and fits the panel to the island.
     /// A non-animated layout (launch, screen change) also re-syncs hover, since a panel that moves under a still
     /// cursor gets no enter/exit event.
@@ -91,6 +135,10 @@ final class NotchWindowController {
     /// Expanded, it is the island centred under the notch and grown downward, plus the glow margin on the sides
     /// and bottom.
     private func panelFrame(around topRow: CGRect) -> CGRect {
+        let sliver = IslandView.sliverHeight
+        guard !isTucked else {
+            return CGRect(x: topRow.minX, y: topRow.minY - sliver, width: topRow.width, height: topRow.height + sliver)
+        }
         guard isExpanded else {
             return CGRect(x: topRow.minX, y: topRow.minY, width: topRow.width + IslandView.wingWidth, height: topRow.height)
         }
@@ -106,11 +154,16 @@ final class NotchWindowController {
         )
     }
 
-    /// The right-click menu from docs/06. Items without an action are disabled stubs until their WP lands.
+    /// The right-click menu from docs/06.
     private func makeMenu() -> NSMenu {
         let menu = NSMenu()
-        // TODO(WP-7): hide mode toggle, launch at login and Settings.
-        menu.addItem(withTitle: "Hide Mode", action: nil, keyEquivalent: "")
+        if let error = serverError() {
+            menu.addItem(ActionMenuItem(title: error, isEnabled: false) {})
+            menu.addItem(.separator())
+        }
+        let hide = ActionMenuItem(title: "Hide Mode", isEnabled: true) { [weak self] in self?.onToggleHideMode?() }
+        hide.state = hideMode ? .on : .off
+        menu.addItem(hide)
         menu.addItem(ActionMenuItem(title: "Mark All Read", isEnabled: hasAttention()) { [weak self] in
             self?.onMarkAllRead?()
         })
@@ -120,9 +173,10 @@ final class NotchWindowController {
             keyEquivalent: ""
         )
         hooks.target = HooksMenuTarget.shared
-        for title in ["Launch at Login", "Settings…"] {
-            menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
-        }
+        let login = ActionMenuItem(title: "Launch at Login", isEnabled: true) { [weak self] in self?.onToggleLaunchAtLogin?() }
+        login.state = launchAtLoginEnabled() ? .on : .off
+        menu.addItem(login)
+        menu.addItem(ActionMenuItem(title: "Settings…", isEnabled: true) { [weak self] in self?.onOpenSettings?() })
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit ClawdNotch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         return menu

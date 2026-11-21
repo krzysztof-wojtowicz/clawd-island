@@ -17,11 +17,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = AppModel()
     private lazy var hud = HUDController(model: model, focus: { [unowned self] in focusWatcher.focus($0) })
     private var server: EventServer?
+    /// Read first after `startServer()`, which creates config.json on first launch.
+    private lazy var preferences = Preferences()
+    private lazy var settings = SettingsWindowController(preferences: preferences)
     private lazy var focusWatcher = TerminalFocusWatcher(
-        sessions: { [model] in model.snapshot.sessions }, markRead: { [model] in model.markRead($0) })
+        sessions: { [model] in model.snapshot.sessions },
+        markRead: { [model] in model.markRead($0) },
+        mode: { [preferences] in preferences.focusReadMode })
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        startServer()
         let controller = NotchWindowController()
+        controller.needsInput = { [model] in model.snapshot.aggregate == .needsInput }
+        controller.serverError = { [model] in model.serverError }
+        controller.hideMode = preferences.hideMode
+        preferences.onHideModeChange = { [controller, settings] hidden in
+            controller.hideMode = hidden
+            settings.refresh()
+        }
+        controller.onToggleHideMode = { [preferences] in preferences.setHideMode(!preferences.hideMode) }
+        controller.onToggleLaunchAtLogin = { LoginItem.setEnabled(!LoginItem.isEnabled) }
+        controller.launchAtLoginEnabled = { LoginItem.isEnabled }
+        controller.onOpenSettings = { [settings] in settings.show() }
         controller.onMarkAllRead = { [model] in model.markAllRead() }
         controller.hasAttention = { [model] in model.snapshot.attentionCount > 0 }
         Self.embed(pet, in: controller.island.petSlot)
@@ -30,8 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PetDemo.startIfRequested(on: pet)
         notchController = controller
         pausePetWhileUnseen()
-        bindSnapshot()
-        startServer()
+        bindSnapshot(controller)
         focusWatcher.start()
     }
 
@@ -42,12 +58,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Renders every new snapshot: the pet's state (REQ-03 AC2), a pop-out on each new `popToken`, and the HUD.
-    private func bindSnapshot() {
+    private func bindSnapshot(_ controller: NotchWindowController) {
         pet.setState(model.snapshot.aggregate)
         hud.render(model.snapshot)
-        model.onSnapshotChange = { [pet, hud] old, new in
+        model.onSnapshotChange = { [pet, hud, controller] old, new in
             pet.setState(new.aggregate)
             if new.popToken > old.popToken { pet.popOut() }
+            if new.aggregate != old.aggregate || new.popToken > old.popToken {
+                controller.popOut(hold: new.aggregate == .needsInput)
+            }
             hud.render(new)
         }
     }

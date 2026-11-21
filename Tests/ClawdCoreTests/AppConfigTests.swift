@@ -19,4 +19,19 @@ struct AppConfigTests {
     func missing() {
         #expect(AppConfig.load(from: URL(filePath: "/nonexistent/clawd/config.json")) == nil)
     }
+
+    @Test("A config written before hide mode existed decodes with defaults")
+    func legacyDefaults() throws {
+        let json = #"{"port": 1234, "token": "t", "originalStatusLine": "echo"}"#
+        let config = try JSONDecoder().decode(AppConfig.self, from: Data(json.utf8))
+        #expect(config == AppConfig(port: 1234, token: "t", originalStatusLine: "echo", hideMode: false, focusReadMode: .tab))
+    }
+
+    @Test("Hide mode and focus-read mode survive a round-trip")
+    func newKeysRoundTrip() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "clawd-\(UUID().uuidString)/config.json")
+        let config = AppConfig(token: "t", hideMode: true, focusReadMode: .off)
+        try config.write(to: url)
+        #expect(AppConfig.load(from: url) == config)
+    }
 }

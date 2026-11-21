@@ -18,7 +18,6 @@ final class AppModel {
     /// What the UI renders.
     private(set) var snapshot: Snapshot
     /// Why the event server is not listening (for example, the port is busy). Nil while it works.
-    // TODO(WP-7): show this in the menu.
     var serverError: String?
     /// Called after `snapshot` changes, with the previous and the new value.
     @ObservationIgnored var onSnapshotChange: ((_ old: Snapshot, _ new: Snapshot) -> Void)?

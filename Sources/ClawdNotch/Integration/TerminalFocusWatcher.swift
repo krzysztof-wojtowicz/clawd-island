@@ -17,6 +17,7 @@ final class TerminalFocusWatcher {
 
     private let sessions: () -> [Session]
     private let markRead: (String) -> Void
+    private let mode: () -> AppConfig.FocusReadMode
     private var dwellTimer: Timer?
     private var observer: NSObjectProtocol?
     /// Scripts run here, never on the main thread; they can block on the Automation prompt.
@@ -25,9 +26,15 @@ final class TerminalFocusWatcher {
     /// - Parameters:
     ///   - sessions: The current sessions, read when an activation arrives.
     ///   - markRead: Marks one session read by id.
-    init(sessions: @escaping () -> [Session], markRead: @escaping (String) -> Void) {
+    ///   - mode: The current focus-read setting: `off` never marks, `app` skips AppleScript and uses the dwell.
+    init(
+        sessions: @escaping () -> [Session],
+        markRead: @escaping (String) -> Void,
+        mode: @escaping () -> AppConfig.FocusReadMode
+    ) {
         self.sessions = sessions
         self.markRead = markRead
+        self.mode = mode
     }
 
     /// Starts observing activations. Idempotent.
@@ -55,8 +62,9 @@ final class TerminalFocusWatcher {
     private func didActivate(_ bundleID: String?) {
         dwellTimer?.invalidate()
         dwellTimer = nil
-        guard let bundleID, sessions().contains(where: { $0.meta?.terminalBundleID == bundleID }) else { return }
-        guard let source = Self.currentTTYScript(bundleID: bundleID) else {
+        guard mode() != .off, let bundleID,
+              sessions().contains(where: { $0.meta?.terminalBundleID == bundleID }) else { return }
+        guard mode() == .tab, let source = Self.currentTTYScript(bundleID: bundleID) else {
             startDwell(bundleID)
             return
         }

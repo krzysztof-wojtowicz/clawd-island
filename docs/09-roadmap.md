@@ -85,7 +85,7 @@ Follow the `add-pet-state` skill end to end.
 - `TerminalFocusWatcher` (Terminal.app and iTerm2 tab-precise; others app-level after a 2 s dwell), and click a session → focus its terminal or tab.
 - AC: REQ-10 AC1–2.
 
-### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5.3 · status: `todo`
+### WP-7 — Hide mode, autostart, settings · owner: macos-ui-engineer · deps: WP-5.3 · status: `done` (hidden idle 0.00 % CPU / 38.3 MB; Settings is AppKit, open→close leaves RSS ~55 MB, handed to WP-8; sliver, menu and login item still to be checked by eye)
 - Hide mode with pop-out rules, `SMAppService` launch at login, the Settings window, and persisting the config.
 - AC: REQ-05 AC1–3.
 

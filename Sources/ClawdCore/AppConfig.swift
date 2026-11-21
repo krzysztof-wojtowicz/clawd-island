@@ -13,11 +13,43 @@ public struct AppConfig: Codable, Equatable, Sendable {
     public var token: String
     /// The user's own statusLine command, saved on install so the bridge can wrap it and uninstall can restore it.
     public var originalStatusLine: String?
+    /// Hide mode (REQ-05): Clawd tucks under the notch and pops out on state changes.
+    public var hideMode: Bool
+    /// How a terminal coming to the front marks sessions read (REQ-10).
+    public var focusReadMode: FocusReadMode
 
-    public init(port: Int = AppConfig.defaultPort, token: String, originalStatusLine: String? = nil) {
+    /// How focusing a terminal marks sessions read.
+    public enum FocusReadMode: String, Codable, CaseIterable, Sendable {
+        /// The selected Terminal.app / iTerm2 tab's session only; other terminals fall back to the dwell.
+        case tab
+        /// Every finished session of the frontmost terminal app after a short dwell; no AppleScript.
+        case app
+        /// Never mark on activation.
+        case off
+    }
+
+    public init(
+        port: Int = AppConfig.defaultPort,
+        token: String,
+        originalStatusLine: String? = nil,
+        hideMode: Bool = false,
+        focusReadMode: FocusReadMode = .tab
+    ) {
         self.port = port
         self.token = token
         self.originalStatusLine = originalStatusLine
+        self.hideMode = hideMode
+        self.focusReadMode = focusReadMode
+    }
+
+    /// Files written before hide mode existed lack its keys, so they decode to the defaults.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        port = try container.decode(Int.self, forKey: .port)
+        token = try container.decode(String.self, forKey: .token)
+        originalStatusLine = try container.decodeIfPresent(String.self, forKey: .originalStatusLine)
+        hideMode = try container.decodeIfPresent(Bool.self, forKey: .hideMode) ?? false
+        focusReadMode = try container.decodeIfPresent(FocusReadMode.self, forKey: .focusReadMode) ?? .tab
     }
 
     /// A fresh config with the default port and a random token.
