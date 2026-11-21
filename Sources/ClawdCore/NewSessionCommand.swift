@@ -16,7 +16,11 @@ public enum NewSessionCommand {
     }
 
     /// `cd '<dir>' && claude`, escaped and ready to sit between the quotes of an AppleScript string.
-    public static func scriptText(directory: String) -> String {
-        appleScriptEscape("cd \(shellQuote(directory)) && claude")
+    /// Nil unless `directory` is absolute and free of control characters: terminals receive the text as
+    /// keystrokes, so a newline, ^U, ^C or ESC inside the quotes could change what runs.
+    public static func scriptText(directory: String) -> String? {
+        guard directory.hasPrefix("/"),
+              !directory.unicodeScalars.contains(where: { $0.value < 0x20 || $0.value == 0x7f }) else { return nil }
+        return appleScriptEscape("cd \(shellQuote(directory)) && claude")
     }
 }

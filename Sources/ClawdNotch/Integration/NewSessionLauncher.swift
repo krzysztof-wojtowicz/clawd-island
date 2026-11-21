@@ -17,7 +17,11 @@ enum NewSessionLauncher {
     /// Opens a new window in the preferred terminal and runs `claude` in `directory`.
     /// - Parameter preferredTerminal: A terminal bundle ID; anything but iTerm2 means Terminal.app.
     static func launch(directory: URL, preferredTerminal: String?) {
-        let text = NewSessionCommand.scriptText(directory: directory.path)
+        // Paths from hook payloads are untrusted: refuse anything that is not a plain absolute path.
+        guard let text = NewSessionCommand.scriptText(directory: directory.path) else {
+            logger.info("launch refused: unsafe directory")
+            return
+        }
         let source: String
         if preferredTerminal == iTerm {
             source = """

@@ -23,6 +23,16 @@ struct NewSessionTests {
         #expect(NewSessionCommand.scriptText(directory: "/tmp/it's") == #"cd '/tmp/it'\\''s' && claude"#)
     }
 
+    @Test("Control characters and relative paths are rejected")
+    func rejected() {
+        #expect(NewSessionCommand.scriptText(directory: "/tmp/a\nrm -rf ~") == nil)
+        #expect(NewSessionCommand.scriptText(directory: "/tmp/a\u{15}b") == nil)
+        #expect(NewSessionCommand.scriptText(directory: "/tmp/a\u{1b}b") == nil)
+        #expect(NewSessionCommand.scriptText(directory: "/tmp/a\u{7f}b") == nil)
+        #expect(NewSessionCommand.scriptText(directory: "relative/dir") == nil)
+        #expect(NewSessionCommand.scriptText(directory: "") == nil)
+    }
+
     @Test("Recent projects keep the newest first, without duplicates, capped at five")
     func recents() {
         var config = AppConfig(token: "t")

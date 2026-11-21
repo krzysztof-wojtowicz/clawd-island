@@ -39,6 +39,8 @@ final class Preferences {
     /// The list comes from the file, so it is right even after another writer changed it.
     func noteRecentProject(_ directory: String) -> [String] {
         var recents: [String] = []
+        // Already first (the common case: every new session of the same project): no write.
+        if let config = AppConfig.load(), config.recentProjects.first == directory { return config.recentProjects }
         persist { $0.noteRecentProject(directory); recents = $0.recentProjects }
         return recents
     }
