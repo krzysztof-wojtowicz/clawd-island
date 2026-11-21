@@ -49,5 +49,10 @@
 - Rule learned: no full-window `CALayer.mask`. A first version tucked the hidden pet with an even-odd `CAShapeLayer` mask, which made Core Animation render offscreen in-process (RenderBox loaded), at +45 MB RSS and a CPU spike on every state change. An opaque black notch-cover layer above the pet does the same job at no cost.
 - `ps %cpu` is a decaying average: read it at least 30 s after a launch or a state change.
 
+### WP-5.5 … WP-11 (release bundle, settled)
+- Hidden idle (corner peek): 0.00 % CPU, 35 MB. After a pop-out: 0.00 %, 34.9 MB.
+- Idle with permission cards, WP-10 and WP-11 code: 0.00–0.11 % CPU, 37.7–38.6 MB.
+- `clawd-bridge statusline` with the extra `/session-meta` POST: about 13 ms per run (20 runs, shell overhead subtracted), within the 20 ms budget.
+
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

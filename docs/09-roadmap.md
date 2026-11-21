@@ -140,17 +140,23 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - "+ New" footer button, recent-projects menu and "Choose Folder…", Terminal.app / iTerm2 launch with safe quoting, `recentProjects` in config.
 - AC: REQ-V2-03 AC1–2.
 
-## v1 checks left for a human
-Each item is in the WP status above. They need eyes or a hover, so no agent can do them:
+## Checks left for a human
+Each item is in the WP status above. They need eyes, a hover, a click or a system permission, so no agent can do them:
 - WP-2 / WP-2.1: physical-notch fit, full-screen hover, right-click without focus, no slide on Space switch.
-- WP-3.1: the hammer reads at notch size and is not clipped (`scripts/simulate.sh tools`).
-- WP-5.2 / WP-5.3: counter colours (grey → blue → red → orange), the panel status row and the `HP · resets · WEEK` footer (`simulate.sh start`, `permission`, `done`, `usage 37`).
-- WP-6: the Automation prompt, tab-precise read in Terminal.app / iTerm2, click-to-focus.
-- WP-7: the hide-mode sliver and pop-out, the menu checkmarks, Settings, launch at login (install to /Applications first).
-- WP-8 / REQ-11: `scripts/perf.sh 30` with the mouse on the expanded panel (glow); drop the glow if it breaks the budget.
+- WP-3.1 / WP-5.5: the hammer is not clipped in the 56 pt wing (`scripts/simulate.sh tools`).
+- WP-5.4 / WP-5.5: the counter morph on hover, the WK-first footer, the blue / orange / red state dots.
+- WP-7.1 / WP-7.2: the upside-down corner peek, the flip into the wing and back, hover from hidden, hide mode toggled while expanded.
+- WP-6 / WP-6.1 / WP-6.2: in iTerm2 and Terminal.app, a session started **before** the app gets focusable after its next statusline refresh; a click focuses its tab and only then marks it read; a session finishing in the tab you are looking at is marked read. If Automation never prompts: `tccutil reset AppleEvents dev.clawdnotch.ClawdNotch`.
+- WP-9: **reinstall the hooks once** (right-click → Install Hooks) so `PermissionRequest` gets `timeout: 120`; then a real permission prompt shows a card, Allow / Deny work from the notch, and the terminal dialog still works.
+- WP-10: Accessibility prompt on the first click on a VS Code session; the right VS Code window comes forward.
+- WP-11: "+ New" menu, Choose Folder…, a new Terminal.app / iTerm2 window running `claude` in the chosen folder.
+- WP-8 / REQ-11: `scripts/perf.sh 30` with the mouse on the expanded panel (glow).
 
-## v2 backlog (REQ-V2-01…03 are now WP-9, WP-10, WP-11)
-- REQ-V2-01: approve permissions from the notch.
-- REQ-V2-02: tab-precise focus for more terminals.
-- REQ-V2-03: start a new Claude Code session from the notch panel (builds on the WP-6 terminal mechanism).
-- Possible extras (`usingTools` is now in v1 as WP-3.1): a compaction "sweeping" pose, a subagent "juggling" pose, sound cues.
+## Next (v3 candidates)
+v2 (REQ-V2-01…03) is done as WP-9, WP-10 and WP-11. Proposed next, in order of value:
+1. **Stable code signature.** Sign with a personal Developer ID (or a self-made signing certificate) and install to `/Applications`, so the Automation, Accessibility and login-item grants survive rebuilds. Today every ad-hoc rebuild can drop them, which is the most likely cause of "focus does not work" reports.
+2. **"Always allow" from the notch.** Echo one of the `permission_suggestions` back as `updatedPermissions` (destination `session` by default), behind a third button.
+3. **Extra poses** via the `add-pet-state` skill: a compaction "sweeping" pose (`PreCompact`) and a subagent "juggling" pose (`activeSubagents > 0`).
+4. **Sound cues** (off by default) for `needsInput` and `done`.
+5. **Ghostty tab precision** if Ghostty ships its planned scripting API.
+6. **v1 perf follow-ups:** cap concurrent connections in `EventServer` (post-burst RSS) and find ~1 MB of launch headroom.
