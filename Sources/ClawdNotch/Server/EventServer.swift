@@ -19,12 +19,13 @@ final class EventServer: Sendable {
     private let listener: NWListener
     private let queue = DispatchQueue(label: "dev.clawdnotch.server")
     private let token: String
-    private let holdPermissions: Bool
+    private let holdPermissions: @Sendable () -> Bool
     private let onMessage: @Sendable (Inbound) -> Void
     private let onPermission: @Sendable (ClawdEvent, PermissionResponder) -> Void
     private let onPermissionClosed: @Sendable (UUID) -> Void
 
     /// - Parameters:
+    ///   - holdPermissions: Asked per request, so toggling "approve from the notch" needs no restart.
     ///   - onMessage: Called on the server queue for every decoded message.
     ///   - onPermission: Called on the server queue for a held `PermissionRequest`, instead of `onMessage`.
     ///     The receiver must eventually call `reply` on the responder (it may do so from any thread).
@@ -34,6 +35,7 @@ final class EventServer: Sendable {
     ///     The server never moves to another port, because hooks are written with a fixed URL.
     init(
         config: AppConfig,
+        holdPermissions: @escaping @Sendable () -> Bool,
         onMessage: @escaping @Sendable (Inbound) -> Void,
         onPermission: @escaping @Sendable (ClawdEvent, PermissionResponder) -> Void,
         onPermissionClosed: @escaping @Sendable (UUID) -> Void,
@@ -48,7 +50,7 @@ final class EventServer: Sendable {
         parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: port)
         listener = try NWListener(using: parameters)
         token = config.token
-        holdPermissions = config.notchPermissions
+        self.holdPermissions = holdPermissions
         self.onMessage = onMessage
         self.onPermission = onPermission
         self.onPermissionClosed = onPermissionClosed
@@ -106,7 +108,7 @@ final class EventServer: Sendable {
     ) {
         guard buffer.count < length else {
             let message = endpoint.decode(buffer.prefix(length), receivedAt: .now)
-            if holdPermissions, case .event(let event)? = message, event.kind == .permissionRequest {
+            if holdPermissions(), case .event(let event)? = message, event.kind == .permissionRequest {
                 return hold(connection, timeout: timeout, event: event)
             }
             if let message { onMessage(message) }
@@ -129,6 +131,7 @@ final class EventServer: Sendable {
     }
 
     /// A hook client sends nothing after its request, so any receive completion means it went away.
+    // shortcut: a client that only half-closes its side is treated as gone too; Claude Code's hook client does not.
     private func watchForClose(_ connection: NWConnection, responder: PermissionResponder) {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 1) { [self] _, _, isComplete, error in
             if error != nil || isComplete {

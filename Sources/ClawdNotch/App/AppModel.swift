@@ -63,6 +63,19 @@ final class AppModel {
         publish()
     }
 
+    /// Replies empty to every held request and drops its card, so Claude Code falls back to its terminal dialog
+    /// (the setting was switched off, docs/05).
+    func releaseAllPermissions() {
+        let held = responders
+        guard !held.isEmpty else { return }
+        responders.removeAll()
+        for (id, responder) in held {
+            responder.reply(.none)
+            store.resolvePermission(id)
+        }
+        publish()
+    }
+
     /// The client of a held request hung up, so its card is stale.
     func permissionClosed(_ id: UUID) {
         guard responders.removeValue(forKey: id) != nil else { return }

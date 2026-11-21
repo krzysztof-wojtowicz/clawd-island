@@ -12,6 +12,10 @@ final class Preferences {
 
     private(set) var hideMode: Bool
     private(set) var focusReadMode: AppConfig.FocusReadMode
+    /// "Approve permissions from the notch" (REQ-V2-01). Read per request on the server queue, hence a lock.
+    nonisolated let notchPermissions: OSAllocatedUnfairLock<Bool>
+    /// Called when "approve from the notch" is switched off, so held requests can be released.
+    var onNotchPermissionsOff: (() -> Void)?
     /// Called after `hideMode` changes.
     var onHideModeChange: ((Bool) -> Void)?
 
@@ -19,6 +23,14 @@ final class Preferences {
         let config = AppConfig.load()
         hideMode = config?.hideMode ?? false
         focusReadMode = config?.focusReadMode ?? .tab
+        notchPermissions = OSAllocatedUnfairLock(initialState: config?.notchPermissions ?? true)
+    }
+
+    /// Sets and persists "approve permissions from the notch"; the event server picks it up on the next request.
+    func setNotchPermissions(_ value: Bool) {
+        notchPermissions.withLock { $0 = value }
+        persist { $0.notchPermissions = value }
+        if !value { onNotchPermissionsOff?() }
     }
 
     /// Sets and persists hide mode.

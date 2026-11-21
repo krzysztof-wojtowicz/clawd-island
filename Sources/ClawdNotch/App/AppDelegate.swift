@@ -35,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             controller.hideMode = hidden
             settings.refresh()
         }
+        preferences.onNotchPermissionsOff = { [model] in model.releaseAllPermissions() }
         controller.onToggleHideMode = { [preferences] in preferences.setHideMode(!preferences.hideMode) }
         controller.onToggleLaunchAtLogin = { LoginItem.setEnabled(!LoginItem.isEnabled) }
         controller.launchAtLoginEnabled = { LoginItem.isEnabled }
@@ -61,7 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func bindSnapshot(_ controller: NotchWindowController) {
         pet.setState(model.snapshot.aggregate)
         hud.render(model.snapshot)
-        model.onSnapshotChange = { [pet, hud, controller, focusWatcher] old, new in
+        model.onSnapshotChange = { [pet, hud, controller, focusWatcher, model] old, new in
             focusWatcher.snapshotChanged(from: old.sessions, to: new.sessions)
             pet.setState(new.aggregate)
             if new.popToken > old.popToken { pet.popOut() }
@@ -69,15 +70,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 controller.popOut(hold: new.aggregate == .needsInput)
             }
             hud.render(new)
+            #if DEBUG
+            Self.debugDecide(new, model: model)
+            #endif
         }
     }
+
+    #if DEBUG
+    /// End-to-end test hook: with `--debug-auto-allow` or `--debug-auto-deny`, answers the newest pending permission
+    /// 3 s after it appears, standing in for a click on the card.
+    private static func debugDecide(_ snapshot: Snapshot, model: AppModel) {
+        let args = CommandLine.arguments
+        guard args.contains("--debug-auto-allow") || args.contains("--debug-auto-deny"),
+              let id = snapshot.pendingPermissions.first?.id else { return }
+        let allow = args.contains("--debug-auto-allow")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { MainActor.assumeIsolated { model.decide(permissionID: id, allow: allow) } }
+    }
+    #endif
 
     /// Starts the event server from the config file, creating a default config (random token) on first launch.
     private func startServer() {
         guard let config = loadOrCreateConfig() else { return }
+        let holdFlag = preferences.notchPermissions
         do {
             let server = try EventServer(
                 config: config,
+                holdPermissions: { holdFlag.withLock { $0 } },
                 onMessage: { [model] message in
                     // main.async keeps arrival order, which the state machine depends on.
                     DispatchQueue.main.async { MainActor.assumeIsolated { model.receive(message) } }

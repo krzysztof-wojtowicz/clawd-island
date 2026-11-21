@@ -8,10 +8,16 @@ import ClawdCore
 /// kept and drawn when the panel is shown, which is also when the reset countdown is computed.
 final class SessionPanelView: NSView {
     // shortcut: the panel has a fixed height, so extra sessions collapse into "+n more"; scroll if users run more.
-    private static let maxRows = 5
+    /// Session rows by number of permission cards shown; each card takes about two and a half rows.
+    private static let maxRows = [5, 3, 1]
+    private static let maxCards = 2
+    private static let cardHeight: CGFloat = 40
+    private static let cardSpacing: CGFloat = 3
 
     /// Called with a session id when its row is clicked.
     var onSelect: ((String) -> Void)?
+    /// Called with a permission id and `true` for Allow, `false` for Deny.
+    var onDecide: ((UUID, Bool) -> Void)?
     /// Called when "Mark all read" is clicked.
     var onMarkAllRead: (() -> Void)?
 
@@ -19,6 +25,8 @@ final class SessionPanelView: NSView {
     private let usageLabel = HUDStyle.label(size: 11, color: .secondaryLabelColor)
     private let markAllRead = ClickableStack()
     private var snapshot: Snapshot?
+    /// The cards on screen, newest first; rebuilt only when the pending permissions change.
+    private var cards: [(permission: PendingPermission, view: NSView)] = []
     /// When the footer was last built; its text is reflowed in `layout` without recomputing the countdown.
     private var footerDate = Date.now
 
@@ -70,8 +78,13 @@ final class SessionPanelView: NSView {
                 ? HUDStyle.usageLine(usage, now: footerDate, compact: true)
                 : full
         }
-        let height = min(rows.fittingSize.height, bounds.height - footerHeight - 6)
-        rows.frame = CGRect(x: 0, y: bounds.maxY - height, width: bounds.width, height: height)
+        var top = bounds.maxY
+        for (_, card) in cards {
+            card.frame = CGRect(x: 0, y: top - Self.cardHeight, width: bounds.width, height: Self.cardHeight)
+            top -= Self.cardHeight + Self.cardSpacing
+        }
+        let height = min(rows.fittingSize.height, top - footerHeight - 6)
+        rows.frame = CGRect(x: 0, y: top - height, width: bounds.width, height: height)
     }
 
     private func rebuild(now: Date) {
@@ -79,19 +92,30 @@ final class SessionPanelView: NSView {
         footerDate = now
         usageLabel.attributedStringValue = HUDStyle.usageLine(snapshot.usage, now: now)
         markAllRead.isHidden = snapshot.attentionCount == 0
+        let pending = Array(snapshot.pendingPermissions.prefix(Self.maxCards))
+        if pending != cards.map(\.permission) {
+            for (_, view) in cards { view.removeFromSuperview() }
+            cards = pending.map { ($0, card(for: $0)) }
+            for (_, view) in cards { addSubview(view) }
+        }
+        let maxRows = Self.maxRows[cards.count]
         for view in rows.arrangedSubviews {
             view.removeFromSuperview()
         }
-        for session in snapshot.sessions.prefix(Self.maxRows) {
+        for session in snapshot.sessions.prefix(maxRows) {
             rows.addArrangedSubview(row(for: session))
         }
-        let hidden = snapshot.sessions.count - Self.maxRows
+        let hidden = snapshot.sessions.count - maxRows
         if snapshot.sessions.isEmpty || hidden > 0 {
             let note = HUDStyle.label(size: 11, color: .secondaryLabelColor)
             note.stringValue = hidden > 0 ? "+\(hidden) more" : "No Claude Code sessions"
             rows.addArrangedSubview(note)
         }
         needsLayout = true
+    }
+
+    private func card(for permission: PendingPermission) -> NSView {
+        PermissionCardView(permission: permission) { [weak self] allow in self?.onDecide?(permission.id, allow) }
     }
 
     private func row(for session: Session) -> NSView {
@@ -143,5 +167,66 @@ private final class ClickableStack: NSStackView {
     override func accessibilityPerformPress() -> Bool {
         onClick?()
         return true
+    }
+}
+
+/// One permission card: `project · tool` over the summary, with Allow and Deny on the right (REQ-V2-01 AC1).
+/// Built with plain frames; a card is a fixed 40 pt, so constraints would only add cost.
+private final class PermissionCardView: NSView {
+    private static let pillSize = CGSize(width: 48, height: 22)
+    private static let inset: CGFloat = 8
+
+    private let title = HUDStyle.label(size: 12, weight: .medium)
+    private let summary = HUDStyle.label(size: 11, color: .secondaryLabelColor)
+    private let allow: ClickableStack
+    private let deny: ClickableStack
+
+    init(permission: PendingPermission, onDecide: @escaping (Bool) -> Void) {
+        let subject = permission.toolName.map { "\(permission.projectName) · \($0)" } ?? permission.projectName
+        allow = Self.pill("Allow", fill: PetTokens.badgeActive, accessibility: "Allow \(subject)") { onDecide(true) }
+        deny = Self.pill("Deny", fill: PetTokens.badgeEmpty, accessibility: "Deny \(subject)") { onDecide(false) }
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 6
+        layer?.cornerCurve = .continuous
+        layer?.backgroundColor = PetTokens.bubbleFill.copy(alpha: 0.1)
+        title.stringValue = subject
+        summary.stringValue = permission.summary
+        summary.lineBreakMode = .byTruncatingMiddle
+        for view in [title, summary, allow, deny] {
+            addSubview(view)
+        }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    private static func pill(_ text: String, fill: CGColor, accessibility: String, action: @escaping () -> Void) -> ClickableStack {
+        let label = HUDStyle.label(size: 11, weight: .semibold, color: HUDStyle.color(PetTokens.badgeGlyph))
+        label.stringValue = text
+        label.alignment = .center
+        label.setAccessibilityElement(false)
+        let button = ClickableStack(views: [label])
+        button.alignment = .centerY
+        button.distribution = .fill
+        button.wantsLayer = true
+        button.layer?.cornerRadius = pillSize.height / 2
+        button.layer?.cornerCurve = .continuous
+        button.layer?.backgroundColor = fill
+        button.onClick = action
+        button.setAccessibilityLabel(accessibility)
+        button.setAccessibilityRole(.button)
+        return button
+    }
+
+    override func layout() {
+        super.layout()
+        let pill = Self.pillSize
+        let y = (bounds.height - pill.height) / 2
+        deny.frame = CGRect(x: bounds.maxX - Self.inset - pill.width, y: y, width: pill.width, height: pill.height)
+        allow.frame = CGRect(x: deny.frame.minX - 6 - pill.width, y: y, width: pill.width, height: pill.height)
+        let textWidth = allow.frame.minX - 2 * Self.inset
+        title.frame = CGRect(x: Self.inset, y: bounds.midY, width: textWidth, height: 16)
+        summary.frame = CGRect(x: Self.inset, y: bounds.midY - 16, width: textWidth, height: 15)
     }
 }

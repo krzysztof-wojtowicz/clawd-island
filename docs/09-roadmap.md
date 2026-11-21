@@ -127,7 +127,7 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - "Done while frontmost": when a session becomes `done` and its terminal is in front, check the selected tab once.
 - AC: REQ-10 AC1, AC1a. Fixes iTerm2 read/focus for sessions started before the app.
 
-### WP-9 — Permissions from the notch · owner: core-engineer (decode, pending model, server hold, installer timeout) + macos-ui-engineer (cards, setting) · deps: WP-6.2 · status: `todo`
+### WP-9 — Permissions from the notch · owner: core-engineer (decode, pending model, server hold, installer timeout) + macos-ui-engineer (cards, setting) · deps: WP-6.2 · status: `done` (e2e with real `claude` + scratch settings: allow created the dir, deny blocked it, setting off replies in 0.05 s; release idle 0.11 % / 38.6 MB; card look and real clicks still to be checked by eye; existing installs need Install Hooks again for `timeout: 120`)
 - ADR-0006. Core: input summary, `PendingPermission`, removal rules, tests. Server: hold `PermissionRequest`, reply allow / deny / empty, 110 s cap, connection-close detection. Installer: `timeout: 120` for `PermissionRequest`, updating existing installs, tests.
 - UI: permission cards with Allow / Deny, the `notchPermissions` setting.
 - AC: REQ-V2-01 AC1–5, verified end-to-end with `claude` and scratch `--settings`.

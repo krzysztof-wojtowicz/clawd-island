@@ -11,6 +11,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private var hideCheck: NSButton?
     private var loginCheck: NSButton?
+    private var permissionCheck: NSButton?
     private var focusPopUp: NSPopUpButton?
 
     init(preferences: Preferences) {
@@ -30,6 +31,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func refresh() {
         hideCheck?.state = preferences.hideMode ? .on : .off
         loginCheck?.state = LoginItem.isEnabled ? .on : .off
+        permissionCheck?.state = preferences.notchPermissions.withLock { $0 } ? .on : .off
         if let index = AppConfig.FocusReadMode.allCases.firstIndex(of: preferences.focusReadMode) {
             focusPopUp?.selectItem(at: index)
         }
@@ -40,12 +42,16 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         window = nil
         hideCheck = nil
         loginCheck = nil
+        permissionCheck = nil
         focusPopUp = nil
     }
 
     private func makeWindow() -> NSWindow {
         let hide = NSButton(checkboxWithTitle: "Hide Clawd under the notch", target: self, action: #selector(hideChanged(_:)))
         let login = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(loginChanged(_:)))
+        let permissions = NSButton(
+            checkboxWithTitle: "Approve permissions from the notch", target: self, action: #selector(permissionsChanged(_:))
+        )
         let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
         // Titles follow `FocusReadMode.allCases` order; `focusChanged` and `refresh` index by it.
         popUp.addItems(withTitles: AppConfig.FocusReadMode.allCases.map { mode in
@@ -58,7 +64,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         popUp.target = self
         popUp.action = #selector(focusChanged(_:))
         let focusRow = NSStackView(views: [NSTextField(labelWithString: "Mark as read on terminal focus:"), popUp])
-        let stack = NSStackView(views: [hide, focusRow, login])
+        let stack = NSStackView(views: [hide, focusRow, permissions, login])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 14
@@ -72,12 +78,17 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         window.delegate = self
         hideCheck = hide
         loginCheck = login
+        permissionCheck = permissions
         focusPopUp = popUp
         return window
     }
 
     @objc private func hideChanged(_ sender: NSButton) {
         preferences.setHideMode(sender.state == .on)
+    }
+
+    @objc private func permissionsChanged(_ sender: NSButton) {
+        preferences.setNotchPermissions(sender.state == .on)
     }
 
     @objc private func loginChanged(_ sender: NSButton) {

@@ -6,6 +6,7 @@ import os
 
 /// Answers one held `PermissionRequest` hook. `reply` takes effect exactly once; later calls are ignored,
 /// so the user's click, the 110 s cap, and a closed connection can race safely.
+// shortcut: the exactly-once and release logic is verified manually only, because the app target has no tests.
 final class PermissionResponder: Sendable {
     /// What goes back to Claude Code.
     enum Decision: Sendable {
