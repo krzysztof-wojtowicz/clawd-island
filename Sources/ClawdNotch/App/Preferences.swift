@@ -35,6 +35,14 @@ final class Preferences {
         persist { $0.focusReadMode = value }
     }
 
+    /// Records a directory as the most recent project (REQ-V2-03) and returns the updated list.
+    /// The list comes from the file, so it is right even after another writer changed it.
+    func noteRecentProject(_ directory: String) -> [String] {
+        var recents: [String] = []
+        persist { $0.noteRecentProject(directory); recents = $0.recentProjects }
+        return recents
+    }
+
     private func persist(_ change: (inout AppConfig) -> Void) {
         // An unreadable or missing file is left alone: it may hold the user's original statusline.
         guard var config = AppConfig.load() else {

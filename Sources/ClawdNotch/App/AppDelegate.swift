@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         startServer()
+        model.recordProject = { [preferences] in preferences.noteRecentProject($0) }
         let controller = NotchWindowController()
         controller.needsInput = { [model] in model.snapshot.aggregate == .needsInput }
         controller.serverError = { [model] in model.serverError }
