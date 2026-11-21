@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mode: { [preferences] in preferences.focusReadMode })
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        model.recordProject = { [unowned self] in preferences.noteRecentProject($0) }  // lazy: not created before startServer()
         startServer()
         let controller = NotchWindowController()
         controller.needsInput = { [model] in model.snapshot.aggregate == .needsInput }

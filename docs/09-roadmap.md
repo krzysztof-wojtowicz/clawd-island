@@ -132,7 +132,7 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - UI: permission cards with Allow / Deny, the `notchPermissions` setting.
 - AC: REQ-V2-01 AC1–5, verified end-to-end with `claude` and scratch `--settings`.
 
-### WP-10 — Window-level focus for the VS Code family · owner: integration-engineer · deps: WP-6.2 · status: `todo`
+### WP-10 — Window-level focus for the VS Code family · owner: integration-engineer · deps: WP-6.2 · status: `done`
 - Accessibility window match by project name for click and activation; app-level fallback.
 - AC: REQ-V2-02 AC1–3.
 

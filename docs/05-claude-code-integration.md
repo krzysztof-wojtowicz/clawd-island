@@ -102,7 +102,7 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 
 ## Focus for the VS Code family (REQ-V2-02)
 - Bundle IDs: `com.microsoft.VSCode`, `com.microsoft.VSCodeInsiders`, `com.vscodium`, `com.todesktop.230313mzl4w4u92` (Cursor), `com.exafunction.windsurf`.
-- Click: `AXUIElementCreateApplication(pid)` → `kAXWindowsAttribute`, pick the first window whose `kAXTitleAttribute` contains the session's project name, `AXRaise` it, then activate the app. Activation: read `kAXFocusedWindowAttribute`'s title and mark matching sessions read.
+- Click: `AXUIElementCreateApplication(pid)` → `kAXWindowsAttribute`, pick the first window whose `kAXTitleAttribute` has a segment equal to the session's project name, else the first that contains it (`WindowTitle`; segments split on " — " and " - ", app name dropped), `AXRaise` it, then activate the app. Activation: read `kAXFocusedWindowAttribute`'s title and mark matching sessions read.
 - `AXIsProcessTrustedWithOptions` with the prompt option is called once, on first use. Without the permission, fall back to app level. Like Automation, the grant is tied to the code signature.
 - Ghostty and Warp have no API to select or read a tab or window: app level only.
 

@@ -30,6 +30,9 @@ public struct AppConfig: Codable, Equatable, Sendable {
 
     /// Hold `PermissionRequest` hooks so the notch can allow or deny them (REQ-V2-01). Off means every hook gets an empty reply.
     public var notchPermissions: Bool
+    /// Directories of recently seen sessions for the "New session" menu: newest first, at most `maxRecentProjects` (REQ-V2-03).
+    public var recentProjects: [String]
+    public static let maxRecentProjects = 5
 
     public init(
         port: Int = AppConfig.defaultPort,
@@ -37,7 +40,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
         originalStatusLine: String? = nil,
         hideMode: Bool = false,
         focusReadMode: FocusReadMode = .tab,
-        notchPermissions: Bool = true
+        notchPermissions: Bool = true,
+        recentProjects: [String] = []
     ) {
         self.port = port
         self.token = token
@@ -45,6 +49,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.hideMode = hideMode
         self.focusReadMode = focusReadMode
         self.notchPermissions = notchPermissions
+        self.recentProjects = recentProjects
     }
 
     /// Files written before a key existed lack it, so they decode to the defaults.
@@ -56,6 +61,14 @@ public struct AppConfig: Codable, Equatable, Sendable {
         hideMode = try container.decodeIfPresent(Bool.self, forKey: .hideMode) ?? false
         focusReadMode = try container.decodeIfPresent(FocusReadMode.self, forKey: .focusReadMode) ?? .tab
         notchPermissions = try container.decodeIfPresent(Bool.self, forKey: .notchPermissions) ?? true
+        recentProjects = try container.decodeIfPresent([String].self, forKey: .recentProjects) ?? []
+    }
+
+    /// Puts `directory` first in `recentProjects`, dropping an earlier copy and anything beyond the cap.
+    public mutating func noteRecentProject(_ directory: String) {
+        recentProjects.removeAll { $0 == directory }
+        recentProjects.insert(directory, at: 0)
+        recentProjects = Array(recentProjects.prefix(Self.maxRecentProjects))
     }
 
     /// A fresh config with the default port and a random token.

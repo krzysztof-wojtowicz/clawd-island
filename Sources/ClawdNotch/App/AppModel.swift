@@ -21,6 +21,11 @@ final class AppModel {
     var serverError: String?
     /// Called after `snapshot` changes, with the previous and the new value.
     @ObservationIgnored var onSnapshotChange: ((_ old: Snapshot, _ new: Snapshot) -> Void)?
+    /// Recently used project directories, newest first, at most 5 (REQ-V2-03). Feeds the "+ New" menu.
+    private(set) var recentProjects: [String] = AppConfig.load()?.recentProjects ?? []
+    /// Persists one directory as the newest recent project and returns the stored list (empty on failure).
+    @ObservationIgnored var recordProject: ((String) -> [String])?
+    @ObservationIgnored private var seenSessionIDs: Set<String> = []
 
     @ObservationIgnored private var store: SessionStore
     @ObservationIgnored private var publishPending = false
@@ -83,6 +88,33 @@ final class AppModel {
         publish()
     }
 
+    /// Starts a new Claude Code session in `directory` (REQ-V2-03), in the terminal of the most recently
+    /// active session when that is Terminal.app or iTerm2, else Terminal.app.
+    func newSession(at directory: URL) {
+        let latest = snapshot.sessions.max { $0.lastEventAt < $1.lastEventAt }
+        NewSessionLauncher.launch(directory: directory, preferredTerminal: latest?.meta?.terminalBundleID)
+        noteProject(directory.path)
+    }
+
+    /// Asks the user for a folder and starts a session there; does nothing if cancelled.
+    func chooseFolderAndStartSession() {
+        if let url = NewSessionLauncher.chooseFolder() { newSession(at: url) }
+    }
+
+    private func noteProject(_ directory: String) {
+        let stored = recordProject?(directory) ?? []
+        if !stored.isEmpty { recentProjects = stored }
+    }
+
+    /// Records the `cwd` of each session the first time its metadata is seen.
+    private func recordNewProjects(in sessions: [Session]) {
+        for session in sessions where !seenSessionIDs.contains(session.id) {
+            guard let cwd = session.meta?.cwd else { continue }
+            seenSessionIDs.insert(session.id)
+            noteProject(cwd)
+        }
+    }
+
     /// Marks one session read (a panel click or terminal focus).
     func markRead(_ id: String) {
         store.markRead(id)
@@ -118,6 +150,7 @@ final class AppModel {
         let next = store.snapshot(now: now)
         releaseStaleResponders(keeping: next.pendingPermissions)
         schedulePermissionExpiry(now: now)
+        recordNewProjects(in: next.sessions)
         if next != snapshot {
             let old = snapshot
             snapshot = next
