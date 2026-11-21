@@ -151,7 +151,7 @@ struct SessionStoreTests {
     func usageInSnapshot() {
         var store = SessionStore()
         #expect(store.snapshot(now: t0).usage == nil)
-        let usage = UsageSnapshot(fiveHourUsedPercent: 37, resetsAt: t0)
+        let usage = UsageSnapshot(fiveHourUsedPercent: 37, resetsAt: t0, sevenDayUsedPercent: nil, sevenDayResetsAt: nil)
         store.apply(usage: usage)
         #expect(store.snapshot(now: t0).usage == usage)
     }

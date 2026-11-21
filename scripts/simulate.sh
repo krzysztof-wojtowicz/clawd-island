@@ -46,7 +46,7 @@ case "$scenario" in
     usage)
         pct="${2:-37}"
         [[ "$pct" =~ ^[0-9]+$ ]] || { echo "usage percent must be an integer" >&2; exit 1; }
-        post /statusline "{\"session_id\":\"sim-1\",\"rate_limits\":{\"five_hour\":{\"used_percentage\":$pct,\"resets_at\":$(( $(date +%s) + 3600 ))}}}"
+        post /statusline "{\"session_id\":\"sim-1\",\"rate_limits\":{\"five_hour\":{\"used_percentage\":$pct,\"resets_at\":$(( $(date +%s) + 3600 ))},\"seven_day\":{\"used_percentage\":19,\"resets_at\":$(( $(date +%s) + 86400 ))}}}"
         ;;
     turn)
         start "$sid"; sleep 1

@@ -18,6 +18,17 @@ final class SessionPanelView: NSView {
     private let rows = NSStackView()
     private let usageLabel = HUDStyle.label(size: 11, color: .secondaryLabelColor)
     private let markAllRead = ClickableStack()
+    /// Idle, working, done, needs-input: one circle each (REQ-04 AC1), always shown.
+    private let statusCircles: [NSTextField] = [
+        PetTokens.badgeEmpty, PetTokens.badgeActive, PetTokens.body, PetTokens.badgeAlert,
+    ].map { fill in
+        let circle = HUDStyle.label(size: 10, weight: .bold, color: HUDStyle.color(PetTokens.badgeGlyph))
+        circle.alignment = .center
+        circle.wantsLayer = true
+        circle.layer?.cornerCurve = .continuous
+        circle.layer?.backgroundColor = fill
+        return circle
+    }
     private var snapshot: Snapshot?
 
     override init(frame frameRect: NSRect) {
@@ -35,7 +46,7 @@ final class SessionPanelView: NSView {
         markAllRead.setAccessibilityRole(.button)
         markAllRead.autoresizingMask = [.minXMargin, .maxYMargin]
         usageLabel.autoresizingMask = [.width, .maxYMargin]
-        for view in [rows, usageLabel, markAllRead] {
+        for view in statusCircles + [rows, usageLabel, markAllRead] {
             addSubview(view)
         }
     }
@@ -61,13 +72,26 @@ final class SessionPanelView: NSView {
         markAllRead.frame.size = markAllRead.fittingSize
         markAllRead.frame.origin = CGPoint(x: bounds.maxX - markAllRead.frame.width, y: 0)
         usageLabel.frame = CGRect(x: 0, y: 0, width: markAllRead.frame.minX - 8, height: footerHeight)
-        let height = min(rows.fittingSize.height, bounds.height - footerHeight - 6)
-        rows.frame = CGRect(x: 0, y: bounds.maxY - height, width: bounds.width, height: height)
+        let circleSize = CountersView.columnWidth
+        var x: CGFloat = 0
+        for circle in statusCircles {
+            let width = max(circleSize, circle.intrinsicContentSize.width + 6)
+            circle.frame = CGRect(x: x, y: bounds.maxY - circleSize, width: width, height: circleSize)
+            circle.layer?.cornerRadius = circleSize / 2
+            x += width + 8
+        }
+        let top = circleSize + 8
+        let height = min(rows.fittingSize.height, bounds.height - footerHeight - 6 - top)
+        rows.frame = CGRect(x: 0, y: bounds.maxY - top - height, width: bounds.width, height: height)
     }
 
     private func rebuild(now: Date) {
         guard let snapshot else { return }
-        usageLabel.stringValue = HUDStyle.usageLine(snapshot.usage, now: now)
+        usageLabel.attributedStringValue = HUDStyle.usageLine(snapshot.usage, now: now)
+        let counts = snapshot.statusCounts
+        for (circle, count) in zip(statusCircles, [counts.idle, counts.working, counts.done, counts.needsInput]) {
+            circle.stringValue = "\(count)"
+        }
         markAllRead.isHidden = snapshot.attentionCount == 0
         for view in rows.arrangedSubviews {
             view.removeFromSuperview()

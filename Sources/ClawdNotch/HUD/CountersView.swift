@@ -81,7 +81,7 @@ final class CountersView: NSView, NSViewToolTipOwner {
     /// Built on demand, like the tooltip, so the reset countdown is current when VoiceOver reads it.
     override func accessibilityLabel() -> String? {
         guard let snapshot else { return nil }
-        return "\(HUDStyle.countsLine(snapshot)), \(HUDStyle.usageLine(snapshot.usage, now: .now))"
+        return "\(HUDStyle.countsLine(snapshot)), \(HUDStyle.usageLine(snapshot.usage, now: .now).string)"
     }
 
     func view(
@@ -91,6 +91,6 @@ final class CountersView: NSView, NSViewToolTipOwner {
         userData data: UnsafeMutableRawPointer?
     ) -> String {
         guard let snapshot else { return "" }
-        return "\(HUDStyle.usageLine(snapshot.usage, now: .now))\n\(HUDStyle.countsLine(snapshot))"
+        return "\(HUDStyle.usageLine(snapshot.usage, now: .now).string)\n\(HUDStyle.countsLine(snapshot))"
     }
 }

@@ -93,6 +93,7 @@ public struct SessionStore: Sendable {
         return Snapshot(
             aggregate: aggregate,
             activeCount: visible.count,
+            statusCounts: StatusCounts(sessions: visible),
             attentionCount: attentionCount,
             hasNeedsInput: visible.contains { $0.state == .needsInput },
             sessions: visible,

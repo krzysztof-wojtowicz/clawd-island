@@ -80,14 +80,33 @@ struct DecoderTests {
             {"model":{"display_name":"Opus"},"rate_limits":{"five_hour":{"used_percentage":37.5,"resets_at":1750000000},
              "seven_day":{"used_percentage":10}}}
             """#.utf8))
-        #expect(usage == UsageSnapshot(fiveHourUsedPercent: 37.5, resetsAt: Date(timeIntervalSince1970: 1_750_000_000)))
+        #expect(usage == UsageSnapshot(fiveHourUsedPercent: 37.5, resetsAt: Date(timeIntervalSince1970: 1_750_000_000),
+                                       sevenDayUsedPercent: 10, sevenDayResetsAt: nil))
         #expect(UsageSnapshot(statusline: Data(#"{"rate_limits":{"five_hour":{"used_percentage":12}}}"#.utf8))?
             .fiveHourUsedPercent == 12)
     }
 
+    @Test("Statusline rate_limits.seven_day is decoded next to five_hour (REQ-04 AC5)")
+    func statuslineSevenDay() {
+        let usage = UsageSnapshot(statusline: Data(#"""
+            {"rate_limits":{"five_hour":{"used_percentage":37.5,"resets_at":1750000000},
+             "seven_day":{"used_percentage":62,"resets_at":1750500000}}}
+            """#.utf8))
+        #expect(usage == UsageSnapshot(fiveHourUsedPercent: 37.5, resetsAt: Date(timeIntervalSince1970: 1_750_000_000),
+                                       sevenDayUsedPercent: 62, sevenDayResetsAt: Date(timeIntervalSince1970: 1_750_500_000)))
+    }
+
+    @Test("Only seven_day present still yields a snapshot, with no 5-hour HP")
+    func onlySevenDay() {
+        let usage = UsageSnapshot(statusline: Data(#"{"rate_limits":{"seven_day":{"used_percentage":5}}}"#.utf8))
+        #expect(usage?.fiveHourUsedPercent == nil)
+        #expect(usage?.sevenDayUsedPercent == 5)
+        #expect(usage?.hitPoints(now: .distantPast) == nil)
+    }
+
     @Test("Missing usage stays nil and is never fabricated (REQ-04 AC2)", arguments: [
         #"{"model":{"display_name":"Opus"}}"#, #"{"rate_limits":{}}"#,
-        #"{"rate_limits":{"seven_day":{"used_percentage":5}}}"#, #"{"rate_limits":{"five_hour":{}}}"#, "garbage",
+        #"{"rate_limits":{"seven_day":{}}}"#, #"{"rate_limits":{"five_hour":{}}}"#, "garbage",
     ])
     func statuslineMissing(json: String) {
         #expect(UsageSnapshot(statusline: Data(json.utf8)) == nil)

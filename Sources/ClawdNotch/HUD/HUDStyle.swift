@@ -39,14 +39,32 @@ enum HUDStyle {
         return snapshot.activeCount > 0 ? PetTokens.badgeActive : PetTokens.badgeEmpty
     }
 
-    /// One line on the 5-hour window, e.g. "HP 63% · resets in 1h 12m". Computed at `now`, never ticking.
-    static func usageLine(_ usage: UsageSnapshot?, now: Date) -> String {
-        guard let usage, let hp = usage.hitPoints(now: now) else { return "Usage unknown" }
-        if hp.isStale { return "HP 100% · window reset, waiting for fresh data" }
-        let percent = "HP \(hp.percent.formatted(.number.precision(.fractionLength(0...1))))%"
-        guard let resetsAt = usage.resetsAt else { return percent }
-        let left = Duration.seconds(max(resetsAt.timeIntervalSince(now), 60))
-        return "\(percent) · resets in \(left.formatted(.units(allowed: [.hours, .minutes], width: .narrow)))"
+    /// One line on the usage windows, e.g. "HP 63% · resets in 1h 12m · WEEK 81%", each percentage tinted with its
+    /// HP band colour. The WEEK part is omitted while the weekly window is unknown. Computed at `now`, never ticking.
+    static func usageLine(_ usage: UsageSnapshot?, now: Date) -> NSAttributedString {
+        guard let usage, let hp = usage.hitPoints(now: now) else { return NSAttributedString(string: "Usage unknown") }
+        let line = NSMutableAttributedString()
+        // Attributed strings ignore the label's textColor, so untinted runs carry the secondary colour themselves.
+        func plain(_ text: String) -> NSAttributedString {
+            NSAttributedString(string: text, attributes: [.foregroundColor: NSColor.secondaryLabelColor])
+        }
+        func percent(_ hp: HitPoints) -> NSAttributedString {
+            let text = "\(hp.percent.formatted(.number.precision(.fractionLength(0...1))))%"
+            return NSAttributedString(string: text, attributes: [.foregroundColor: color(token(for: hp.level))])
+        }
+        line.append(plain("HP "))
+        line.append(percent(hp))
+        if hp.isStale {
+            line.append(plain(" · window reset, waiting for fresh data"))
+        } else if let resetsAt = usage.resetsAt {
+            let left = Duration.seconds(max(resetsAt.timeIntervalSince(now), 60))
+            line.append(plain(" · resets in \(left.formatted(.units(allowed: [.hours, .minutes], width: .narrow)))"))
+        }
+        if let week = usage.weekRemaining(now: now) {
+            line.append(plain(" · WEEK "))
+            line.append(percent(week))
+        }
+        return line
     }
 
     /// The counters in words, for the tooltip and VoiceOver.

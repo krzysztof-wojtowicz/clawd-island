@@ -76,7 +76,7 @@ Follow the `add-pet-state` skill end to end.
 - `CountersView`: one number in an always-visible circle, vertically centred on the pet and the HP bar. Its colour follows the red / orange / blue / grey rule. Add the `badge.active` and `badge.empty` tokens.
 - AC: REQ-04 AC1–4, REQ-10 AC3.
 
-### WP-5.3 — Panel status counts and weekly usage · owner: core-engineer (Core) + macos-ui-engineer (panel) · deps: WP-5.2 · status: `todo`
+### WP-5.3 — Panel status counts and weekly usage · owner: core-engineer (Core) + macos-ui-engineer (panel) · deps: WP-5.2 · status: `done` (perf 0.28 % CPU / 38.9 MB; panel row and footer still to be checked by eye)
 - Core: `Snapshot.statusCounts` (`04`); `UsageSnapshot` reads `rate_limits.seven_day` (`sevenDayUsedPercent?`, `sevenDayResetsAt?`). Add tests for the bucket sum and the seven_day decoding, including absent and stale cases.
 - `SessionPanelView`: the status-count row above the list, and the footer `HP 63% · resets in 1h 12m · WEEK 81%` with level-tinted percentages. The HP-bar tooltip shows the same line. `expandedExtraHeight` grows to about 182.
 - AC: REQ-04 AC1 and AC5.

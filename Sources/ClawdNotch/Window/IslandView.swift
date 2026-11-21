@@ -16,7 +16,7 @@ final class IslandView: NSView {
     /// Minimum top-row height: room for the pet slot plus 3 pt above and below.
     static let minRowHeight: CGFloat = 32
     /// How far the expanded panel reaches below the top row.
-    static let expandedExtraHeight: CGFloat = 160
+    static let expandedExtraHeight: CGFloat = 182
     /// Room for the glow beside and below the expanded island.
     static let glowMargin: CGFloat = 24
     /// The pet is 26 pt tall in the collapsed island (docs/07); its width follows the unit box.
