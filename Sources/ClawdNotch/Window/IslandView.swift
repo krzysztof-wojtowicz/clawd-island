@@ -14,8 +14,9 @@ import AppKit
 final class IslandView: NSView {
     /// Width of the wing left of the notch: the counter circle (REQ-04 AC4: wings at most 72 pt).
     static let leftWingWidth: CGFloat = 28
-    /// Width of the wing right of the notch: HP bar, gap, pet.
-    static let rightWingWidth = (CountersView.barInset + CountersView.barWidth + CountersView.barPetGap + petSize.width + 2)
+    /// Width of the wing right of the notch: HP bar, gap, pet, and room for the hammer, which reaches about 9 pt past
+    /// the pet's right edge mid-swing (PetRig: arm pivot x 28 + hammer 8.5, unit box 32, scale 26/24).
+    static let rightWingWidth = (CountersView.barInset + CountersView.barWidth + CountersView.barPetGap + petSize.width + 10)
         .rounded(.up)
     /// Room each side of the notch in the expanded island, enough for the three counters on the left.
     static let expandedWingWidth: CGFloat = 72

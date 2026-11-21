@@ -111,7 +111,7 @@ A design change after v1: the counter moves left of the notch, and the panel's s
 - Placement: `IslandView.setPetPlacement` computes the screen-space target and `PetView.setPlacement` animates the offset and tilt (pop-out spring), used for hidden / wing / expanded, replacing the width-driven slide and the 7 pt sliver constants.
 - AC: REQ-05 AC1–4. `perf.sh` hidden idle and during a pop-out stays within budget.
 
-### WP-5.5 — Panel polish · owner: macos-ui-engineer · deps: WP-7.1 · status: `todo`
+### WP-5.5 — Panel polish · owner: macos-ui-engineer · deps: WP-7.1 · status: `done` (build + tests; footer, blue dot and hammer room still to be checked by eye)
 - Footer `WK 81% · HP 63% · resets in 1h 12m` (WK first, tints kept; tooltip the same).
 - Blue state dot for working sessions (`badge.active`), next to the existing orange and red ones.
 - Right wing about 56 pt so the hammer swing is never clipped.

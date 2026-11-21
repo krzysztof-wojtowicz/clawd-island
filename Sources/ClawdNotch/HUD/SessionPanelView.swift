@@ -19,6 +19,8 @@ final class SessionPanelView: NSView {
     private let usageLabel = HUDStyle.label(size: 11, color: .secondaryLabelColor)
     private let markAllRead = ClickableStack()
     private var snapshot: Snapshot?
+    /// When the footer was last built; its text is reflowed in `layout` without recomputing the countdown.
+    private var footerDate = Date.now
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -61,12 +63,20 @@ final class SessionPanelView: NSView {
         markAllRead.frame.size = markAllRead.fittingSize
         markAllRead.frame.origin = CGPoint(x: bounds.maxX - markAllRead.frame.width, y: 0)
         usageLabel.frame = CGRect(x: 0, y: 0, width: markAllRead.frame.minX - 8, height: footerHeight)
+        // Shorten "resets in" to "resets" when the full line does not fit beside the button.
+        if let usage = snapshot?.usage {
+            let full = HUDStyle.usageLine(usage, now: footerDate)
+            usageLabel.attributedStringValue = full.size().width > usageLabel.frame.width
+                ? HUDStyle.usageLine(usage, now: footerDate, compact: true)
+                : full
+        }
         let height = min(rows.fittingSize.height, bounds.height - footerHeight - 6)
         rows.frame = CGRect(x: 0, y: bounds.maxY - height, width: bounds.width, height: height)
     }
 
     private func rebuild(now: Date) {
         guard let snapshot else { return }
+        footerDate = now
         usageLabel.attributedStringValue = HUDStyle.usageLine(snapshot.usage, now: now)
         markAllRead.isHidden = snapshot.attentionCount == 0
         for view in rows.arrangedSubviews {
@@ -86,8 +96,14 @@ final class SessionPanelView: NSView {
 
     private func row(for session: Session) -> NSView {
         let marker = HUDStyle.label(size: 9)
-        marker.stringValue = session.needsAttention ? "●" : ""
-        marker.textColor = HUDStyle.color(session.state == .needsInput ? PetTokens.badgeAlert : PetTokens.body)
+        let dot: CGColor? = switch session.state {
+        case .needsInput: PetTokens.badgeAlert
+        case .done where session.needsAttention: PetTokens.body
+        case .thinking, .usingTools, .talking: PetTokens.badgeActive
+        default: nil
+        }
+        marker.stringValue = dot == nil ? "" : "●"
+        marker.textColor = HUDStyle.color(dot ?? PetTokens.body)
         marker.widthAnchor.constraint(equalToConstant: 10).isActive = true
         let name = HUDStyle.label(size: 12, weight: .medium)
         name.stringValue = session.projectName
