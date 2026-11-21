@@ -43,7 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.hasAttention = { [model] in model.snapshot.attentionCount > 0 }
         Self.embed(pet, in: controller.island.petSlot)
         Self.embed(hud.counters, in: controller.island.countersSlot)
-        Self.embed(hud.panel, in: controller.island.panelSlot)
+        controller.island.panelProvider = { [hud] in hud.makePanel() }
         PetDemo.startIfRequested(on: pet)
         notchController = controller
         pausePetWhileUnseen()

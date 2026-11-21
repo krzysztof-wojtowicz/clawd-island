@@ -9,17 +9,30 @@ import ClawdCore
 @MainActor
 final class HUDController {
     let counters = CountersView()
-    let panel = SessionPanelView()
+    private let model: AppModel
+    private let focus: (Session) -> Void
+    /// Built on the first expand (docs/08); nil until then.
+    private var panel: SessionPanelView?
 
     private var snapshot: Snapshot?
     private var resetTimer: Timer?
 
     init(model: AppModel, focus: @escaping (Session) -> Void) {
-        panel.onSelect = { [model] id in
+        self.model = model
+        self.focus = focus
+    }
+
+    /// Builds the session panel, draws the latest snapshot into it and returns it. Called once, on the first expand.
+    func makePanel() -> SessionPanelView {
+        let panel = SessionPanelView()
+        panel.onSelect = { [model, focus] id in
             model.markRead(id)
             if let session = model.snapshot.sessions.first(where: { $0.id == id }) { focus(session) }
         }
         panel.onMarkAllRead = { [model] in model.markAllRead() }
+        if let snapshot { panel.render(snapshot) }
+        self.panel = panel
+        return panel
     }
 
     /// Draws `snapshot` into both views.
@@ -27,7 +40,7 @@ final class HUDController {
         self.snapshot = snapshot
         let now = Date.now
         counters.render(snapshot, now: now)
-        panel.render(snapshot)
+        panel?.render(snapshot)
         scheduleResetRender(at: snapshot.usage?.resetsAt, now: now)
     }
 

@@ -89,9 +89,18 @@ Follow the `add-pet-state` skill end to end.
 - Hide mode with pop-out rules, `SMAppService` launch at login, the Settings window, and persisting the config.
 - AC: REQ-05 AC1–3.
 
-### WP-8 — Performance pass · owner: reviewer (audit) + owners (fixes) · deps: WP-7 · status: `todo`
+### WP-8 — Performance pass · owner: reviewer (audit) + owners (fixes) · deps: WP-7 · status: `done` (release table in `08`; launch peak at the 40 MB line, post-burst 41–44 MB and Settings RSS recorded as known exceptions; expanded-glow run needs a human hover)
 - Run every scenario in `08`, fix the regressions, and record the measured numbers in `08`.
 - AC: REQ-08 AC1–2.
+
+## v1 checks left for a human
+Each item is in the WP status above. They need eyes or a hover, so no agent can do them:
+- WP-2 / WP-2.1: physical-notch fit, full-screen hover, right-click without focus, no slide on Space switch.
+- WP-3.1: the hammer reads at notch size and is not clipped (`scripts/simulate.sh tools`).
+- WP-5.2 / WP-5.3: counter colours (grey → blue → red → orange), the panel status row and the `HP · resets · WEEK` footer (`simulate.sh start`, `permission`, `done`, `usage 37`).
+- WP-6: the Automation prompt, tab-precise read in Terminal.app / iTerm2, click-to-focus.
+- WP-7: the hide-mode sliver and pop-out, the menu checkmarks, Settings, launch at login (install to /Applications first).
+- WP-8 / REQ-11: `scripts/perf.sh 30` with the mouse on the expanded panel (glow); drop the glow if it breaks the budget.
 
 ## v2 backlog
 - REQ-V2-01: approve permissions from the notch.

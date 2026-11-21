@@ -51,6 +51,9 @@ final class IslandView: NSView {
     /// Called with `true` when the mouse enters the island and `false` when it leaves.
     var onHoverChange: ((Bool) -> Void)?
 
+    /// Builds the session panel on the first expand, so it costs nothing at launch.
+    var panelProvider: (() -> NSView)?
+
     /// Builds the right-click menu on demand; building it at launch costs about 4 MB of peak RSS.
     var menuProvider: (() -> NSMenu)?
 
@@ -126,6 +129,11 @@ final class IslandView: NSView {
         let panelHeight = row.minY - island.minY
         panelSlot.isHidden = panelHeight <= 2 * Self.panelInset
         if !panelSlot.isHidden {
+            if panelSlot.subviews.isEmpty, let view = panelProvider?() {
+                view.frame = panelSlot.bounds
+                view.autoresizingMask = [.width, .height]
+                panelSlot.addSubview(view)
+            }
             panelSlot.frame = CGRect(x: island.minX, y: island.minY, width: island.width, height: panelHeight)
                 .insetBy(dx: Self.panelInset, dy: Self.panelInset)
         }
