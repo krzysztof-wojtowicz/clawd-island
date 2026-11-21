@@ -43,8 +43,10 @@ final class TerminalFocusWatcher {
 
     /// Activates the session's terminal and, in Terminal.app or iTerm2, selects its tab.
     func focus(_ session: Session) {
-        guard let bundleID = session.meta?.terminalBundleID else { return }
-        NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first?.activate()
+        // A `tell` to a terminal that has quit would relaunch it, so only focus running ones.
+        guard let bundleID = session.meta?.terminalBundleID,
+              let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
+        app.activate()
         guard let tty = session.meta?.tty, Self.isSafe(tty),
               let source = Self.selectScript(bundleID: bundleID, tty: tty) else { return }
         runScript(source) { _ in }
@@ -59,7 +61,8 @@ final class TerminalFocusWatcher {
             return
         }
         runScript(source) { [weak self] result in
-            guard let self else { return }
+            // The script can block on the Automation prompt; drop the result if the user has moved on.
+            guard let self, NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bundleID else { return }
             if let tty = result, !tty.isEmpty {
                 for session in sessions() where session.meta?.tty == tty { markRead(session.id) }
             } else {
@@ -69,6 +72,7 @@ final class TerminalFocusWatcher {
     }
 
     private func startDwell(_ bundleID: String) {
+        dwellTimer?.invalidate()
         let timer = Timer(timeInterval: Self.dwell, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated { self?.dwellElapsed(bundleID) }
         }
