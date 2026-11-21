@@ -66,8 +66,15 @@ final class TerminalFocusWatcher {
         // A `tell` to a terminal that has quit would relaunch it, so only focus running ones.
         guard let bundleID = session.meta?.terminalBundleID,
               let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
-        app.activate()
         let id = session.id
+        if EditorWindows.bundleIDs.contains(bundleID) {
+            // Raise before activating so the right window is frontmost when the app comes forward.
+            _ = EditorWindows.raise(project: session.projectName, in: app)
+            app.activate()
+            if mode() != .off { markRead(id) }
+            return
+        }
+        app.activate()
         guard let tty = session.meta?.tty, Self.isSafe(tty),
               let source = Self.selectScript(bundleID: bundleID, tty: tty) else {
             // App-level terminal: bringing its app forward is the whole focus.
@@ -85,6 +92,16 @@ final class TerminalFocusWatcher {
         dwellTimer = nil
         guard mode() != .off, let bundleID,
               sessions().contains(where: { $0.meta?.terminalBundleID == bundleID }) else { return }
+        if EditorWindows.bundleIDs.contains(bundleID), mode() == .tab {
+            // Window-level: the focused window's title names the project; otherwise the plain dwell.
+            let title = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first
+                .flatMap { EditorWindows.focusedWindowTitle(of: $0) }
+            let matches = sessions().filter {
+                $0.meta?.terminalBundleID == bundleID && title?.contains($0.projectName) == true
+            }
+            if matches.isEmpty { startDwell(bundleID) } else { matches.forEach { markRead($0.id) } }
+            return
+        }
         guard mode() == .tab, let source = Self.currentTTYScript(bundleID: bundleID) else {
             startDwell(bundleID)
             return
