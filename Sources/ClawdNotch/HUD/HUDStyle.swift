@@ -51,8 +51,8 @@ enum HUDStyle {
         switch session.state {
         case .idle: "idle"
         case .thinking: "thinking"
-        case .talking(.tool): "running \(session.toolName ?? "a tool")"
-        case .talking(.text): "writing"
+        case .usingTools: "using \(session.toolName ?? "a tool")"
+        case .talking: "writing"
         case .needsInput: "needs input"
         case .done: session.failed ? "failed" : "done"
         }

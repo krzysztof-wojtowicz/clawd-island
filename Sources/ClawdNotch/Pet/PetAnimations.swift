@@ -25,6 +25,12 @@ extension PetRig {
                 circle.add(pulse, forKey: "loop.pulse")
             }
             torso.add(Self.keyframes("position.y", [0, 0.6, 0, -0.6, 0], period: 1.6, additive: true), forKey: "loop.bob")
+        case .usingTools:
+            // Fast down-stroke (0.14 s), slow lift; the body dips on impact. One 0.7 s loop, all in the render server.
+            let strike = Self.keyframes("transform.rotation.z", [0, -40, 0].map(Self.radians), period: 0.7, keyTimes: [0, 0.2, 1], additive: true)
+            rightArm.add(strike, forKey: "loop.strike")
+            let dip = Self.keyframes("position.y", [0, -0.5, 0], period: 0.7, keyTimes: [0, 0.2, 1], additive: true)
+            torso.add(dip, forKey: "loop.dip")
         case .talking:
             for (index, dot) in dots.enumerated() {
                 let light = Self.keyframes("opacity", [0.3, 1, 0.3, 0.3], period: 0.9, keyTimes: [0, 0.17, 0.33, 1])

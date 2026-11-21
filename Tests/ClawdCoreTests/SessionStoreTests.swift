@@ -20,9 +20,11 @@ struct SessionStoreTests {
         AggregateCase(sessions: [], expected: .sleeping),
         AggregateCase(sessions: [(.idle, false)], expected: .idle),
         AggregateCase(sessions: [(.idle, false), (.thinking, false)], expected: .thinking),
-        AggregateCase(sessions: [(.thinking, false), (.talking(.text), false)], expected: .talking),
-        AggregateCase(sessions: [(.talking(.tool), false), (.done, true)], expected: .done),
-        AggregateCase(sessions: [(.done, true), (.needsInput, false), (.talking(.tool), false)],
+        AggregateCase(sessions: [(.thinking, false), (.talking, false)], expected: .talking),
+        AggregateCase(sessions: [(.talking, false), (.usingTools, false)], expected: .usingTools),
+        AggregateCase(sessions: [(.usingTools, false), (.thinking, false), (.idle, false)], expected: .usingTools),
+        AggregateCase(sessions: [(.usingTools, false), (.done, true)], expected: .done),
+        AggregateCase(sessions: [(.done, true), (.needsInput, false), (.usingTools, false)],
                       expected: .needsInput),
         AggregateCase(sessions: [(.done, false), (.idle, false)], expected: .idle),
     ]
@@ -64,11 +66,21 @@ struct SessionStoreTests {
         #expect(store.snapshot(now: t0.addingTimeInterval(2.0)).sessions.first?.state == .thinking)
     }
 
+    @Test("usingTools never decays and sets no decay deadline")
+    func usingToolsDoesNotDecay() {
+        var store = SessionStore()
+        store.apply(event(.preToolUse), now: t0)
+        #expect(store.nextDecayDeadline(now: t0) == nil)
+        let later = store.snapshot(now: t0.addingTimeInterval(60))
+        #expect(later.aggregate == .usingTools)
+        #expect(later.sessions.first?.state == .usingTools)
+    }
+
     @Test("A new talking event restarts the decay and moves the deadline")
     func decayDeadline() {
         var store = SessionStore()
         #expect(store.nextDecayDeadline(now: t0) == nil)
-        store.apply(event(.preToolUse), now: t0)
+        store.apply(event(.messageDisplay), now: t0)
         store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1.5))
         #expect(store.nextDecayDeadline(now: t0.addingTimeInterval(1.5)) == t0.addingTimeInterval(3.5))
         #expect(store.snapshot(now: t0.addingTimeInterval(3)).aggregate == .talking)

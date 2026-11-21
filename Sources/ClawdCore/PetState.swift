@@ -7,6 +7,7 @@ public enum PetState: String, CaseIterable, Equatable, Sendable {
     case idle
     case thinking
     case talking
+    case usingTools
     case done
     case needsInput
 }

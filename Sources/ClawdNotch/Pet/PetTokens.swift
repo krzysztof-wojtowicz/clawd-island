@@ -13,6 +13,9 @@ enum PetTokens {
     static let badgeGlyph = rgb(0xFFFFFF)
     /// Speech bubble, thought cloud and "Zzz".
     static let bubbleFill = rgb(0xFFFFFF, alpha: 0.92)
+    /// Hammer handle and head (`usingTools`).
+    static let toolHandle = rgb(0x8B5A2B)
+    static let toolHead = rgb(0x8E8E93)
     static let hpHigh = rgb(0x34C759)
     static let hpMid = rgb(0xFFCC00)
     static let hpLow = rgb(0xFF3B30)

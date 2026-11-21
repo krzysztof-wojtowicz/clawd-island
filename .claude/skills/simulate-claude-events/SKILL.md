@@ -12,7 +12,8 @@ Scenarios. Implement all of these in WP-0/WP-4 and keep this list in sync with t
 |---|---|---|
 | `start` | `/session-meta` (how SessionStart arrives in production) | idle |
 | `think` | UserPromptSubmit | thinking |
-| `tool` | PreToolUse(Bash) | talking (decays to thinking after 2 s) |
+| `tool` | PreToolUse(Bash) | usingTools (hammer strike; never decays, ends on PostToolUse/Stop) |
+| `tools` | think → PreToolUse(Bash) → hold 4 s → PostToolUse → Stop | thinking → usingTools (hammer) → done |
 | `text` | MessageDisplay ×5, 200 ms apart | talking |
 | `permission` | PermissionRequest | needsInput (red !) |
 | `done` | Stop | done (paw raised) + pop-out |

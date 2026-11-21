@@ -20,7 +20,7 @@ public struct Snapshot: Equatable, Sendable {
 
 extension PetState {
     /// The highest-priority state across sessions (REQ-03 AC3):
-    /// `needsInput > done (unread) > talking > thinking > idle > sleeping`.
+    /// `needsInput > done (unread) > usingTools > talking > thinking > idle > sleeping`.
     init(aggregating sessions: [Session]) {
         if sessions.isEmpty {
             self = .sleeping
@@ -28,7 +28,9 @@ extension PetState {
             self = .needsInput
         } else if sessions.contains(where: { $0.state == .done && $0.unread }) {
             self = .done
-        } else if sessions.contains(where: { if case .talking = $0.state { true } else { false } }) {
+        } else if sessions.contains(where: { $0.state == .usingTools }) {
+            self = .usingTools
+        } else if sessions.contains(where: { $0.state == .talking }) {
             self = .talking
         } else if sessions.contains(where: { $0.state == .thinking }) {
             self = .thinking

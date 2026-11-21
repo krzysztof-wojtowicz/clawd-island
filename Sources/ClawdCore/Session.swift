@@ -5,14 +5,12 @@ import Foundation
 
 /// The inferred phase of a single session. The pet shows the aggregate of these, not each one.
 public enum SessionState: Equatable, Sendable {
-    /// What the session is "saying": running a tool or streaming text.
-    public enum TalkKind: Sendable {
-        case tool, text
-    }
-
     case idle
     case thinking
-    case talking(TalkKind)
+    /// Between `PreToolUse` and its result. Never decays: a long tool run sends no events.
+    case usingTools
+    /// Streaming text; decays to `thinking` after `SessionStore.talkingDecay`.
+    case talking
     case needsInput
     case done
 }
@@ -72,11 +70,10 @@ public struct Session: Equatable, Sendable, Identifiable {
             unread = false
             failed = false
         case .preToolUse:
-            state = .talking(.tool)
-            lastTalkingAt = now
+            state = .usingTools
             toolName = event.toolName
         case .messageDisplay:
-            state = .talking(.text)
+            state = .talking
             lastTalkingAt = now
         case .postToolUse, .postToolBatch, .postToolUseFailure, .preCompact:
             state = .thinking

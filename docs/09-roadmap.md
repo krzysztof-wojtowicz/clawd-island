@@ -63,7 +63,7 @@ A design change requested after WP-5: everything moves to the right of the notch
 - The hover glow (REQ-11): a `shadowPath` shadow with an opacity fade (`06`). Measure it with `perf.sh` and drop it if it breaks the budget.
 - AC: REQ-01 AC1–2 (updated), REQ-04 AC1–4, REQ-11 AC1–2 (or a recorded drop in `08`).
 
-### WP-3.1 — `usingTools` state with a hammer · owner: core-engineer (state) + pet-animator (hammer) + macos-ui-engineer (panel text) · deps: WP-5.1 · status: `todo`
+### WP-3.1 — `usingTools` state with a hammer · owner: core-engineer (state) + pet-animator (hammer) + macos-ui-engineer (panel text) · deps: WP-5.1 · status: `done` (hammering: CPU avg 0.09 % / peak 0.50 %; hammer look at notch size still to be checked by eye)
 Follow the `add-pet-state` skill end to end.
 - Core: a `usingTools` case in `PetState` and `SessionState` (replacing `talking(.tool)`), `PreToolUse` → `usingTools` with no decay, the new aggregate priority, and tests (`04`).
 - Pet: the hammer accessory, the pose and the strike loop, the `tool.*` tokens, and Reduce Motion (`07`).

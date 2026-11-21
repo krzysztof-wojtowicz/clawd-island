@@ -20,6 +20,8 @@ struct PetRig {
     let bubble = CAShapeLayer()
     let dots: [CAShapeLayer]
     let badge: CAShapeLayer
+    /// Handle and head, held by the right arm so it swings with it.
+    let hammer = CALayer()
 
     private let eyeGroup = CALayer()
     private let fullBox = CGRect(origin: .zero, size: PetTokens.unitBox)
@@ -28,6 +30,8 @@ struct PetRig {
     // Raised from the shoulder rather than mid-height, so the paw clears the body's silhouette at notch size.
     private let raisedArmPivot = CGPoint(x: 28, y: 18.5)
     private let raisedArmAngle: CGFloat = 110 * .pi / 180
+    // The hammer is cocked up and to the right, so it stays near the unit box instead of towering over the head.
+    private let cockedArmAngle: CGFloat = 65 * .pi / 180
 
     init() {
         let body = Self.roundedRect(CGRect(x: 4, y: 6, width: 24, height: 14), radius: 3.5, color: PetTokens.body)
@@ -59,13 +63,14 @@ struct PetRig {
         configureBubble()
         configureText()
         legs.forEach(root.addSublayer)
+        configureHammer()
         [torso, zzz, bubble, badge].forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
         for accessory in accessories { accessory.opacity = 0 }
     }
 
     /// Accessory layers that cross-fade between states.
-    private var accessories: [CALayer] { [zzz, bubble, badge] + cloud }
+    private var accessories: [CALayer] { [zzz, bubble, badge, hammer] + cloud }
 
     /// Sets the model values of the pose parts (eyes, torso height, right arm) for `state`.
     func applyPose(_ state: PetState) {
@@ -73,15 +78,17 @@ struct PetRig {
         for eye in eyes { eye.transform = CATransform3DMakeScale(1, eyeScale, 1) }
         eyeGroup.position = CGPoint(x: fullBox.midX, y: fullBox.midY + (state == .thinking ? 1 : 0))
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom - (state == .sleeping ? 1 : 0))
-        let raised = state == .done || state == .needsInput
+        let raised = state == .done || state == .needsInput || state == .usingTools
         rightArm.position = raised ? raisedArmPivot : armPivot
-        rightArm.transform = raised ? CATransform3DMakeRotation(raisedArmAngle, 0, 0, 1) : CATransform3DIdentity
+        let angle = state == .usingTools ? cockedArmAngle : raisedArmAngle
+        rightArm.transform = raised ? CATransform3DMakeRotation(angle, 0, 0, 1) : CATransform3DIdentity
     }
 
     /// Shows only the accessories that belong to `state`.
     func showAccessories(for state: PetState) {
         zzz.opacity = state == .sleeping ? 1 : 0
         bubble.opacity = state == .talking ? 1 : 0
+        hammer.opacity = state == .usingTools ? 1 : 0
         badge.opacity = state == .needsInput ? 1 : 0
         for circle in cloud { circle.opacity = state == .thinking ? 1 : 0 }
     }
@@ -107,6 +114,16 @@ struct PetRig {
         bubble.path = path
         bubble.fillColor = PetTokens.bubbleFill
         dots.forEach(bubble.addSublayer)
+    }
+
+    /// Arm-local coordinates (the arm is 3.5 × 4, pivoting at its left edge): the handle runs along the arm, the head crosses its tip.
+    private func configureHammer() {
+        let handle = Self.roundedRect(CGRect(x: 2.5, y: 1.5, width: 5, height: 1), radius: 0.4, color: PetTokens.toolHandle)
+        let head = Self.roundedRect(CGRect(x: 6.5, y: 0, width: 2, height: 4), radius: 0.6, color: PetTokens.toolHead)
+        hammer.frame = rightArm.bounds
+        hammer.addSublayer(handle)
+        hammer.addSublayer(head)
+        rightArm.addSublayer(hammer)
     }
 
     private func configureText() {

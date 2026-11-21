@@ -56,6 +56,12 @@ case "$scenario" in
         for i in 1 2 3; do hook MessageDisplay "$sid"; sleep 0.3; done
         sleep 1; hook Stop "$sid"
         ;;
+    tools)
+        hook UserPromptSubmit "$sid"; sleep 1
+        hook PreToolUse "$sid" '"tool_name":"Bash","tool_input":{},"tool_use_id":"t1"'; sleep 4
+        hook PostToolUse "$sid" '"tool_name":"Bash","tool_input":{},"tool_use_id":"t1"'; sleep 1
+        hook Stop "$sid"
+        ;;
     multi)
         start sim-a; hook UserPromptSubmit sim-a
         start sim-b; hook PreToolUse sim-b '"tool_name":"Edit"'
@@ -70,7 +76,7 @@ case "$scenario" in
         done
         ;;
     *)
-        echo "usage: $0 {start|think|tool|text|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
+        echo "usage: $0 {start|think|tool|tools|text|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
         exit 1
         ;;
 esac

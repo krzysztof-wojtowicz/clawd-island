@@ -70,7 +70,7 @@ public struct SessionStore: Sendable {
     public func nextDecayDeadline(now: Date) -> Date? {
         sessions
             .compactMap { session -> Date? in
-                guard case .talking = session.state, let talkedAt = session.lastTalkingAt else { return nil }
+                guard session.state == .talking, let talkedAt = session.lastTalkingAt else { return nil }
                 return talkedAt.addingTimeInterval(Self.talkingDecay)
             }
             .filter { $0 > now }
@@ -99,7 +99,7 @@ public struct SessionStore: Sendable {
     }
 
     private func decayed(_ session: Session, now: Date) -> Session {
-        guard case .talking = session.state, let talkedAt = session.lastTalkingAt,
+        guard session.state == .talking, let talkedAt = session.lastTalkingAt,
               now.timeIntervalSince(talkedAt) >= Self.talkingDecay
         else { return session }
         var copy = session
