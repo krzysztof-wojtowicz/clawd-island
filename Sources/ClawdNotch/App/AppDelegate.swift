@@ -55,11 +55,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bindSnapshot(controller)
         focusWatcher.start()
         if preferences.headphones { nowPlayingWatcher.start() }
-        preferences.onHeadphonesChange = { [nowPlayingWatcher, pet] on in
+        preferences.onHeadphonesChange = { [nowPlayingWatcher, pet, model] on in
             if on {
                 nowPlayingWatcher.start()
             } else {
                 nowPlayingWatcher.stop()
+                model.clearNowPlaying()
                 pet.setHeadphones(false)
             }
         }

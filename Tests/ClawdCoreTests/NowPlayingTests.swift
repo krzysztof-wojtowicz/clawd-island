@@ -32,6 +32,16 @@ struct NowPlayingTests {
         #expect(store.snapshot(now: now).nowPlaying?.isPlaying == false)
     }
 
+    @Test("Clearing forgets the state, so the next play is a change again (REQ-13 AC7)")
+    func clearing() {
+        var store = SessionStore()
+        store.apply(nowPlaying: NowPlaying(app: .spotify, isPlaying: true, title: "A"))
+        store.clearNowPlaying()
+        #expect(store.snapshot(now: now).nowPlaying == nil)
+        store.apply(nowPlaying: NowPlaying(app: .spotify, isPlaying: true, title: "B"))
+        #expect(store.snapshot(now: now).nowPlaying?.isPlaying == true)
+    }
+
     @Test("Playing wins; when the source stops the other app takes over if it plays")
     func twoApps() {
         var store = SessionStore()

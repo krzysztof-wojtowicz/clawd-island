@@ -104,6 +104,13 @@ public struct SessionStore: Sendable {
         }
     }
 
+    /// Forgets every music report, e.g. when the headphones switch is turned off: the watcher misses changes while
+    /// off, so stale state would otherwise hide the next play (REQ-13 AC7).
+    public mutating func clearNowPlaying() {
+        players.removeAll()
+        nowPlayingSource = nil
+    }
+
     /// Stores the latest usage window from the statusline.
     public mutating func apply(usage: UsageSnapshot) {
         self.usage = usage
