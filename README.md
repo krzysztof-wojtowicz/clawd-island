@@ -57,7 +57,7 @@ Pull and re-run `scripts/install.sh`, then click **Install Hooks** in Settings a
 - **"+ New" session.** Start a new Claude Code session from the panel.
 - **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes, needs you or runs subagents; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
 
-  ![Mini mode: corner peek, pose-only change, 3 s pop-out](docs/media/hide-mode.gif)
+  ![Mini mode: corner peek, pose-only change, 3 s pop-out](docs/media/mini-mode.gif)
 
 - **Sound cues** for needs-input and done.
 - **JetBrains Mono** for the numbers, with a monospaced fallback.
@@ -103,7 +103,7 @@ Every pose is a Core Animation layer loop run by the render server. The GIFs are
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU and RSS of the running app against the budget |
 | `scripts/perf-suite.sh` | Every performance scenario on a release bundle, one table |
-| `scripts/record-gif.sh <island\|hide-mode>` | Record the README island / hide-mode GIFs |
+| `scripts/record-gif.sh <island\|mini-mode>` | Record the README island / mini-mode GIFs |
 | `swift scripts/window-info.swift` | Print screens and the app's window level and bounds |
 
 To regenerate the pose GIFs, build in debug and run `.build/debug/ClawdIsland --render-poses docs/media`. The mode exists only in debug builds.

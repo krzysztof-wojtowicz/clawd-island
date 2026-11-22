@@ -1,12 +1,12 @@
 #!/bin/bash
 # Records the README GIFs from the release bundle in dist/ (skill: build-and-run).
-# Usage: scripts/record-gif.sh <island|hide-mode> [out.gif]
+# Usage: scripts/record-gif.sh <island|mini-mode> [out.gif]
 # Captures only the app's window (screencapture -l), so no other screen content can appear.
 # Needs the Screen Recording permission and the Bash sandbox disabled. Backs up and restores config.json.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-scene="${1:?usage: record-gif.sh <island|hide-mode> [out.gif]}"
+scene="${1:?usage: record-gif.sh <island|mini-mode> [out.gif]}"
 out="${2:-docs/media/$scene.gif}"
 config="$HOME/Library/Application Support/ClawdIsland/config.json"
 work="$(mktemp -d)"
@@ -33,7 +33,7 @@ scene_island() {
     swift scripts/hover.swift on; sleep 3
     swift scripts/hover.swift off; sleep 1.5
 }
-scene_hide_mode() {
+scene_mini_mode() {
     sleep 1.5; $sim start; sleep 2
     $sim think; sleep 2
     $sim text; sleep 4.5
@@ -41,14 +41,19 @@ scene_hide_mode() {
 }
 
 case "$scene" in
-    island)    hide=false ;;
-    hide-mode) hide=true ;;
+    island)    mini=false ;;
+    mini-mode) mini=true ;;
     *) echo "unknown scene $scene" >&2; exit 1 ;;
 esac
 
 # Quiet, deterministic config for the recording: no sound, chosen mini mode.
-plutil -replace miniMode -bool "$hide" "$config"
+plutil -replace miniMode -bool "$mini" "$config"
 plutil -replace soundCues -bool false "$config"
+# Isolate from the user's real Claude Code: real HTTP hooks aim at the default port with the old token, and the
+# bridge (statusline) reads port and token from this config at runtime, so a scratch port plus a random token cut
+# both off while simulate.sh (same config) still reaches the app. cleanup restores the backup.
+plutil -replace port -integer 47499 "$config"
+plutil -replace token -string "$(uuidgen)" "$config"
 
 swift scripts/hover.swift off 2>/dev/null || true
 pkill -x ClawdIsland 2>/dev/null || true

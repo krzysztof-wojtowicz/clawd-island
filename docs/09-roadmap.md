@@ -162,8 +162,8 @@ Older entries above keep the names of their time ("hide mode", headphones, REQ-1
 - Signing "ClawdIsland Dev" (`make-signing-cert.sh`, `bundle.sh`); scripts, `.claude/` agents and skills, README, CLAUDE.md and docs 03–08 use the new name; `uninstall.sh` also removes a leftover `ClawdNotch` folder.
 - AC: REQ-15 (v5 name); `grep -rI ClawdNotch` leaves only the migration code, ADR-0009 and CHANGELOG history; `install.sh --dest <tmp>` works; `codesign -dv` shows the new identifier.
 
-### WP-29 — README GIFs on a scratch port · owner: macos-ui-engineer + orchestrator · deps: WP-28 · status: `todo`
-- `record-gif.sh` sets a scratch port in the backed-up config while recording (real Claude Code hooks cannot reach the app, so no live session or real WK/HP leaks in); `simulate.sh` reads the port from the config. The scene becomes `mini-mode`; `docs/media/mini-mode.gif` replaces `hide-mode.gif` (deleted), README links updated.
+### WP-29 — README GIFs on a scratch port · owner: macos-ui-engineer + orchestrator · deps: WP-28 · status: `done`
+- `record-gif.sh` sets a scratch port in the backed-up config while recording (a scratch port and random token, also in `perf-suite.sh`: real Claude Code hooks and the bridge cannot reach the app, so no live session or real WK/HP leaks in); `simulate.sh` reads the port from the config. The scene becomes `mini-mode`; `docs/media/mini-mode.gif` replaces `hide-mode.gif` (deleted), README links updated.
 - Re-record `island.gif` and `mini-mode.gif`; check extracted frames: the first frame tilted, no foreign sessions, the wave visible in `done`.
 - AC: both GIFs < 600 KB, show motion and nothing outside the app window.
 

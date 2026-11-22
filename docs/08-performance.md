@@ -72,5 +72,19 @@ Remaining over target, with the cause:
 - **Burst / post-burst 42 MB (target 40):** each hook connection costs about 7.8 KB of Network.framework state (`Endpoint`, `ProtocolStack`, path parameters) that stays alive about 30 s after the client closed, and the allocator keeps those pages (`malloc_zone_pressure_relief` and breaking the closure retention gave nothing, measured). Only dropping `NWListener` for a plain socket accept loop would remove it (and `Network.framework` from the launch set); not done here.
 - **Settings window open 60 MB / closed 55 MB (`footprint` 19 MB):** plain AppKit controls, released on close (`windowWillClose` drops all references), but the AppKit controls/text-system pages stay resident. Opened rarely; accepted, with these numbers.
 
+## v5 measured (WP-29, release bundle, `scripts/perf-suite.sh`, scratch port)
+| Scenario | CPU avg / max | RSS max | footprint |
+|---|---|---|---|
+| sleeping | 0.00 / 0.00 % | 32.4 MB | 10 MB |
+| thinking | 0.00 / 0.00 % | 34.9 MB | 11 MB |
+| burst (50 events/s, 10 s) | 2.38 / 7.50 % | 38.6 MB | 14 MB |
+| expanded hover | 0.00 / 0.00 % | 40.2 MB | 15 MB |
+| settings open (10 s) / closed | 1.12 / 6.80 % then 0.00 % | 59.7 / 54.9 MB | 19 MB |
+| mini-mode pop-out | 0.11 / 1.90 % | 41.3 MB | 11 MB |
+
+Launch peak 0.12 / 3.10 %, 40.6 MB RSS. All within budget (footprint <= 20 MB); Settings RSS is shared AppKit pages.
+
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdIsland` for wakeups per second.
+
+`perf-suite.sh` and `record-gif.sh` swap the config `port` (47499) and `token` (random) for the run: real Claude Code HTTP hooks (old port) and the bridge (reads the same config at runtime) can no longer reach the app, so real traffic cannot pollute the numbers. `simulate.sh` reads the same config. The backed-up config is restored on exit.

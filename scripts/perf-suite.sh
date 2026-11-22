@@ -16,6 +16,16 @@ if [[ -f "$config" ]]; then cp "$config" "$backup"; had_config=1; fi
 rows=()
 pid=""
 
+# Isolate from the user's real Claude Code (its hooks would add random CPU spikes): real HTTP hooks aim at the
+# default port with the old token, and the bridge reads port and token from this config at runtime, so a scratch
+# port plus a random token cut both off while simulate.sh (same config) still works. cleanup restores the backup.
+isolate() {
+    mkdir -p "$(dirname "$config")"
+    [[ -f "$config" ]] || echo '{}' >"$config"
+    plutil -replace port -integer 47499 "$config"
+    plutil -replace token -string "$(uuidgen)" "$config"
+}
+
 cleanup() {
     pkill -x ClawdIsland 2>/dev/null || true
     sleep 1 # let the app finish any config write before we restore
@@ -60,7 +70,7 @@ settled() { sleep "$settle"; record "$1" "$(measure "$sample")"; }
 sim() { scripts/simulate.sh "$@" >/dev/null; }
 endall() { for s in sim-1 sim-a sim-b sim-c; do sim end "$s"; done; }
 
-set_hide_mode() {
+set_mini_mode() {
     mkdir -p "$(dirname "$config")"
     [[ -f "$config" ]] || echo '{}' >"$config"
     plutil -replace miniMode -bool "$1" "$config"
@@ -75,7 +85,8 @@ scripts/bundle.sh release >/dev/null
 header
 
 # miniMode must be off for the normal scenarios, whatever the user's config says.
-set_hide_mode false
+isolate
+set_mini_mode false
 launch
 record "launch peak (first ${settle}s)" "$(measure "$settle")"
 settled "sleeping"
@@ -104,11 +115,11 @@ launch --open-settings --close-settings-after 10
 record "settings open (first 10 s)" "$(measure 10)"
 settled "settings closed"
 
-set_hide_mode true
+set_mini_mode true
 launch
 settled "hidden idle"
 sim start; sim think; sleep 3; sim done
-record "hide-mode pop-out (after a turn)" "$(measure "$sample")"
+record "mini-mode pop-out (after a turn)" "$(measure "$sample")"
 endall
 
 echo

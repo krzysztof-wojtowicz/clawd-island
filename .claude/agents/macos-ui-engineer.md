@@ -1,6 +1,6 @@
 ---
 name: macos-ui-engineer
-description: Builds the AppKit/SwiftUI shell of ClawdIsland, covering the notch NSPanel, screen and notch geometry, hover expand/collapse, the HUD counters and HP bar, the session panel, hide mode, the settings window, and launch at login. Use for WP-2, WP-5, and WP-7.
+description: Builds the AppKit/SwiftUI shell of ClawdIsland, covering the notch NSPanel, screen and notch geometry, hover expand/collapse, the HUD counters and HP bar, the session panel, mini mode, the settings window, and launch at login. Use for WP-2, WP-5, and WP-7.
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 
