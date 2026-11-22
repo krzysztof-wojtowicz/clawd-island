@@ -109,12 +109,6 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - `AXIsProcessTrustedWithOptions` with the prompt option is called once, on first use. Without the permission, fall back to app level. Like Automation, the grant is tied to the code signature.
 - Ghostty and Warp have no API to select or read a tab or window: app level only. Tab precision inside any IDE terminal is not possible.
 
-## Now playing (REQ-13, ADR-0007)
-- `NowPlayingWatcher` observes `DistributedNotificationCenter` for `com.apple.Music.playerInfo` and `com.spotify.client.PlaybackStateChanged`. `userInfo` keys: `Player State` (`Playing` / `Paused` / `Stopped`), `Name`, `Artist`, `Album`. Missing keys become nil; unknown states count as not playing.
-- Event-driven only: no polling, no AppleScript, no Automation permission, no login. Works with AirPlay, because the apps post the notification themselves.
-- It feeds `NowPlaying(isPlaying, title, artist, album, app)` into the store; the snapshot carries it (`03`). Titles are stored, not shown.
-- **Known limit:** the apps post only on change, so after launching ClawdNotch the headphones appear at the next play, pause or track change.
-
 ## Sound cues (REQ-12)
 `SoundCues` (App) watches `Snapshot.popToken` edges and plays a system sound through a short-lived `/usr/bin/afplay` process (an in-process `NSSound` costs +7 MB RSS): "Funk" for needsInput, "Glass" for unread done. It does not play for user-caused changes and is skipped when `soundCues` is off. Event-driven; no timer.
 

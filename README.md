@@ -18,17 +18,17 @@ scripts/install.sh             # release build -> ~/Applications/ClawdNotch.app,
 
 `scripts/install.sh --dest /Applications` installs for all users. Without the certificate the app is signed ad-hoc, which works, but macOS forgets the permissions below after every rebuild. A signed app is a stable identity, so the grants survive updates. The certificate is local to your Mac (ADR-0008); other Macs see an "unidentified developer" warning (right-click, Open).
 
-Then, in the notch menu, choose **Install Hooks**. It backs up `~/.claude/settings.json`, adds the hooks and the statusline, and can be undone from the same menu.
+Then open **Settings** (right-click the notch → Settings…) and click **Install Hooks**. It backs up `~/.claude/settings.json`, adds the hooks and the statusline, and can be undone from the same place (**Uninstall Hooks**).
 
 ### First-run permissions
 
 - **Automation** (Terminal.app, iTerm2): macOS asks the first time you click a session; allow it for tab-precise focus.
 - **Accessibility**: for VS Code and JetBrains window focus. Add ClawdNotch in System Settings, Privacy & Security, Accessibility.
-- **Login item**: toggle "Launch at login" in the menu.
+- **Login item**: toggle "Launch at login" in Settings.
 
 ### Updating
 
-Pull and re-run `scripts/install.sh`, then choose **Install Hooks** again if the install folder changed (hooks point at the app's bridge path; re-installing replaces the old entries).
+Pull and re-run `scripts/install.sh`, then click **Install Hooks** in Settings again if the install folder changed (hooks point at the app's bridge path; re-installing replaces the old entries).
 
 ### Uninstall
 
@@ -53,31 +53,28 @@ Pull and re-run `scripts/install.sh`, then choose **Install Hooks** again if the
 
 - **Permissions from the notch.** Answer Claude Code permission requests with Deny, Allow or Always allow, without switching windows.
 - **"+ New" session.** Start a new Claude Code session from the panel.
-- **Hide mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes, needs you or runs subagents; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
+- **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes, needs you or runs subagents; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
 
-  ![Hide mode: corner peek, pose-only change, 3 s pop-out](docs/media/hide-mode.gif)
+  ![Mini mode: corner peek, pose-only change, 3 s pop-out](docs/media/hide-mode.gif)
 
 - **Sound cues** for needs-input and done.
-- **Music headphones.** The pet puts on headphones and nods while Apple Music or Spotify plays (switch in Settings).
 - **JetBrains Mono** for the numbers, with a monospaced fallback.
 
 ## Poses
 
 Every pose is a Core Animation layer loop run by the render server. The GIFs are rendered offscreen by the app itself.
 
-| State | Trigger | Pose | With headphones |
-|---|---|---|---|
-| `sleeping` | no sessions | ![sleeping](docs/media/sleeping.gif) | ![sleeping with headphones](docs/media/sleeping-headphones.gif) |
-| `idle` | session waiting for a prompt | ![idle](docs/media/idle.gif) | ![idle with headphones](docs/media/idle-headphones.gif) |
-| `thinking` | prompt submitted, between tool calls | ![thinking](docs/media/thinking.gif) | ![thinking with headphones](docs/media/thinking-headphones.gif) |
-| `usingTools` | a tool is running | ![usingTools](docs/media/usingTools.gif) | ![usingTools with headphones](docs/media/usingTools-headphones.gif) |
-| `talking` | Claude is writing text | ![talking](docs/media/talking.gif) | ![talking with headphones](docs/media/talking-headphones.gif) |
-| `compacting` | context compaction | ![compacting](docs/media/compacting.gif) | ![compacting with headphones](docs/media/compacting-headphones.gif) |
-| `juggling` | subagents running | ![juggling](docs/media/juggling.gif) | ![juggling with headphones](docs/media/juggling-headphones.gif) |
-| `done` | turn finished | ![done](docs/media/done.gif) | ![done with headphones](docs/media/done-headphones.gif) |
-| `needsInput` | permission or question waiting | ![needsInput](docs/media/needsInput.gif) | ![needsInput with headphones](docs/media/needsInput-headphones.gif) |
-
-Headphones are independent of the state: they appear on top of any pose while music plays. The cups sit on the body's upper corners, clear of the raised paw, and the nod only shows in the calm poses.
+| State | Trigger | Pose |
+|---|---|---|
+| `sleeping` | no sessions | ![sleeping](docs/media/sleeping.gif) |
+| `idle` | session waiting for a prompt | ![idle](docs/media/idle.gif) |
+| `thinking` | prompt submitted, between tool calls | ![thinking](docs/media/thinking.gif) |
+| `usingTools` | a tool is running | ![usingTools](docs/media/usingTools.gif) |
+| `talking` | Claude is writing text | ![talking](docs/media/talking.gif) |
+| `compacting` | context compaction | ![compacting](docs/media/compacting.gif) |
+| `juggling` | subagents running | ![juggling](docs/media/juggling.gif) |
+| `done` | turn finished | ![done](docs/media/done.gif) |
+| `needsInput` | permission or question waiting | ![needsInput](docs/media/needsInput.gif) |
 
 ## Requirements
 
@@ -119,7 +116,7 @@ To try the hook uninstaller safely, point it at scratch copies: `CLAWD_SETTINGS_
 | [03 Architecture](docs/03-architecture.md) | targets, types, data flow |
 | [04 State machine](docs/04-state-machine.md) | hook event → pet state |
 | [05 Claude Code integration](docs/05-claude-code-integration.md) | hooks, bridge, statusline, installer |
-| [06 Window & notch](docs/06-window-and-notch.md) | NSPanel, geometry, hide mode |
+| [06 Window & notch](docs/06-window-and-notch.md) | NSPanel, geometry, mini mode |
 | [07 Pet design](docs/07-pet-design.md) | tokens, anatomy, animations |
 | [08 Performance](docs/08-performance.md) | budget and rules |
 | [09 Roadmap](docs/09-roadmap.md) | work packages |

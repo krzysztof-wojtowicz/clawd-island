@@ -1,6 +1,6 @@
 # ADR-0007 — Now playing via the music apps' own notifications
 
-**Status:** accepted (implementation: WP-18, REQ-13)
+**Status:** Superseded — feature removed in v5 (WP-25). Kept for history.
 
 **Context:** The pet should wear headphones while music plays, and keep title, artist and album for later features. Constraints: no login, no private API, no polling, and the CPU/RSS budget (`docs/08`). The user listens through Apple Music and Spotify, including over AirPlay.
 

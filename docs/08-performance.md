@@ -20,7 +20,7 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 6. **No logging in hot paths in release builds.** Use `os.Logger` at `.debug` level only.
 7. **Small binary.** No dependencies. Build release with `-Osize` if it is not slower in practice.
 8. **No App Nap fights.** Do not disable App Nap. The app should be naturally idle.
-9. **Music and sound are event-driven (v3).** `NowPlayingWatcher` only observes distributed notifications; `SoundCues` plays a system sound in a short-lived `afplay` process on `popToken` edges (`NSSound` in-process costs +7 MB RSS / +6 MB footprint, never released). No polling, no timers, no AppleScript. The headphones and broom/ball overlays are Core Animation layers like every other part, hidden (not animating) when unused.
+9. **Sound is event-driven (v3).** `SoundCues` plays a system sound in a short-lived `afplay` process on `popToken` edges (`NSSound` in-process costs +7 MB RSS / +6 MB footprint, never released). No polling, no timers, no AppleScript. The broom/ball overlays and the wave loop (v5) are Core Animation layers like every other part, hidden (not animating) when unused.
 10. **Cheap effects only.** The hover glow (REQ-11) is a layer shadow with an explicit `shadowPath`, and only its opacity is animated. Never use a blur filter, `NSVisualEffectView`, or a per-frame redraw for it.
 
 ## Measured (latest, release bundle, settled; `scripts/perf.sh`)
@@ -42,7 +42,7 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 
 ## v4 targets (WP-22)
 - Launch peak ≤ 38 MB, steady ≤ 37 MB, post-burst ≤ 40 MB (cap concurrent `EventServer` connections; held `PermissionRequest`s are counted separately and never dropped), idle CPU ≈ 0 % settled, expanded panel with glow < 1 % (REQ-11 AC2).
-- `scripts/perf-suite.sh` runs every scenario on a release bundle and prints one table (CPU avg/max after a settle, RSS max, `footprint`): launch, sleeping, thinking, usingTools, burst + post-burst, hidden idle, hide-mode pop-out, expanded hover (cursor moved with `CGWarpMouseCursorPosition`, no permission needed), permission card, Settings open/close (`--open-settings`).
+- `scripts/perf-suite.sh` runs every scenario on a release bundle and prints one table (CPU avg/max after a settle, RSS max, `footprint`): launch, sleeping, thinking, usingTools, burst + post-burst, hidden idle, mini-mode pop-out, expanded hover (cursor moved with `CGWarpMouseCursorPosition`, no permission needed), permission card, Settings open/close (`--open-settings`).
 - Remaining exceptions are kept only with numbers and a reason.
 
 ### WP-22 measurements (final)
@@ -60,11 +60,11 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 | permission card | 0.00 / 0.00, 50.7, fp 18 | 0.00 / 0.00, 43.8, fp 15 |
 | Settings open (first 10 s) / closed | not measurable | 1.35 / 10.6, 60.0, fp 19 / 0.00, 55.2, fp 19 |
 | hidden idle | 0.04 / 0.9, 38.5, fp 11 | 0.00 / 0.00, 40.6, fp 11 |
-| hide-mode pop-out | 0.33 / 3.3, 45.5, fp 14 | 0.08 / 1.4, 41.3, fp 11 |
+| mini-mode pop-out | 0.33 / 3.3, 45.5, fp 14 | 0.08 / 1.4, 41.3, fp 11 |
 
 What moved what:
-- **`SoundCues` (the one real lever, -6 to -7 MB RSS and -4 to -6 MB footprint):** the first `done`/`needsInput` cue called `NSSound`, which loads the audio stack into the process for good (RSS 39 -> 46 MB on the first `done`). The cue now runs `/usr/bin/afplay` as a child process, so the app stays at 39.6 MB after a cue. This is what the "post-burst 48 MB" and "hide-mode pop-out 45 MB" rows really were: the burst simulator runs after `sim done`, not connection buffers. `heap`/`vmmap` before and after a burst show live malloc objects back at the launch count (about 20k) once Network releases the connections (about 40 s later).
-- `import AppKit` alone links `libswiftMetal`, `libswiftCoreImage`, `libswiftUniformTypeIdentifiers`, `libswiftXPC` and friends; an empty `NSApplication` accessory app links the same list, so they cost nothing we can remove. Release already excludes `PoseRenderer` (`#if DEBUG` wraps its imports). Removing the unused `@Observable` on `AppModel` (nothing observed it) dropped `libswiftObservation`: -0.05 MB, kept as dead-code removal. `-Osize` changed nothing (steady 39.0 MB either way, binary 1.0 MB), so it is not used. Lazy creation of everything else was already in place (HUD panel, Settings, `NowPlayingWatcher`, `NSSound`).
+- **`SoundCues` (the one real lever, -6 to -7 MB RSS and -4 to -6 MB footprint):** the first `done`/`needsInput` cue called `NSSound`, which loads the audio stack into the process for good (RSS 39 -> 46 MB on the first `done`). The cue now runs `/usr/bin/afplay` as a child process, so the app stays at 39.6 MB after a cue. This is what the "post-burst 48 MB" and "mini-mode pop-out 45 MB" rows really were: the burst simulator runs after `sim done`, not connection buffers. `heap`/`vmmap` before and after a burst show live malloc objects back at the launch count (about 20k) once Network releases the connections (about 40 s later).
+- `import AppKit` alone links `libswiftMetal`, `libswiftCoreImage`, `libswiftUniformTypeIdentifiers`, `libswiftXPC` and friends; an empty `NSApplication` accessory app links the same list, so they cost nothing we can remove. Release already excludes `PoseRenderer` (`#if DEBUG` wraps its imports). Removing the unused `@Observable` on `AppModel` (nothing observed it) dropped `libswiftObservation`: -0.05 MB, kept as dead-code removal. `-Osize` changed nothing (steady 39.0 MB either way, binary 1.0 MB), so it is not used. Lazy creation of everything else was already in place (HUD panel, Settings, `NSSound`).
 - `--open-settings` (and `--close-settings-after <s>`) added; the suite uses them for the Settings rows.
 
 Remaining over target, with the cause:

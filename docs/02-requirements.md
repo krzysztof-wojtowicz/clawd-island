@@ -25,8 +25,8 @@ The pet stays visible above all apps, including full-screen apps, and on every S
 | `compacting` | context compaction (`PreCompact`) | sweeps with a broom, dust puffs |
 | `juggling` | subagents are running (`activeSubagents > 0`) | juggles 3 balls |
 | `talking` | writing text | speech bubble with animated dots, mouth/body bounce |
-| `done` | a session finished and is unread | one paw raised, with a pop-out on transition |
-| `needsInput` | a permission or question is pending | paw raised, red "!" badge, stronger pop-out |
+| `done` | a session finished and is unread | one paw raised, then waving in a loop; pop-out on transition |
+| `needsInput` | a permission or question is pending | paw raised, then waving in a loop; red "!" badge, stronger pop-out |
 The pet shows no single session: it shows the **aggregate**, the most important state across all live sessions (AC3, `04`). One session waiting for permission raises the paw even while others are busy.
 - AC1: Each state is distinguishable at a glance, at actual notch size.
 - AC2: State changes render within 150 ms of the event reaching the app.
@@ -34,6 +34,7 @@ The pet shows no single session: it shows the **aggregate**, the most important 
 - AC4: `compacting` starts on `PreCompact` and ends on the next state-setting event or on `SessionStart(source: compact)` (`04`).
 - AC5: The panel text reads "compacting" and "N subagents"; both states count as working in the status buckets.
 - AC6: `juggling` is derived per session from `activeSubagents > 0` unless the session is `needsInput` or `done`. The counter resets on `Stop`, `StopFailure` and `UserPromptSubmit`, so a missed `SubagentStop` cannot leave the pet juggling.
+- AC7 (v5): In `done` and `needsInput` the paw raises, then waves in a loop: three ±20° swings (about 0.9 s), a rest of about 1.5 s, repeating while the state holds. No wave under Reduce Motion (the paw stays raised).
 
 ## REQ-04 Session counter and HP bar
 The collapsed island is laid out as `counter | notch | HP bar · pet` (see the sketch in `06`). Everything is vertically centred in the top row:
@@ -54,15 +55,17 @@ The collapsed island is laid out as `counter | notch | HP bar · pet` (see the s
 - AC4: The wings are asymmetric and sized to their content: the left wing (counter) is about 28 pt or less, the right wing (HP bar and pet) about 56 pt or less, with enough room on the right that the `usingTools` hammer swing is never clipped (tuned by eye). There is a visible gap between the HP bar and the pet.
 - AC5: `WK xx%` = `100 − rate_limits.seven_day.used_percentage`. It shows what is left, the same as HP. No weekly reset time is shown, because only HP has a countdown. The WK part is omitted when the window is absent, and after `seven_day.resets_at` passes it shows 100 % as stale (the same rule as AC3). Each percentage is tinted with the `hp.*` level colours.
 
-## REQ-05 Hide mode
-A toggle (right-click menu or Settings) hides the wings and tucks the pet into the notch's **bottom-right corner, upside down**: it is turned 180° and then a further 30° (about 150° clockwise in total), so its legs and lower body stay hidden behind the notch while its head, eyes and arms stick out down and to the right. Its state animations (blinking, hammer, bubbles, the "!" badge) stay visible.
-- AC1: In hide mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done`, `needsInput` or `juggling`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s (v3.1).
+## REQ-05 Mini mode
+A toggle (right-click menu "Mini Mode", or Settings) hides the wings and tucks the pet into the notch's **bottom-right corner, upside down**: it is turned 180° and then a further 30° (about 150° clockwise in total), so its legs and lower body stay hidden behind the notch while its head, eyes and arms stick out down and to the right. Its state animations (blinking, hammer, bubbles, the "!" badge) stay visible.
+- AC1: In mini mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done`, `needsInput` or `juggling`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s (v3.1).
 - AC2: `needsInput` stays popped out until it is resolved (it does not retract after 3 s).
 - AC3: Hovering over the peeking pet expands the island temporarily.
-- AC4: Every transition (hidden ↔ popped ↔ expanded, and switching hide mode on or off in any of them) moves the pet continuously: its position and tilt animate together with the island resize, with no jumps.
+- AC4: Every transition (hidden ↔ popped ↔ expanded, and switching mini mode on or off in any of them) moves the pet continuously: its position and tilt animate together with the island resize, with no jumps.
+- AC5 (v5): Launching with mini mode already on shows the pet tilted from the first frame (the pet is embedded before the persisted mode is applied).
+- AC6 (v5): Launch at login is a Settings checkbox only; it is not in the right-click menu.
 
 ## REQ-06 Clawd-inspired design
-Orange (`#D97757` family), a rounded-rectangle body, two tall dark eyes, little side arms and four stubby legs, with smooth corners and richer animation than the pixel original.
+Orange (`#D97757` family), a rounded-rectangle body, two tall dark eyes, little side arms and four stubby legs in two pairs with a gap between them (v5), with smooth corners and richer animation than the pixel original.
 - AC1: Vector-only, so it is sharp on every Retina scale. There are no bitmap assets.
 
 ## REQ-07 macOS only
@@ -77,6 +80,7 @@ See `08-performance.md`.
 - AC1: A one-click install adds hooks and the statusline to `~/.claude/settings.json` (with a backup, idempotently). Uninstall restores the previous state, including any original statusline.
 - AC2: Multiple concurrent sessions (several terminals, subagents) are tracked independently.
 - AC3: Usage data comes from the statusline `rate_limits` field only (ADR-0004).
+- AC4 (v5): Install Hooks / Uninstall Hooks live in Settings only (a status row "Claude Code hooks: Installed / Not installed" plus one button), not in the right-click menu.
 
 ## REQ-10 Attention / read tracking
 A `done` session becomes *read* when any of the following happens:
@@ -122,20 +126,13 @@ While the session panel is expanded (on hover), a soft orange (`clawd.body`) glo
   - AC2: Once per edge, using the `popToken` edge logic; no repeat while the state persists.
   - AC3: No sound for changes the user causes (mark read, focus-read, session removal).
   - AC4: Settings toggle "Sound cues" (`soundCues` in config), default **on**. Sounds play through a short-lived `afplay` process (an in-process `NSSound` costs +7 MB RSS); no timer, no polling.
-- **REQ-13 Music headphones**: while Apple Music or Spotify plays, the pet wears headphones.
-  - AC1: Driven only by the apps' play-state notifications (`05`, ADR-0007): no login, no private API, no polling, no AppleScript.
-  - AC2: `Playing` shows the headphones (150 ms cross-fade); `Paused` / `Stopped` hides them.
-  - AC3: The headphones are an overlay orthogonal to every pose, including hide mode. Only in `idle` and `sleeping` may the head bob slightly.
-  - AC6 (v3.1): The band and cups read clearly on the black island (light colours, `07`), and in every pose — the raised arm in `done` / `needsInput`, the hammer, the broom, the balls — nothing hides them, and they never cover the eyes.
-  - AC7 (v3.1): Settings has "Show headphones when music plays" (`headphones` in config.json, default on). Off: the watcher stops observing and the headphones hide at once. On: they appear at the next play / pause / track change (AC5).
-  - AC4: Title, artist and album are stored in `Snapshot.nowPlaying` for later features and are not displayed.
-  - AC5: Known limit: after launching the app, the headphones appear at the next play, pause or track change. Reduce Motion: no bob.
+- **REQ-13 Music headphones**: removed in v5 (WP-25, ADR-0007 superseded). The pet no longer reacts to music; the number stays reserved.
 - **REQ-14 Typography**: all HUD and panel text (counters, footer, session rows, cards, Settings) uses **JetBrains Mono**.
   - AC1: Looked up with `NSFont(name:size:)`; fallback `NSFont.monospacedSystemFont` when it is not installed. No crash, no layout break.
   - AC2: The font is bundled in `Contents/Resources/Fonts/` and registered for the process at launch when JetBrains Mono is not already installed (a process-registered face costs ~3 MB RSS per face used, so an installed copy is preferred; OFL 1.1 text in `THIRD_PARTY_NOTICES.md`, REQ-15).
   - AC3: Text still fits: footer, cards and panel rows truncate rather than overflow.
-- **REQ-15 Distribution (v4)**: the app is ready to install and share from source.
-  - AC1: Signed with a stable identity: the local "ClawdNotch Dev" certificate when present (ADR-0008), otherwise ad-hoc; `bundle.sh` says which. Automation, Accessibility and login-item grants survive rebuilds when signed.
+- **REQ-15 Distribution (v4)**: the app is ready to install and share from source. From v5 (WP-28, ADR-0009) it is named **ClawdIsland**: bundle id `dev.clawdisland.app`, `dist/ClawdIsland.app`, signing certificate "ClawdIsland Dev".
+  - AC1: Signed with a stable identity: the local "ClawdIsland Dev" certificate when present (ADR-0008), otherwise ad-hoc; `bundle.sh` says which. Automation, Accessibility and login-item grants survive rebuilds when signed.
   - AC2: Info.plist carries `CFBundleShortVersionString` (1.0.0), `CFBundleVersion` (git commit count), `LSMinimumSystemVersion` 14.0, `NSHumanReadableCopyright`, and an `AppIcon.icns` drawn from the pet.
   - AC3: JetBrains Mono is bundled (REQ-14 AC2).
   - AC4: `scripts/install.sh` installs a release build to `~/Applications` or `/Applications`; `scripts/uninstall.sh` uninstalls the hooks through the app's reversible uninstaller, then removes the app and its config; `scripts/package.sh` makes a zip and its sha256. None of them touches `~/.claude/settings.json` except through `HookInstaller`.

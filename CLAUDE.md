@@ -2,7 +2,7 @@
 
 Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** v1 and v2 are done; **v3 work (WP-12…WP-19) is specified in `docs/09-roadmap.md`** (permission Always allow, JetBrains Mono, JetBrains focus, sound cues, compacting/juggling poses, music headphones, README).
+**Status:** v1–v4 are done; **v5 is in progress (WP-25…WP-29 in `docs/09-roadmap.md`)**: remove headphones, waving paw and two-pair legs, mini mode and Settings-only hooks/login, rename to ClawdIsland, new README GIFs.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
@@ -51,7 +51,7 @@ Sources/ClawdNotch/     app: App/, Server/ (EventServer), Window/, Pet/, HUD/, I
   Window/, HUD/         NSPanel, notch geometry, SwiftUI HUD/panel/settings                 (owner: macos-ui-engineer)
   Pet/                  Core Animation Clawd, poses                                         (owner: pet-animator)
   Integration/          hook installer, terminal focus watcher, new-session launcher,
-                        editor window focus (VS Code, JetBrains), now-playing watcher       (owner: integration-engineer)
+                        editor window focus (VS Code, JetBrains)                         (owner: integration-engineer)
 Sources/clawd-bridge/   CLI: `hook session-start`, `statusline`                              (owner: integration-engineer)
 Tests/ClawdCoreTests/   swift-testing
 scripts/                bundle/run/simulate/perf

@@ -13,7 +13,7 @@ WP-16 (compacting) ──▶ WP-17 (juggling) ──▶ WP-18 (music headphones)
 - WP-12 → WP-13 → WP-15 share the HUD files, so they run in sequence.
 - WP-16 → WP-17 → WP-18 share `PetState` / Pet files, so they run in sequence. That chain runs in parallel with the HUD chain, because Core and Pet are disjoint from HUD.
 - WP-19 is last: it needs every pose.
-- Hide-mode note: the pop-out stays **4 s** (REQ-05 AC1) and `needsInput` stays out until resolved (AC2). That is designed behaviour, not a bug; it is not changed in v3.
+- Mini-mode note (called hide mode until v5): the pop-out stays **4 s** (REQ-05 AC1) and `needsInput` stays out until resolved (AC2). That is designed behaviour, not a bug; it is not changed in v3.
 
 ## Done (v1, v2)
 | WP | What | Key files / result |
@@ -74,7 +74,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - Pet: three balls on keyframed arcs, `ball.1–3` tokens. Simulator `subagents` scenario + skill row.
 - AC: REQ-03 AC1, AC3, AC4, AC5, AC6.
 
-### WP-18 — Music → headphones · owner: integration-engineer + core-engineer + pet-animator · deps: WP-17 · status: `done` (NowPlaying + store, NowPlayingWatcher, headphones overlay, `--debug-headphones`)
+### WP-18 — Music → headphones (removed in v5, WP-25) · owner: integration-engineer + core-engineer + pet-animator · deps: WP-17 · status: `done` (NowPlaying + store, NowPlayingWatcher, headphones overlay, `--debug-headphones`)
 - Integration: `NowPlayingWatcher` (ADR-0007, `05`). Core: `NowPlaying` in `Snapshot`. Pet: headphones overlay orthogonal to every pose and to hide mode (`07`).
 - AC: REQ-13 AC1–AC5. Verify with a real Music or Spotify play/pause; CPU stays at the idle budget.
 
@@ -103,14 +103,14 @@ WP-20 (Pet/) and WP-21 (Window/, App/, HUD/) touch disjoint directories, so they
 These need eyes, a hover, a click or a system permission:
 - Notch fit, full-screen hover, right-click without focus, no slide on Space switch (WP-2, WP-2.1).
 - Hammer not clipped in the 56 pt wing (`scripts/simulate.sh tools`); counter morph, WK-first footer, state dots (WP-5.4, WP-5.5).
-- Hide mode: corner peek, flip into the wing and back, hover from hidden, toggled while expanded (WP-7.1, WP-7.2).
+- Mini mode (hide mode until v5): corner peek, flip into the wing and back, hover from hidden, toggled while expanded (WP-7.1, WP-7.2).
 - iTerm2 / Terminal.app: a session started before the app becomes focusable after its next statusline refresh; a click focuses the tab and then marks read; a session finishing in the watched tab is marked read. If Automation never prompts: `tccutil reset AppleEvents dev.clawdnotch.ClawdNotch` (WP-6.x).
 - Permissions: reinstall hooks once (right-click, Install Hooks) so `PermissionRequest` gets `timeout: 120`; a real prompt shows a card; Allow / Deny work and the terminal dialog still works (WP-9).
 - Accessibility prompt on the first click on a VS Code session; the right window comes forward (WP-10).
 - "+ New" menu, Choose Folder…, a new Terminal.app / iTerm2 window running `claude` there (WP-11).
 - `scripts/perf.sh 30` with the mouse on the expanded panel (glow, REQ-11).
-- v3: Always allow on a real prompt (WP-12), JetBrains window focus (WP-14), headphones with Music and Spotify (WP-18).
-- v3.1: headphones clear of the raised arm and visible on black, bigger balls (WP-20); 3 s pop-out only on talking / done / needsInput / juggling, headphones switch (WP-21).
+- v3: Always allow on a real prompt (WP-12), JetBrains window focus (WP-14).
+- v3.1: bigger balls (WP-20); 3 s pop-out only on talking / done / needsInput / juggling (WP-21).
 
 ## v4 — performance, README GIFs, production
 Order: v3.1 (WP-20 ∥ WP-21) → WP-22 → WP-23 → WP-24 (WP-23 and WP-24 both edit README.md, so they run in sequence).
@@ -133,9 +133,42 @@ Order: v3.1 (WP-20 ∥ WP-21) → WP-22 → WP-23 → WP-24 (WP-23 and WP-24 bot
 - README.md: install, first-run permissions, updating, uninstall, license.
 - AC: REQ-14 AC2, REQ-15 AC1–AC5.
 
-## Next (after v4)
+## v5 — waving pet, no headphones, mini mode, ClawdIsland
+Older entries above keep the names of their time ("hide mode", headphones, REQ-13). v5 removes REQ-13 (WP-25) and renames hide mode to mini mode (WP-27). Order: WP-25 → (WP-26 ∥ WP-27, disjoint directories) → WP-28 → WP-29. Every WP runs `swift build`, `scripts/test.sh` and the release `scripts/perf-suite.sh` within the `08` budget, then `reviewer`, then one local commit.
+
+### WP-25 — Remove headphones and now-playing · owner: core-engineer + pet-animator + macos-ui-engineer (sequential) · deps: none · status: `todo`
+- Core: delete `NowPlaying`, `Snapshot.nowPlaying`, the `SessionStore` player state and `AppConfig.headphones` (the decoder ignores the leftover key; test it); delete `NowPlayingTests` and the headphones cases in `AppConfigTests`.
+- App: delete `NowPlayingWatcher` and its wiring (`AppModel`, `AppDelegate`, `Preferences`, the Settings checkbox).
+- Pet: remove the headphone layers, tokens and `setHeadBob` (`PetRig`, `PetTokens`, `PetAnimations`, `PetView`, `PetDemo`, `PoseRenderer`); delete `docs/media/*-headphones.gif`; drop `headphones` from `record-gif.sh`.
+- AC: REQ-13 removed, ADR-0007 superseded; no `headphone` / `NowPlaying` left in code or docs outside history; release perf-suite re-measured and recorded in `08`.
+
+### WP-26 — Waving paw and two-pair legs · owner: pet-animator · deps: WP-25 · status: `todo`
+- Legs: two pairs with a visible middle gap (centres about x 7.5 / 11 and 21 / 24.5, `07`); tune against hero renders.
+- Wave: in `done` and `needsInput` the raised paw loops three ±20° swings (about 0.9 s) then rests about 1.5 s, while the state holds; Core Animation only; none under Reduce Motion.
+- Regenerate `docs/media/*.gif` (`--render-poses docs/media`).
+- AC: REQ-03 AC7, REQ-06; the wave loop runs in both states, and idle CPU stays at budget.
+
+### WP-27 — Mini mode, launch tilt fix, Settings-only hooks and login · owner: macos-ui-engineer (+ core-engineer for `AppConfig`) · deps: WP-25 · status: `todo`
+- Rename hide mode to mini mode in code, UI and docs: `hideMode` → `miniMode`, menu "Mini Mode", Settings checkbox; `AppConfig` reads the legacy `hideMode` key as a fallback (test).
+- Fix the launch tilt: embed the pet before applying the persisted mini mode (`AppDelegate`), so `IslandView.setPetPlacement` finds it; launching with `miniMode` on shows a tilted pet from the first frame.
+- Right-click menu: [server error], Mini Mode, Mark All Read, Settings…, Quit. Remove the Hooks and Launch at Login items.
+- Settings: a hooks row ("Installed / Not installed" + Install / Uninstall button, `HookInstaller`, errors shown) next to Launch at login; re-measure the Settings RSS exception.
+- AC: REQ-05 AC5–AC6, REQ-09 AC4. Installer tested only against scratch files (`CLAWD_SETTINGS_PATH` / `CLAWD_CONFIG_PATH`).
+
+### WP-28 — Rename to ClawdIsland · owner: integration-engineer · deps: WP-25, WP-26, WP-27 · status: `todo`
+- Package, executable target and `Sources/ClawdNotch` → `ClawdIsland`; `ClawdCore`, `clawd-bridge` and `X-Clawd-Token` keep their names (ADR-0009).
+- Bundle `dist/ClawdIsland.app`, id `dev.clawdisland.app`, usage strings, menu and window titles; version 1.1.0 and a CHANGELOG entry.
+- Application Support `ClawdNotch/` → `ClawdIsland/`, moved once at launch if the new folder is missing (keeps token, port, `originalStatusLine`); test with a temp home.
+- Signing "ClawdIsland Dev" (`make-signing-cert.sh`, `bundle.sh`); scripts, `.claude/` agents and skills, README, CLAUDE.md and docs 03–08 use the new name; `uninstall.sh` also removes a leftover `ClawdNotch` folder.
+- AC: REQ-15 (v5 name); `grep -rI ClawdNotch` leaves only the migration code, ADR-0009 and CHANGELOG history; `install.sh --dest <tmp>` works; `codesign -dv` shows the new identifier.
+
+### WP-29 — README GIFs on a scratch port · owner: macos-ui-engineer + orchestrator · deps: WP-28 · status: `todo`
+- `record-gif.sh` sets a scratch port in the backed-up config while recording (real Claude Code hooks cannot reach the app, so no live session or real WK/HP leaks in); `simulate.sh` reads the port from the config. The scene becomes `mini-mode`; `docs/media/mini-mode.gif` replaces `hide-mode.gif` (deleted), README links updated.
+- Re-record `island.gif` and `mini-mode.gif`; check extracted frames: the first frame tilted, no foreign sessions, the wave visible in `done`.
+- AC: both GIFs < 600 KB, show motion and nothing outside the app window.
+
+## Next (after v5)
 - Developer ID signing, hardened runtime and notarization for sharing beyond this Mac.
-- Optional: show the now-playing title (already in `Snapshot.nowPlaying`).
 
 ## Deferred
 - Developer ID + notarization (ADR-0008 upgrade path).
