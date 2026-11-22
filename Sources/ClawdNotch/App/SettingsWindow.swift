@@ -9,8 +9,10 @@ import ClawdCore
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let preferences: Preferences
     private var window: NSWindow?
-    private var hideCheck: NSButton?
+    private var miniCheck: NSButton?
     private var loginCheck: NSButton?
+    private var hooksLabel: NSTextField?
+    private var hooksButton: NSButton?
     private var permissionCheck: NSButton?
     private var soundCheck: NSButton?
     private var focusPopUp: NSPopUpButton?
@@ -31,10 +33,13 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     /// Closes the window, releasing its views (`windowWillClose`).
     func close() { window?.close() }
 
-    /// Syncs the controls with the current settings, e.g. after the menu toggled hide mode.
+    /// Syncs the controls with the current settings, e.g. after the menu toggled mini mode.
     func refresh() {
-        hideCheck?.state = preferences.hideMode ? .on : .off
+        miniCheck?.state = preferences.miniMode ? .on : .off
         loginCheck?.state = LoginItem.isEnabled ? .on : .off
+        let installed = Self.installer.isInstalled
+        hooksLabel?.stringValue = "Claude Code hooks: " + (installed ? "Installed" : "Not installed")
+        hooksButton?.title = installed ? "Uninstall" : "Install"
         soundCheck?.state = preferences.soundCues ? .on : .off
         permissionCheck?.state = preferences.notchPermissions.withLock { $0 } ? .on : .off
         if let index = AppConfig.FocusReadMode.allCases.firstIndex(of: preferences.focusReadMode) {
@@ -45,23 +50,27 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         window?.delegate = nil
         window = nil
-        hideCheck = nil
+        miniCheck = nil
         loginCheck = nil
+        hooksLabel = nil
+        hooksButton = nil
         permissionCheck = nil
         soundCheck = nil
         focusPopUp = nil
     }
 
     private func makeWindow() -> NSWindow {
-        let hide = NSButton(checkboxWithTitle: "Hide Clawd under the notch", target: self, action: #selector(hideChanged(_:)))
+        let mini = NSButton(checkboxWithTitle: "Mini mode: Clawd peeks from under the notch", target: self, action: #selector(miniChanged(_:)))
         let login = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(loginChanged(_:)))
         let permissions = NSButton(
             checkboxWithTitle: "Approve permissions from the notch", target: self, action: #selector(permissionsChanged(_:))
         )
+        let hooksText = NSTextField(labelWithString: "")
+        let hooksAction = NSButton(title: "", target: self, action: #selector(hooksClicked(_:)))
         let sound = NSButton(checkboxWithTitle: "Sound cues", target: self, action: #selector(soundChanged(_:)))
         let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
         let focusLabel = NSTextField(labelWithString: "Mark as read on terminal focus:")
-        for control in [hide, login, permissions, sound, popUp, focusLabel] as [NSControl] {
+        for control in [mini, login, permissions, sound, popUp, focusLabel, hooksText, hooksAction] as [NSControl] {
             control.font = HUDStyle.font(size: 13)
         }
         // Titles follow `FocusReadMode.allCases` order; `focusChanged` and `refresh` index by it.
@@ -75,7 +84,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         popUp.target = self
         popUp.action = #selector(focusChanged(_:))
         let focusRow = NSStackView(views: [focusLabel, popUp])
-        let stack = NSStackView(views: [hide, focusRow, permissions, sound, login])
+        let hooksRow = NSStackView(views: [hooksText, hooksAction])
+        let stack = NSStackView(views: [mini, focusRow, permissions, sound, login, hooksRow])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 14
@@ -87,16 +97,18 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         window.setContentSize(stack.fittingSize)
         window.center()
         window.delegate = self
-        hideCheck = hide
+        miniCheck = mini
         loginCheck = login
+        hooksLabel = hooksText
+        hooksButton = hooksAction
         permissionCheck = permissions
         soundCheck = sound
         focusPopUp = popUp
         return window
     }
 
-    @objc private func hideChanged(_ sender: NSButton) {
-        preferences.setHideMode(sender.state == .on)
+    @objc private func miniChanged(_ sender: NSButton) {
+        preferences.setMiniMode(sender.state == .on)
     }
 
     @objc private func permissionsChanged(_ sender: NSButton) {
@@ -109,6 +121,22 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     @objc private func loginChanged(_ sender: NSButton) {
         LoginItem.setEnabled(sender.state == .on)
+        refresh()
+    }
+
+    /// Installer pointed at the `clawd-bridge` shipped next to the app's main executable.
+    private static var installer: HookInstaller {
+        HookInstaller(bridgePath: Bundle.main.executableURL?.deletingLastPathComponent()
+            .appending(path: "clawd-bridge").path ?? "/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge")
+    }
+
+    @objc private func hooksClicked(_ sender: NSButton) {
+        let installer = Self.installer
+        do {
+            if installer.isInstalled { try installer.uninstall() } else { try installer.install() }
+        } catch {
+            NSAlert(error: error).runModal()
+        }
         refresh()
     }
 

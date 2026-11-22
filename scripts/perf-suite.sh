@@ -63,7 +63,7 @@ endall() { for s in sim-1 sim-a sim-b sim-c; do sim end "$s"; done; }
 set_hide_mode() {
     mkdir -p "$(dirname "$config")"
     [[ -f "$config" ]] || echo '{}' >"$config"
-    plutil -replace hideMode -bool "$1" "$config"
+    plutil -replace miniMode -bool "$1" "$config"
 }
 
 header() {
@@ -74,7 +74,7 @@ echo "building release bundle..." >&2
 scripts/bundle.sh release >/dev/null
 header
 
-# hideMode must be off for the normal scenarios, whatever the user's config says.
+# miniMode must be off for the normal scenarios, whatever the user's config says.
 set_hide_mode false
 launch
 record "launch peak (first ${settle}s)" "$(measure "$settle")"

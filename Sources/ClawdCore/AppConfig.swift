@@ -13,8 +13,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
     public var token: String
     /// The user's own statusLine command, saved on install so the bridge can wrap it and uninstall can restore it.
     public var originalStatusLine: String?
-    /// Hide mode (REQ-05): Clawd tucks under the notch and pops out on state changes.
-    public var hideMode: Bool
+    /// Mini mode (REQ-05): Clawd tucks under the notch and pops out on state changes.
+    public var miniMode: Bool
     /// How a terminal coming to the front marks sessions read (REQ-10).
     public var focusReadMode: FocusReadMode
 
@@ -40,7 +40,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         port: Int = AppConfig.defaultPort,
         token: String,
         originalStatusLine: String? = nil,
-        hideMode: Bool = false,
+        miniMode: Bool = false,
         focusReadMode: FocusReadMode = .tab,
         notchPermissions: Bool = true,
         soundCues: Bool = true,
@@ -49,11 +49,17 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.port = port
         self.token = token
         self.originalStatusLine = originalStatusLine
-        self.hideMode = hideMode
+        self.miniMode = miniMode
         self.focusReadMode = focusReadMode
         self.notchPermissions = notchPermissions
         self.soundCues = soundCues
         self.recentProjects = recentProjects
+    }
+
+    /// Keys of earlier versions, read only as a fallback.
+    private enum LegacyKeys: String, CodingKey {
+        /// Renamed to `miniMode` in v5.
+        case hideMode
     }
 
     /// Files written before a key existed lack it, so they decode to the defaults.
@@ -62,7 +68,9 @@ public struct AppConfig: Codable, Equatable, Sendable {
         port = try container.decode(Int.self, forKey: .port)
         token = try container.decode(String.self, forKey: .token)
         originalStatusLine = try container.decodeIfPresent(String.self, forKey: .originalStatusLine)
-        hideMode = try container.decodeIfPresent(Bool.self, forKey: .hideMode) ?? false
+        let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+        miniMode = try container.decodeIfPresent(Bool.self, forKey: .miniMode)
+            ?? legacy.decodeIfPresent(Bool.self, forKey: .hideMode) ?? false
         focusReadMode = try container.decodeIfPresent(FocusReadMode.self, forKey: .focusReadMode) ?? .tab
         notchPermissions = try container.decodeIfPresent(Bool.self, forKey: .notchPermissions) ?? true
         soundCues = try container.decodeIfPresent(Bool.self, forKey: .soundCues) ?? true

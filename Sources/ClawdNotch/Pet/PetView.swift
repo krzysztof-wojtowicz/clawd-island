@@ -67,7 +67,7 @@ final class PetView: NSView {
         rig.popOut()
     }
 
-    /// Tilts the pet to `tilt` degrees about its centre (docs/06 hide mode, docs/07 "Placement moves"). When
+    /// Tilts the pet to `tilt` degrees about its centre (docs/06 mini mode, docs/07 "Placement moves"). When
     /// `animated`, the pet starts displaced by `offset` and rotated back by `tiltChange` and settles with the pop-out
     /// spring, or a straight 200 ms ease-out under Reduce Motion. The view itself is already at its target frame, so
     /// the move is an additive animation and stays correct while the window resizes. Each call adds its own

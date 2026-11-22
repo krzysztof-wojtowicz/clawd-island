@@ -46,8 +46,8 @@ case "$scene" in
     *) echo "unknown scene $scene" >&2; exit 1 ;;
 esac
 
-# Quiet, deterministic config for the recording: no sound, chosen hide mode.
-plutil -replace hideMode -bool "$hide" "$config"
+# Quiet, deterministic config for the recording: no sound, chosen mini mode.
+plutil -replace miniMode -bool "$hide" "$config"
 plutil -replace soundCues -bool false "$config"
 
 swift scripts/hover.swift off 2>/dev/null || true
@@ -65,7 +65,7 @@ scene_pid=$!
 n=0
 start=$(date +%s.%N)
 while kill -0 "$scene_pid" 2>/dev/null; do
-    # The window resizes and may vanish (hide mode), so resolve its ID for every frame.
+    # The window resizes and may vanish (mini mode), so resolve its ID for every frame.
     # One screencapture takes ~300 ms, so captures overlap to reach the target fps.
     if read -r id x < <("$work/bin/window-id"); then
         n=$((n + 1))

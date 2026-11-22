@@ -26,32 +26,29 @@ final class NotchWindowController {
     private var isExpanded = false
     private var hoverTask: Task<Void, Never>?
     private var retractTask: Task<Void, Never>?
-    /// Whether hide mode has the island out (a state change, or a pending `needsInput`).
+    /// Whether mini mode has the island out (a state change, or a pending `needsInput`).
     private var isPopped = false
 
-    /// Hide mode (REQ-05): Clawd tucks under the notch unless popped out or hovered.
-    var hideMode = false {
+    /// Mini mode (REQ-05): Clawd tucks under the notch unless popped out or hovered.
+    var miniMode = false {
         didSet {
-            guard hideMode != oldValue else { return }
+            guard miniMode != oldValue else { return }
             retractTask?.cancel()
             isPopped = false
-            // AC2: a pending needsInput stays out even when hide mode is switched on.
-            if hideMode, needsInput() { popOut(hold: true) } else { layout(animated: true) }
+            // AC2: a pending needsInput stays out even when mini mode is switched on.
+            if miniMode, needsInput() { popOut(hold: true) } else { layout(animated: true) }
         }
     }
     /// Whether the aggregate state is `needsInput`.
     var needsInput: () -> Bool = { false }
     /// Why the event server is not listening, shown as a disabled top menu item.
     var serverError: () -> String? = { nil }
-    /// Called by the "Hide Mode" menu item.
-    var onToggleHideMode: (() -> Void)?
-    /// Called by the "Launch at Login" and "Settings…" menu items.
-    var onToggleLaunchAtLogin: (() -> Void)?
+    /// Called by the "Mini Mode" menu item.
+    var onToggleMiniMode: (() -> Void)?
+    /// Called by the "Settings…" menu item.
     var onOpenSettings: (() -> Void)?
-    /// Whether launch at login is on, for the menu checkmark.
-    var launchAtLoginEnabled: () -> Bool = { false }
 
-    private var isTucked: Bool { hideMode && !isExpanded && !isPopped }
+    private var isTucked: Bool { miniMode && !isExpanded && !isPopped }
 
     init() {
         panel = NotchPanel(contentRect: .zero)
@@ -90,7 +87,7 @@ final class NotchWindowController {
 
     /// Pops a hidden island out for 3 s (REQ-05 AC1; a new call restarts it), or until the next call when `hold` is set (AC2: `needsInput`).
     func popOut(hold: Bool) {
-        guard hideMode else { return }
+        guard miniMode else { return }
         retractTask?.cancel()
         isPopped = true
         layout(animated: true)
@@ -172,21 +169,12 @@ final class NotchWindowController {
             menu.addItem(ActionMenuItem(title: error, isEnabled: false) {})
             menu.addItem(.separator())
         }
-        let hide = ActionMenuItem(title: "Hide Mode", isEnabled: true) { [weak self] in self?.onToggleHideMode?() }
-        hide.state = hideMode ? .on : .off
-        menu.addItem(hide)
+        let mini = ActionMenuItem(title: "Mini Mode", isEnabled: true) { [weak self] in self?.onToggleMiniMode?() }
+        mini.state = miniMode ? .on : .off
+        menu.addItem(mini)
         menu.addItem(ActionMenuItem(title: "Mark All Read", isEnabled: hasAttention()) { [weak self] in
             self?.onMarkAllRead?()
         })
-        let hooks = menu.addItem(
-            withTitle: HooksMenuTarget.installer.isInstalled ? "Uninstall Hooks" : "Install Hooks",
-            action: #selector(HooksMenuTarget.toggle(_:)),
-            keyEquivalent: ""
-        )
-        hooks.target = HooksMenuTarget.shared
-        let login = ActionMenuItem(title: "Launch at Login", isEnabled: true) { [weak self] in self?.onToggleLaunchAtLogin?() }
-        login.state = launchAtLoginEnabled() ? .on : .off
-        menu.addItem(login)
         menu.addItem(ActionMenuItem(title: "Settings…", isEnabled: true) { [weak self] in self?.onOpenSettings?() })
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit ClawdNotch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
@@ -216,28 +204,5 @@ private final class ActionMenuItem: NSMenuItem, NSMenuItemValidation {
     // The menu auto-enables items, so a plain isEnabled would be overwritten.
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         isAvailable
-    }
-}
-
-/// Menu target for the one-click hook install/uninstall (REQ-09 AC1). Menu items hold their target weakly,
-/// so a single shared instance lives for the app's lifetime.
-@MainActor
-private final class HooksMenuTarget: NSObject {
-    static let shared = HooksMenuTarget()
-
-    /// Installer pointed at the `clawd-bridge` shipped next to the app's main executable.
-    static var installer: HookInstaller {
-        HookInstaller(bridgePath: Bundle.main.executableURL?.deletingLastPathComponent()
-            .appending(path: "clawd-bridge").path ?? "/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge")
-    }
-
-    @objc func toggle(_ sender: NSMenuItem) {
-        let installer = Self.installer
-        do {
-            if installer.isInstalled { try installer.uninstall() } else { try installer.install() }
-        } catch {
-            NSApp.activate()
-            NSAlert(error: error).runModal()
-        }
     }
 }

@@ -1,5 +1,5 @@
 // Preferences.swift
-// Hide mode and focus-read mode, persisted in the shared config file (docs/03).
+// Mini mode and focus-read mode, persisted in the shared config file (docs/03).
 
 import ClawdCore
 import os
@@ -10,19 +10,19 @@ import os
 final class Preferences {
     private static let logger = Logger(subsystem: "dev.clawdnotch", category: "prefs")
 
-    private(set) var hideMode: Bool
+    private(set) var miniMode: Bool
     private(set) var soundCues: Bool
     private(set) var focusReadMode: AppConfig.FocusReadMode
     /// "Approve permissions from the notch" (REQ-V2-01). Read per request on the server queue, hence a lock.
     nonisolated let notchPermissions: OSAllocatedUnfairLock<Bool>
     /// Called when "approve from the notch" is switched off, so held requests can be released.
     var onNotchPermissionsOff: (() -> Void)?
-    /// Called after `hideMode` changes.
-    var onHideModeChange: ((Bool) -> Void)?
+    /// Called after `miniMode` changes.
+    var onMiniModeChange: ((Bool) -> Void)?
 
     init() {
         let config = AppConfig.load()
-        hideMode = config?.hideMode ?? false
+        miniMode = config?.miniMode ?? false
         focusReadMode = config?.focusReadMode ?? .tab
         soundCues = config?.soundCues ?? true
         notchPermissions = OSAllocatedUnfairLock(initialState: config?.notchPermissions ?? true)
@@ -41,12 +41,12 @@ final class Preferences {
         persist { $0.soundCues = value }
     }
 
-    /// Sets and persists hide mode.
-    func setHideMode(_ value: Bool) {
-        guard value != hideMode else { return }
-        hideMode = value
-        persist { $0.hideMode = value }
-        onHideModeChange?(value)
+    /// Sets and persists mini mode.
+    func setMiniMode(_ value: Bool) {
+        guard value != miniMode else { return }
+        miniMode = value
+        persist { $0.miniMode = value }
+        onMiniModeChange?(value)
     }
 
     /// Sets and persists the focus-read mode.

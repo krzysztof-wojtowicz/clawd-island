@@ -142,13 +142,13 @@ Older entries above keep the names of their time ("hide mode", headphones, REQ-1
 - Pet: remove the headphone layers, tokens and `setHeadBob` (`PetRig`, `PetTokens`, `PetAnimations`, `PetView`, `PetDemo`, `PoseRenderer`); delete `docs/media/*-headphones.gif`; drop `headphones` from `record-gif.sh`.
 - AC: REQ-13 removed, ADR-0007 superseded; no `headphone` / `NowPlaying` left in code or docs outside history; release perf-suite re-measured and recorded in `08`.
 
-### WP-26 — Waving paw and two-pair legs · owner: pet-animator · deps: WP-25 · status: `todo`
+### WP-26 — Waving paw and two-pair legs · owner: pet-animator · deps: WP-25 · status: `done`
 - Legs: two pairs with a visible middle gap (centres about x 7.5 / 11 and 21 / 24.5, `07`); tune against hero renders.
 - Wave: in `done` and `needsInput` the raised paw loops three ±20° swings (about 0.9 s) then rests about 1.5 s, while the state holds; Core Animation only; none under Reduce Motion.
 - Regenerate `docs/media/*.gif` (`--render-poses docs/media`).
 - AC: REQ-03 AC7, REQ-06; the wave loop runs in both states, and idle CPU stays at budget.
 
-### WP-27 — Mini mode, launch tilt fix, Settings-only hooks and login · owner: macos-ui-engineer (+ core-engineer for `AppConfig`) · deps: WP-25 · status: `todo`
+### WP-27 — Mini mode, launch tilt fix, Settings-only hooks and login · owner: macos-ui-engineer (+ core-engineer for `AppConfig`) · deps: WP-25 · status: `done`
 - Rename hide mode to mini mode in code, UI and docs: `hideMode` → `miniMode`, menu "Mini Mode", Settings checkbox; `AppConfig` reads the legacy `hideMode` key as a fallback (test).
 - Fix the launch tilt: embed the pet before applying the persisted mini mode (`AppDelegate`), so `IslandView.setPetPlacement` finds it; launching with `miniMode` on shows a tilted pet from the first frame.
 - Right-click menu: [server error], Mini Mode, Mark All Read, Settings…, Quit. Remove the Hooks and Launch at Login items.

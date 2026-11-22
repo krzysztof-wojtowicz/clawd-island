@@ -32,19 +32,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let controller = NotchWindowController()
         controller.needsInput = { [model] in model.snapshot.aggregate == .needsInput }
         controller.serverError = { [model] in model.serverError }
-        controller.hideMode = preferences.hideMode
-        preferences.onHideModeChange = { [controller, settings] hidden in
-            controller.hideMode = hidden
+        // The pet must be in its slot first, or the tilt of a persisted mini mode is lost.
+        Self.embed(pet, in: controller.island.petSlot)
+        controller.miniMode = preferences.miniMode
+        preferences.onMiniModeChange = { [controller, settings] mini in
+            controller.miniMode = mini
             settings.refresh()
         }
         preferences.onNotchPermissionsOff = { [model] in model.releaseAllPermissions() }
-        controller.onToggleHideMode = { [preferences] in preferences.setHideMode(!preferences.hideMode) }
-        controller.onToggleLaunchAtLogin = { LoginItem.setEnabled(!LoginItem.isEnabled) }
-        controller.launchAtLoginEnabled = { LoginItem.isEnabled }
+        controller.onToggleMiniMode = { [preferences] in preferences.setMiniMode(!preferences.miniMode) }
         controller.onOpenSettings = { [settings] in settings.show() }
         controller.onMarkAllRead = { [model] in model.markAllRead() }
         controller.hasAttention = { [model] in model.snapshot.attentionCount > 0 }
-        Self.embed(pet, in: controller.island.petSlot)
         Self.embed(hud.counters, in: controller.island.countersSlot)
         controller.island.panelProvider = { [hud] in hud.makePanel() }
         PetDemo.startIfRequested(on: pet)
