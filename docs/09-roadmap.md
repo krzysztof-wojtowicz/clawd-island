@@ -56,7 +56,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - Check the footer, cards and counters still fit (monospace is wider); adjust `expandedMinWidth` only if needed.
 - AC: REQ-14 AC1–AC3. RSS within budget.
 
-### WP-14 — JetBrains window-level focus · owner: integration-engineer · deps: none (parallel with WP-12) · status: `todo`
+### WP-14 — JetBrains window-level focus · owner: integration-engineer · deps: none (parallel with WP-12) · status: `done`
 - Extend the Accessibility focus path to the `com.jetbrains.` family; title rule per family (`05`); `WindowTitle` tests for both title shapes.
 - AC: REQ-V2-02 AC4–AC6. Tab precision inside the IDE terminal is not possible and is not attempted.
 

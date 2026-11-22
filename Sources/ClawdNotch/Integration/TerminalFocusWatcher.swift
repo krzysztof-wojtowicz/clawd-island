@@ -67,16 +67,16 @@ final class TerminalFocusWatcher {
         guard let bundleID = session.meta?.terminalBundleID,
               let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
         let id = session.id
-        if EditorWindows.bundleIDs.contains(bundleID) {
+        if EditorWindows.handles(bundleID) {
             let finish: @MainActor () -> Void = { [weak self] in
                 app.activate()
                 if self?.mode() != .off { self?.markRead(id) }
             }
             guard EditorWindows.requestTrust() else { finish(); return }
             // Raise before activating so the right window is frontmost when the app comes forward.
-            let (project, pid) = (session.projectName, app.processIdentifier)
+            let (project, pid, family) = (session.projectName, app.processIdentifier, WindowTitle.Family(bundleID: bundleID))
             scriptQueue.async {
-                _ = EditorWindows.raise(project: project, pid: pid)
+                _ = EditorWindows.raise(project: project, pid: pid, family: family)
                 DispatchQueue.main.async { MainActor.assumeIsolated { finish() } }
             }
             return
@@ -99,12 +99,13 @@ final class TerminalFocusWatcher {
         dwellTimer = nil
         guard mode() != .off, let bundleID,
               sessions().contains(where: { $0.meta?.terminalBundleID == bundleID }) else { return }
-        if EditorWindows.bundleIDs.contains(bundleID), mode() == .tab {
+        if EditorWindows.handles(bundleID), mode() == .tab {
             // Window-level: the focused window's title names the project; otherwise the plain dwell.
             // No prompt here: a plain app switch must not trigger the Accessibility dialog.
             guard EditorWindows.isTrusted(),
                   let pid = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first?.processIdentifier
             else { startDwell(bundleID); return }
+            let family = WindowTitle.Family(bundleID: bundleID)
             scriptQueue.async {
                 let title = EditorWindows.focusedWindowTitle(pid: pid)
                 DispatchQueue.main.async {
@@ -112,7 +113,7 @@ final class TerminalFocusWatcher {
                         guard let self, NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bundleID else { return }
                         let matches = sessions().filter { session in
                             session.meta?.terminalBundleID == bundleID
-                                && title.map { WindowTitle.matches($0, project: session.projectName) } == true
+                                && title.map { WindowTitle.matches($0, project: session.projectName, family: family) } == true
                         }
                         if matches.isEmpty { startDwell(bundleID) } else { matches.forEach { markRead($0.id) } }
                     }
