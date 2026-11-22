@@ -87,7 +87,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 ## v3.1 polish
 WP-20 (Pet/) and WP-21 (Window/, App/, HUD/) touch disjoint directories, so they run in parallel (one in a worktree).
 
-### WP-20 — Headphones redesign and bigger juggling balls · owner: pet-animator · deps: WP-19 · status: `todo`
+### WP-20 — Headphones redesign and bigger juggling balls · owner: pet-animator · deps: WP-19 · status: `done`
 - Balls about 3.6 u, orbit raised to clear the head and the band.
 - Headphones: bigger cups on the body's upper corners, below the arms in z-order; wider, lighter band; new token colours (`07`). Check every pose (raised arm, hammer, broom, balls) and the upside-down peek.
 - Regenerate `docs/media/` GIFs with the DEBUG `--render-poses docs/media` mode, and update README.md's headphones line.
