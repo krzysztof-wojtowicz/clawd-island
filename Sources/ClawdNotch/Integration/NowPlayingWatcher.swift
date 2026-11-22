@@ -31,4 +31,10 @@ final class NowPlayingWatcher {
             tokens.append(token)
         }
     }
+
+    /// Removes the observers; `start()` may be called again.
+    func stop() {
+        tokens.forEach { DistributedNotificationCenter.default().removeObserver($0) }
+        tokens = []
+    }
 }

@@ -93,7 +93,7 @@ WP-20 (Pet/) and WP-21 (Window/, App/, HUD/) touch disjoint directories, so they
 - Regenerate `docs/media/` GIFs with the DEBUG `--render-poses docs/media` mode, and update README.md's headphones line.
 - AC: REQ-13 AC3, AC6; `07` anatomy. Release `perf.sh` settled within budget.
 
-### WP-21 — Selective 3 s hide-mode pop-out and the headphones switch · owner: macos-ui-engineer (+ core-engineer for the config test) · deps: WP-19 · status: `todo`
+### WP-21 — Selective 3 s hide-mode pop-out and the headphones switch · owner: macos-ui-engineer (+ core-engineer for the config test) · deps: WP-19 · status: `done`
 - Pop-out 3 s; triggers: `popToken` advance or the aggregate entering `talking`, `done`, `needsInput`, `juggling`; other changes only re-pose the peeking pet; `needsInput` holds.
 - Settings checkbox "Show headphones when music plays" (`headphones`, default on, `decodeIfPresent`, Core test); off stops `NowPlayingWatcher` and hides the headphones at once.
 - README.md: hide-mode text (3 s, which states pop out) and the headphones switch.

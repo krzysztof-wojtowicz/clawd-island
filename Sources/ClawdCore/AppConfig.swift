@@ -32,6 +32,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
     public var notchPermissions: Bool
     /// Play a short system sound on the edge into needs-input or an unread done (REQ-12).
     public var soundCues: Bool
+    /// Show headphones on the pet while music plays (REQ-13 AC7).
+    public var headphones: Bool
     /// Directories of recently seen sessions for the "New session" menu: newest first, at most `maxRecentProjects` (REQ-V2-03).
     public var recentProjects: [String]
     public static let maxRecentProjects = 5
@@ -44,6 +46,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         focusReadMode: FocusReadMode = .tab,
         notchPermissions: Bool = true,
         soundCues: Bool = true,
+        headphones: Bool = true,
         recentProjects: [String] = []
     ) {
         self.port = port
@@ -53,6 +56,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.focusReadMode = focusReadMode
         self.notchPermissions = notchPermissions
         self.soundCues = soundCues
+        self.headphones = headphones
         self.recentProjects = recentProjects
     }
 
@@ -66,6 +70,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         focusReadMode = try container.decodeIfPresent(FocusReadMode.self, forKey: .focusReadMode) ?? .tab
         notchPermissions = try container.decodeIfPresent(Bool.self, forKey: .notchPermissions) ?? true
         soundCues = try container.decodeIfPresent(Bool.self, forKey: .soundCues) ?? true
+        headphones = try container.decodeIfPresent(Bool.self, forKey: .headphones) ?? true
         recentProjects = try container.decodeIfPresent([String].self, forKey: .recentProjects) ?? []
     }
 

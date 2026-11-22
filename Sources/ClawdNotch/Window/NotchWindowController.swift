@@ -13,7 +13,7 @@ final class NotchWindowController {
     private static let collapseDelay: Duration = .milliseconds(300)
     private static let resizeDuration: TimeInterval = 0.25
     /// How long a hidden island stays out after a state change (REQ-05 AC1).
-    private static let popDuration: Duration = .seconds(4)
+    private static let popDuration: Duration = .seconds(3)
 
     /// The island content view; its `petSlot`, `countersSlot` and `panelSlot` are the integration points.
     let island = IslandView()
@@ -88,7 +88,7 @@ final class NotchWindowController {
         }
     }
 
-    /// Pops a hidden island out for 4 s (REQ-05 AC1), or until the next call when `hold` is set (AC2: `needsInput`).
+    /// Pops a hidden island out for 3 s (REQ-05 AC1; a new call restarts it), or until the next call when `hold` is set (AC2: `needsInput`).
     func popOut(hold: Bool) {
         guard hideMode else { return }
         retractTask?.cancel()

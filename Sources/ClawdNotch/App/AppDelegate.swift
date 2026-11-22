@@ -54,7 +54,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pausePetWhileUnseen()
         bindSnapshot(controller)
         focusWatcher.start()
-        nowPlayingWatcher.start()
+        if preferences.headphones { nowPlayingWatcher.start() }
+        preferences.onHeadphonesChange = { [nowPlayingWatcher, pet] on in
+            if on {
+                nowPlayingWatcher.start()
+            } else {
+                nowPlayingWatcher.stop()
+                pet.setHeadphones(false)
+            }
+        }
     }
 
     private static func embed(_ view: NSView, in slot: NSView) {
@@ -63,6 +71,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         slot.addSubview(view)
     }
 
+    /// States whose entry pops a hidden island out (REQ-05 AC1); other changes only re-pose the peeking pet.
+    private static let popsOut: Set<PetState> = [.talking, .done, .needsInput, .juggling]
+
     /// Renders every new snapshot: the pet's state (REQ-03 AC2), a pop-out on each new `popToken`, and the HUD.
     private func bindSnapshot(_ controller: NotchWindowController) {
         pet.setState(model.snapshot.aggregate)
@@ -70,13 +81,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.onSnapshotChange = { [pet, hud, controller, focusWatcher, model, preferences, sounds] old, new in
             focusWatcher.snapshotChanged(from: old.sessions, to: new.sessions)
             pet.setState(new.aggregate)
-            if new.nowPlaying?.isPlaying != old.nowPlaying?.isPlaying { pet.setHeadphones(new.nowPlaying?.isPlaying == true) }
+            if new.nowPlaying?.isPlaying != old.nowPlaying?.isPlaying {
+                pet.setHeadphones(preferences.headphones && new.nowPlaying?.isPlaying == true)
+            }
             if new.popToken > old.popToken {
                 pet.popOut()
                 if preferences.soundCues { sounds.playEdge(from: old, to: new) }
             }
-            if new.aggregate != old.aggregate || new.popToken > old.popToken {
+            let entered = new.aggregate != old.aggregate && Self.popsOut.contains(new.aggregate)
+            if entered || new.popToken > old.popToken {
                 controller.popOut(hold: new.aggregate == .needsInput)
+            } else if old.aggregate == .needsInput && new.aggregate != .needsInput {
+                controller.popOut(hold: false)  // resolved: the held pop-out now runs its 3 s out
             }
             hud.render(new)
             #if DEBUG
