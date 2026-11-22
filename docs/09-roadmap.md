@@ -170,10 +170,10 @@ Older entries above keep the names of their time ("hide mode", headphones, REQ-1
 ## v6 — Public 1.0.0
 First public release on GitHub (Apple silicon, signed with a stable self-signed identity, no notarization). Nothing here is implemented yet. Order: (WP-30 ∥ WP-32 ∥ WP-34) → WP-31 → WP-33 → WP-35 → the user publishes. Every WP runs `swift build`, `scripts/test.sh` and, when it touches the app, the release `scripts/perf-suite.sh` within the `08` budget, then `reviewer`, then one local commit.
 
-### WP-30 — Signing identity "ClawdIsland" · owner: integration-engineer · deps: none · status: `todo`
+### WP-30 — Signing identity "ClawdIsland" · owner: integration-engineer · deps: none · status: `done` (no identity on this Mac yet: the user runs `make-signing-cert.sh`; `package.sh` refuses the ad-hoc build, `--adhoc` packages it)
 - `make-signing-cert.sh` and `bundle.sh` use the name "ClawdIsland" (renamed from "ClawdIsland Dev"; the user re-runs the script once). Releases are always signed with that identity, so friends' TCC grants survive updates (ADR-0008).
 - `package.sh` refuses to package an ad-hoc build unless `--adhoc` is given.
-- AC: REQ-15 AC1, AC4; `codesign -dv` shows the identity; the zip has a `.sha256`.
+- AC: REQ-15 AC1, AC4; `codesign -dvv` shows the identity; the zip has a `.sha256`.
 
 ### WP-31 — First-run onboarding · owner: macos-ui-engineer · deps: WP-30 · status: `todo`
 - On the first launch (no `onboarded` flag in config) and while the hooks are not installed, open Settings with a one-line welcome ("Install the Claude Code hooks to connect Clawd"); Install is the default button. Set the flag after the window has been shown once. No new window type.

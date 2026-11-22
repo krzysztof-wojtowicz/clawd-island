@@ -12,7 +12,7 @@ ClawdIsland is built from source. You need macOS 14+ and the Swift 6.2 Command L
 
 ```sh
 git clone <this repo> && cd claude-pet
-scripts/make-signing-cert.sh   # once: creates the "ClawdIsland Dev" certificate, asks for your login password
+scripts/make-signing-cert.sh   # once: creates the "ClawdIsland" certificate, asks for your login password
 scripts/install.sh             # release build -> ~/Applications/ClawdIsland.app, then launches it
 ```
 
@@ -96,7 +96,7 @@ Every pose is a Core Animation layer loop run by the render server. The GIFs are
 |---|---|
 | `swift build` | Build all targets (debug) |
 | `scripts/test.sh` | Run `ClawdCoreTests` (wraps `swift test`; with Command Line Tools only, plain `swift test` silently runs nothing) |
-| `scripts/bundle.sh [debug\|release]` | Assemble and sign `dist/ClawdIsland.app` ("ClawdIsland Dev" if present, else ad-hoc) |
+| `scripts/bundle.sh [debug\|release]` | Assemble and sign `dist/ClawdIsland.app` ("ClawdIsland" if present, else ad-hoc) |
 | `scripts/run.sh` | Kill the running instance, bundle debug, launch |
 | `scripts/make-signing-cert.sh` | Create the local signing certificate (once) |
 | `scripts/install.sh`, `uninstall.sh`, `package.sh` | Install, remove, zip (see Install) |

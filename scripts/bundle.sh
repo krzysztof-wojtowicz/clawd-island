@@ -41,7 +41,7 @@ EOF
 
 # Sign the nested CLI first; the outer signature covers it. A stable identity keeps TCC grants across rebuilds.
 identity="-"
-if security find-identity -v -p codesigning | grep -q '"ClawdIsland Dev"'; then identity="ClawdIsland Dev"; fi
+if security find-identity -v -p codesigning | grep -q '"ClawdIsland"'; then identity="ClawdIsland"; fi
 codesign --force -s "$identity" "$app/Contents/MacOS/clawd-bridge"
 codesign --force --deep -s "$identity" "$app"
 if [[ "$identity" == "-" ]]; then
