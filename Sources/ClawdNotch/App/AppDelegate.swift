@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var hud = HUDController(model: model, focus: { [unowned self] in focusWatcher.focus($0) })
     private var server: EventServer?
     /// Read first after `startServer()`, which creates config.json on first launch.
+    private let sounds = SoundCues()
     private lazy var preferences = Preferences()
     private lazy var settings = SettingsWindowController(preferences: preferences)
     private lazy var focusWatcher = TerminalFocusWatcher(
@@ -66,11 +67,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func bindSnapshot(_ controller: NotchWindowController) {
         pet.setState(model.snapshot.aggregate)
         hud.render(model.snapshot)
-        model.onSnapshotChange = { [pet, hud, controller, focusWatcher, model] old, new in
+        model.onSnapshotChange = { [pet, hud, controller, focusWatcher, model, preferences, sounds] old, new in
             focusWatcher.snapshotChanged(from: old.sessions, to: new.sessions)
             pet.setState(new.aggregate)
             if new.nowPlaying?.isPlaying != old.nowPlaying?.isPlaying { pet.setHeadphones(new.nowPlaying?.isPlaying == true) }
-            if new.popToken > old.popToken { pet.popOut() }
+            if new.popToken > old.popToken {
+                pet.popOut()
+                if preferences.soundCues { sounds.playEdge(from: old, to: new) }
+            }
             if new.aggregate != old.aggregate || new.popToken > old.popToken {
                 controller.popOut(hold: new.aggregate == .needsInput)
             }

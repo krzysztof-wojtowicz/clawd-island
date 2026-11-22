@@ -60,7 +60,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - Extend the Accessibility focus path to the `com.jetbrains.` family; title rule per family (`05`); `WindowTitle` tests for both title shapes.
 - AC: REQ-V2-02 AC4–AC6. Tab precision inside the IDE terminal is not possible and is not attempted.
 
-### WP-15 — Sound cues + Settings toggle · owner: macos-ui-engineer · deps: WP-13 · status: `todo`
+### WP-15 — Sound cues + Settings toggle · owner: macos-ui-engineer · deps: WP-13 · status: `done` (edge = `popToken` advance; Funk if the needs-input count rose, else Glass; lazy cached `NSSound`s; sound heard-check left to the user; release idle 0.00 % / 37.9 MB)
 - `SoundCues`: cached `NSSound(named:)`, played once per edge (needsInput, unread done) using the `popToken` edge logic; `soundCues` config key, default on; Settings checkbox "Sound cues".
 - AC: REQ-12 AC1–AC4. No timers added.
 

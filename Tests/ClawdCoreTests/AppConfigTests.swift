@@ -24,6 +24,15 @@ struct AppConfigTests {
         #expect(AppConfig.load(from: url)?.notchPermissions == false)
     }
 
+    @Test("soundCues defaults to on for old files and round-trips when off")
+    func soundCues() throws {
+        let old = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port":1,"token":"t"}"#.utf8))
+        #expect(old.soundCues)
+        let url = FileManager.default.temporaryDirectory.appending(path: "clawd-\(UUID().uuidString)/config.json")
+        try AppConfig(token: "t", soundCues: false).write(to: url)
+        #expect(AppConfig.load(from: url)?.soundCues == false)
+    }
+
     @Test("Missing file loads as nil")
     func missing() {
         #expect(AppConfig.load(from: URL(filePath: "/nonexistent/clawd/config.json")) == nil)

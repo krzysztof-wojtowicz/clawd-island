@@ -30,6 +30,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
 
     /// Hold `PermissionRequest` hooks so the notch can allow or deny them (REQ-V2-01). Off means every hook gets an empty reply.
     public var notchPermissions: Bool
+    /// Play a short system sound on the edge into needs-input or an unread done (REQ-12).
+    public var soundCues: Bool
     /// Directories of recently seen sessions for the "New session" menu: newest first, at most `maxRecentProjects` (REQ-V2-03).
     public var recentProjects: [String]
     public static let maxRecentProjects = 5
@@ -41,6 +43,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         hideMode: Bool = false,
         focusReadMode: FocusReadMode = .tab,
         notchPermissions: Bool = true,
+        soundCues: Bool = true,
         recentProjects: [String] = []
     ) {
         self.port = port
@@ -49,6 +52,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.hideMode = hideMode
         self.focusReadMode = focusReadMode
         self.notchPermissions = notchPermissions
+        self.soundCues = soundCues
         self.recentProjects = recentProjects
     }
 
@@ -61,6 +65,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         hideMode = try container.decodeIfPresent(Bool.self, forKey: .hideMode) ?? false
         focusReadMode = try container.decodeIfPresent(FocusReadMode.self, forKey: .focusReadMode) ?? .tab
         notchPermissions = try container.decodeIfPresent(Bool.self, forKey: .notchPermissions) ?? true
+        soundCues = try container.decodeIfPresent(Bool.self, forKey: .soundCues) ?? true
         recentProjects = try container.decodeIfPresent([String].self, forKey: .recentProjects) ?? []
     }
 

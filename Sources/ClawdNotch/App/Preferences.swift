@@ -11,6 +11,7 @@ final class Preferences {
     private static let logger = Logger(subsystem: "dev.clawdnotch", category: "prefs")
 
     private(set) var hideMode: Bool
+    private(set) var soundCues: Bool
     private(set) var focusReadMode: AppConfig.FocusReadMode
     /// "Approve permissions from the notch" (REQ-V2-01). Read per request on the server queue, hence a lock.
     nonisolated let notchPermissions: OSAllocatedUnfairLock<Bool>
@@ -23,6 +24,7 @@ final class Preferences {
         let config = AppConfig.load()
         hideMode = config?.hideMode ?? false
         focusReadMode = config?.focusReadMode ?? .tab
+        soundCues = config?.soundCues ?? true
         notchPermissions = OSAllocatedUnfairLock(initialState: config?.notchPermissions ?? true)
     }
 
@@ -31,6 +33,12 @@ final class Preferences {
         notchPermissions.withLock { $0 = value }
         persist { $0.notchPermissions = value }
         if !value { onNotchPermissionsOff?() }
+    }
+
+    /// Sets and persists "Sound cues".
+    func setSoundCues(_ value: Bool) {
+        soundCues = value
+        persist { $0.soundCues = value }
     }
 
     /// Sets and persists hide mode.
