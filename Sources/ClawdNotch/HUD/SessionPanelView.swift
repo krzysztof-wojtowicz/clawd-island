@@ -168,8 +168,8 @@ final class SessionPanelView: NSView {
         let dot: CGColor? = switch session.state {
         case .needsInput: PetTokens.badgeAlert
         case .done where session.needsAttention: PetTokens.body
-        case .thinking, .usingTools, .talking: PetTokens.badgeActive
-        default: nil
+        case .thinking, .usingTools, .talking, .compacting, .juggling: PetTokens.badgeActive
+        case .done, .idle: nil
         }
         marker.stringValue = dot == nil ? "" : "●"
         marker.textColor = HUDStyle.color(dot ?? PetTokens.body)
