@@ -27,7 +27,7 @@ trap cleanup EXIT
 launch() {
     pkill -x ClawdNotch 2>/dev/null || true
     sleep 1
-    open -n dist/ClawdNotch.app
+    open -n dist/ClawdNotch.app ${1:+--args "$@"}
     for _ in $(seq 1 50); do
         pid="$(pgrep -nx ClawdNotch || true)"
         [[ -n "$pid" ]] && break
@@ -100,7 +100,9 @@ sim start; sim permission
 settled "permission card"
 endall
 
-rows+=("$(printf '%-34s %s' 'settings open/close' 'TODO(app): needs --open-settings')")
+launch --open-settings --close-settings-after 10
+record "settings open (first 10 s)" "$(measure 10)"
+settled "settings closed"
 
 set_hide_mode true
 launch

@@ -17,7 +17,7 @@ Claude Code ──(http hooks, POST JSON)─────────────
                          TerminalFocusWatcher (NSWorkspace activation + AppleScript tty)  → SessionStore.markRead
                          EditorWindows (Accessibility: VS Code family + JetBrains windows) → focus / markRead
                          NowPlayingWatcher (Music / Spotify distributed notifications)     → NowPlaying (REQ-13)
-                         SoundCues (popToken edges → cached NSSound)                       (REQ-12)
+                         SoundCues (popToken edges → afplay)                           (REQ-12)
                          LivenessTimer (30 s, kill(pid, 0))                               → SessionStore.expire
 ```
 

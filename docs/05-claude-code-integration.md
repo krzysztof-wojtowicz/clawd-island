@@ -116,7 +116,7 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - **Known limit:** the apps post only on change, so after launching ClawdNotch the headphones appear at the next play, pause or track change.
 
 ## Sound cues (REQ-12)
-`SoundCues` (App) watches `Snapshot.popToken` edges and plays a cached `NSSound(named:)`: "Funk" for needsInput, "Glass" for unread done. It does not play for user-caused changes and is skipped when `soundCues` is off. Event-driven; no timer.
+`SoundCues` (App) watches `Snapshot.popToken` edges and plays a system sound through a short-lived `/usr/bin/afplay` process (an in-process `NSSound` costs +7 MB RSS): "Funk" for needsInput, "Glass" for unread done. It does not play for user-caused changes and is skipped when `soundCues` is off. Event-driven; no timer.
 
 ## New session (REQ-V2-03)
 - Terminal.app: `tell application "Terminal"` → `do script "cd <dir> && claude"` and `activate`.

@@ -3,13 +3,12 @@
 
 import ClawdCore
 import Foundation
-import Observation
 import os
 
 /// The app's single source of truth for the UI. It owns the `SessionStore`, applies inbound messages,
 /// and publishes `snapshot` only when it differs from the previous one (docs/08 rule 3).
 /// Timers: one one-shot talking-decay re-evaluation, and the 30 s liveness check while sessions exist.
-@MainActor @Observable
+@MainActor
 final class AppModel {
     private static let coalesceInterval: TimeInterval = 0.1
     private static let livenessInterval: TimeInterval = 30
@@ -20,21 +19,21 @@ final class AppModel {
     /// Why the event server is not listening (for example, the port is busy). Nil while it works.
     var serverError: String?
     /// Called after `snapshot` changes, with the previous and the new value.
-    @ObservationIgnored var onSnapshotChange: ((_ old: Snapshot, _ new: Snapshot) -> Void)?
+    var onSnapshotChange: ((_ old: Snapshot, _ new: Snapshot) -> Void)?
     /// Recently used project directories, newest first, at most 5 (REQ-V2-03). Feeds the "+ New" menu.
     private(set) var recentProjects: [String] = AppConfig.load()?.recentProjects ?? []
     /// Persists one directory as the newest recent project and returns the stored list (empty on failure).
-    @ObservationIgnored var recordProject: ((String) -> [String])?
-    @ObservationIgnored private var seenSessionIDs: Set<String> = []
+    var recordProject: ((String) -> [String])?
+    private var seenSessionIDs: Set<String> = []
 
-    @ObservationIgnored private var store: SessionStore
-    @ObservationIgnored private var publishPending = false
-    @ObservationIgnored private var decayTimer: Timer?
-    @ObservationIgnored private var livenessTimer: Timer?
-    @ObservationIgnored private var paused = false
+    private var store: SessionStore
+    private var publishPending = false
+    private var decayTimer: Timer?
+    private var livenessTimer: Timer?
+    private var paused = false
     /// Held `PermissionRequest` connections by `PendingPermission.id`; an entry exists exactly while its card does.
-    @ObservationIgnored private var responders: [UUID: PermissionResponder] = [:]
-    @ObservationIgnored private var permissionTimer: Timer?
+    private var responders: [UUID: PermissionResponder] = [:]
+    private var permissionTimer: Timer?
 
     init() {
         var store = SessionStore()

@@ -17,7 +17,7 @@
 6. **No logging in hot paths in release builds.** Use `os.Logger` at `.debug` level only.
 7. **Small binary.** No dependencies. Build release with `-Osize` if it is not slower in practice.
 8. **No App Nap fights.** Do not disable App Nap. The app should be naturally idle.
-9. **Music and sound are event-driven (v3).** `NowPlayingWatcher` only observes distributed notifications; `SoundCues` plays cached `NSSound`s on `popToken` edges. No polling, no timers, no AppleScript. The headphones and broom/ball overlays are Core Animation layers like every other part, hidden (not animating) when unused.
+9. **Music and sound are event-driven (v3).** `NowPlayingWatcher` only observes distributed notifications; `SoundCues` plays a system sound in a short-lived `afplay` process on `popToken` edges (`NSSound` in-process costs +7 MB RSS / +6 MB footprint, never released). No polling, no timers, no AppleScript. The headphones and broom/ball overlays are Core Animation layers like every other part, hidden (not animating) when unused.
 10. **Cheap effects only.** The hover glow (REQ-11) is a layer shadow with an explicit `shadowPath`, and only its opacity is animated. Never use a blur filter, `NSVisualEffectView`, or a per-frame redraw for it.
 
 ## Measured (latest, release bundle, settled; `scripts/perf.sh`)
@@ -34,8 +34,6 @@
 | `clawd-bridge statusline` with the extra `/session-meta` POST | about 13 ms | n/a | PASS (< 20 ms) |
 
 - Process CPU excludes Core Animation work in the render server (`WindowServer`).
-- **Known exception, post-burst RSS:** about 41 MB (up to 43.9 MB after repeated bursts) is retained by the allocator from concurrent HTTP connections in `Server/` (`footprint` 14–16 MB). Bounded, not a leak, under the 45 MB burst budget. Fix, if wanted: cap concurrent connections in `EventServer` (deferred, `09`).
-- **Known exception, Settings window:** plain AppKit, released on close, but framework pages stay resident (debug: 42 → 55 MB after closing). Opened rarely; accepted.
 - **Rules learned:** no full-window `CALayer.mask` (it forced offscreen rendering in-process: +45 MB RSS and CPU spikes; an opaque notch-cover layer does the same job for free). `ps %cpu` is a decaying average: read it at least 30 s after a launch or a state change.
 - **Still to measure by a human:** `perf.sh 30` with the mouse on the expanded panel (hover glow, REQ-11 AC2). If CPU at rest rises measurably or steady RSS passes 40 MB, drop the glow and record the numbers here.
 
@@ -44,28 +42,32 @@
 - `scripts/perf-suite.sh` runs every scenario on a release bundle and prints one table (CPU avg/max after a settle, RSS max, `footprint`): launch, sleeping, thinking, usingTools, burst + post-burst, hidden idle, hide-mode pop-out, expanded hover (cursor moved with `CGWarpMouseCursorPosition`, no permission needed), permission card, Settings open/close (`--open-settings`).
 - Remaining exceptions are kept only with numbers and a reason.
 
-### WP-22 measurements (server and suite half)
-`scripts/perf-suite.sh` (settle 30 s, sample 20 s, release bundle). CPU avg / max %, RSS max MB, `footprint` MB. Before = main at `c6ef368`, after = with the `EventServer` cap (16 non-held connections in flight, extras cancelled at once; held `PermissionRequest`s are never counted).
+### WP-22 measurements (final)
+`scripts/perf-suite.sh` (settle 30 s, sample 20 s, release bundle, `-O`). CPU avg / max %, RSS max MB, `footprint` MB. Before = main at `a8ea54b` (with the server cap), after = this change.
 
 | Scenario | Before | After |
 |---|---|---|
-| launch peak (first 30 s) | 0.23 / 6.8, 40.6 MB, fp 11 | 0.18 / 5.3, 40.7 MB, fp 11 |
-| sleeping | 0.00 / 0.00, 37.9, fp 11 | 0.00 / 0.00, 37.9, fp 11 |
-| thinking | 0.00 / 0.00, 38.4, fp 11 | 0.01 / 0.10, 38.4, fp 11 |
-| usingTools | 0.05 / 1.0, 38.5, fp 11 | 0.03 / 0.6, 38.5, fp 11 |
-| burst (50 events/s, 10 s) | 2.93 / 12.5, 47.8, fp 17 | 2.18 / 7.8, 47.9, fp 17 |
-| post-burst | 0.07 / 1.3, 47.7, fp 17 | 0.02 / 0.2, 48.0, fp 17 |
-| expanded hover | 0.00 / 0.00, 49.0, fp 17 | 0.00 / 0.00, 48.8, fp 17 |
-| permission card | 0.07 / 1.2, 49.5, fp 18 | 0.00 / 0.00, 49.6, fp 18 |
-| hidden idle | 0.00 / 0.00, 44.7, fp 14 | 0.00 / 0.00, 37.9, fp 11 |
-| hide-mode pop-out | 0.06 / 0.7, 38.7, fp 13 | 0.33 / 4.2, 45.3, fp 14 |
-| Settings open/close | TODO(app): needs `--open-settings` | same |
+| launch peak (first 30 s) | 0.25 / 5.0, 41.1 MB, fp 11 | 0.26 / 5.1, 41.3 MB, fp 11 |
+| sleeping | 0.00 / 0.00, 38.4, fp 11 | 0.00 / 0.00, 38.5, fp 11 |
+| thinking | 0.00 / 0.00, 38.4, fp 11 | 0.00 / 0.00, 38.5, fp 11 |
+| usingTools | 0.00 / 0.00, 38.4, fp 11 | 0.01 / 0.20, 38.5, fp 11 |
+| burst (50 events/s, 10 s) | 3.43 / 12.9, 48.6, fp 18 | 2.42 / 7.5, 42.1, fp 14 |
+| post-burst | 0.00 / 0.00, 48.6, fp 17 | 0.00 / 0.00, 42.0, fp 14 |
+| expanded hover | 0.00 / 0.00, 49.7, fp 18 | 0.00 / 0.00, 43.3, fp 15 |
+| permission card | 0.00 / 0.00, 50.7, fp 18 | 0.00 / 0.00, 43.8, fp 15 |
+| Settings open (first 10 s) / closed | not measurable | 1.35 / 10.6, 60.0, fp 19 / 0.00, 55.2, fp 19 |
+| hidden idle | 0.04 / 0.9, 38.5, fp 11 | 0.00 / 0.00, 40.6, fp 11 |
+| hide-mode pop-out | 0.33 / 3.3, 45.5, fp 14 | 0.08 / 1.4, 41.3, fp 11 |
 
-Findings (run-to-run noise on CPU max and on the hidden rows is large; they are not an effect of the cap):
-- The cap did **not** move post-burst RSS. A separate burst probe (10 s burst, 20 s wait, three builds) gave 42.7 / 42.8 / 42.6 MB for no cap / cap / cap + `autoreleasepool` around decode, footprint 14 MB each. The simulator's `curl`s rarely overlap 16-deep, and decode garbage is not the cause.
-- `vmmap --summary` before/after a burst: `MALLOC_SMALL` dirty 5.9 -> 9.4 MB and live malloc objects 20k -> 37k (allocated 2.9 -> 5.2 MB). That is retained state per event on the app side (snapshot, session or HUD work), not connection buffers. Needs an app-side look (WP-22 app half).
-- RSS (about 48 MB in the suite) is far above `footprint` (17 MB): the difference is clean framework pages touched by Network and SwiftUI, which a server change cannot shrink.
-- Launch peak 40.7 MB (target 38) and post-burst 48 MB (target 40) remain over; footprint is 11 / 17 MB, so RSS is dominated by resident shared-library pages.
+What moved what:
+- **`SoundCues` (the one real lever, -6 to -7 MB RSS and -4 to -6 MB footprint):** the first `done`/`needsInput` cue called `NSSound`, which loads the audio stack into the process for good (RSS 39 -> 46 MB on the first `done`). The cue now runs `/usr/bin/afplay` as a child process, so the app stays at 39.6 MB after a cue. This is what the "post-burst 48 MB" and "hide-mode pop-out 45 MB" rows really were: the burst simulator runs after `sim done`, not connection buffers. `heap`/`vmmap` before and after a burst show live malloc objects back at the launch count (about 20k) once Network releases the connections (about 40 s later).
+- `import AppKit` alone links `libswiftMetal`, `libswiftCoreImage`, `libswiftUniformTypeIdentifiers`, `libswiftXPC` and friends; an empty `NSApplication` accessory app links the same list, so they cost nothing we can remove. Release already excludes `PoseRenderer` (`#if DEBUG` wraps its imports). Removing the unused `@Observable` on `AppModel` (nothing observed it) dropped `libswiftObservation`: -0.05 MB, kept as dead-code removal. `-Osize` changed nothing (steady 39.0 MB either way, binary 1.0 MB), so it is not used. Lazy creation of everything else was already in place (HUD panel, Settings, `NowPlayingWatcher`, `NSSound`).
+- `--open-settings` (and `--close-settings-after <s>`) added; the suite uses them for the Settings rows.
+
+Remaining over target, with the cause:
+- **Launch peak 41.3 MB (target 38) and steady 38.5 (target 37):** `footprint` is 11 MB. An empty accessory `NSApplication` (about 20 lines, no window) peaks at 31.8 MB and settles at 29.6 MB, so about 30 MB of our RSS is AppKit and shared-cache pages we cannot shed; our own share is about 9 MB (Network, Core Animation, 3 MB of malloc). The first 10 s peak is the LaunchServices database (`com.apple.LaunchServices-*.csstore`, 2.6 MB resident) which the system unmaps on its own about 10 s after launch (the empty app does the same, -2.1 MB). Needs a budget decision, not code.
+- **Burst / post-burst 42 MB (target 40):** each hook connection costs about 7.8 KB of Network.framework state (`Endpoint`, `ProtocolStack`, path parameters) that stays alive about 30 s after the client closed, and the allocator keeps those pages (`malloc_zone_pressure_relief` and breaking the closure retention gave nothing, measured). Only dropping `NWListener` for a plain socket accept loop would remove it (and `Network.framework` from the launch set); not done here.
+- **Settings window open 60 MB / closed 55 MB (`footprint` 19 MB):** plain AppKit controls, released on close (`windowWillClose` drops all references), but the AppKit controls/text-system pages stay resident. Opened rarely; accepted, with these numbers.
 
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

@@ -121,7 +121,7 @@ While the session panel is expanded (on hover), a soft orange (`clawd.body`) glo
   - AC1: Entering `needsInput` plays one system sound (default "Funk"); a session becoming `done` and unread plays another ("Glass").
   - AC2: Once per edge, using the `popToken` edge logic; no repeat while the state persists.
   - AC3: No sound for changes the user causes (mark read, focus-read, session removal).
-  - AC4: Settings toggle "Sound cues" (`soundCues` in config), default **on**. Sounds are cached `NSSound`s; no timer, no polling.
+  - AC4: Settings toggle "Sound cues" (`soundCues` in config), default **on**. Sounds play through a short-lived `afplay` process (an in-process `NSSound` costs +7 MB RSS); no timer, no polling.
 - **REQ-13 Music headphones**: while Apple Music or Spotify plays, the pet wears headphones.
   - AC1: Driven only by the apps' play-state notifications (`05`, ADR-0007): no login, no private API, no polling, no AppleScript.
   - AC2: `Playing` shows the headphones (150 ms cross-fade); `Paused` / `Stopped` hides them.

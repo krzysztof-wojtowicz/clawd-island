@@ -115,7 +115,7 @@ These need eyes, a hover, a click or a system permission:
 ## v4 — performance, README GIFs, production
 Order: v3.1 (WP-20 ∥ WP-21) → WP-22 → WP-23 → WP-24 (WP-23 and WP-24 both edit README.md, so they run in sequence).
 
-### WP-22 — Performance pass · owner: core-engineer (Server) + macos-ui-engineer (app) · deps: WP-20, WP-21 · status: `todo`
+### WP-22 — Performance pass · owner: core-engineer (Server) + macos-ui-engineer (app) · deps: WP-20, WP-21 · status: `done` (server cap + suite; app half: `SoundCues` via `afplay` -6 MB RSS, `--open-settings`; burst 48.6 -> 42.1 MB, hide pop-out 45.5 -> 41.3 MB; launch peak 41.3 MB, steady 38.5 MB and post-burst 42 MB stay over target because the empty-AppKit floor is 29.6 MB while `footprint` is 11 MB, see `08`)
 - `scripts/perf-suite.sh` with every scenario in `08` (v4 targets), including the expanded panel with the glow (REQ-11 AC2) and Settings open/close.
 - Profile launch (`vmmap --summary`, `footprint`); lazy-create what is not needed at launch; release flags (`-Osize`), no DEBUG code in release.
 - Cap concurrent `EventServer` connections (held permissions exempt); re-measure post-burst.

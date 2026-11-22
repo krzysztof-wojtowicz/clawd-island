@@ -54,6 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pausePetWhileUnseen()
         bindSnapshot(controller)
         focusWatcher.start()
+        openSettingsIfRequested()
         if preferences.headphones { nowPlayingWatcher.start() }
         preferences.onHeadphonesChange = { [nowPlayingWatcher, pet, model] on in
             if on {
@@ -63,6 +64,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 model.clearNowPlaying()
                 pet.setHeadphones(false)
             }
+        }
+    }
+
+    /// `--open-settings` opens Settings once after launch; `--close-settings-after <s>` closes it again (perf-suite.sh).
+    private func openSettingsIfRequested() {
+        let args = CommandLine.arguments
+        guard args.contains("--open-settings") else { return }
+        settings.show()
+        if let flag = args.firstIndex(of: "--close-settings-after"), args.indices.contains(flag + 1),
+            let seconds = Double(args[flag + 1])
+        {
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [settings] in MainActor.assumeIsolated { settings.close() } }
         }
     }
 

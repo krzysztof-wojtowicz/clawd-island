@@ -29,6 +29,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         window?.makeKeyAndOrderFront(nil)
     }
 
+    /// Closes the window, releasing its views (`windowWillClose`).
+    func close() { window?.close() }
+
     /// Syncs the controls with the current settings, e.g. after the menu toggled hide mode.
     func refresh() {
         hideCheck?.state = preferences.hideMode ? .on : .off
