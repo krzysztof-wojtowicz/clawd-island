@@ -1,12 +1,13 @@
 #!/bin/bash
 # Runs the swift-testing suite. Command Line Tools keep Testing.framework outside SwiftPM's search
 # paths and ship a broken _Testing_Foundation overlay, so both are handled here (see ADR-0001).
+# With full Xcode (the CI runner, WP-32) plain `swift test` works, so the workaround applies only to CLT.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 frameworks="$(xcode-select -p)/Library/Developer/Frameworks"
 args=()
-if [[ -d "$frameworks/Testing.framework" ]]; then
+if [[ "$(xcode-select -p)" == */CommandLineTools && -d "$frameworks/Testing.framework" ]]; then
     args=(-Xswiftc -F -Xswiftc "$frameworks"
           -Xswiftc -Xfrontend -Xswiftc -disable-cross-import-overlays
           -Xlinker -rpath -Xlinker "$frameworks")

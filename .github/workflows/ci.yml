@@ -1,0 +1,16 @@
+# Builds and tests every push and pull request (REQ-15 AC6, WP-32). No secrets, no signing.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-26  # Apple silicon with Xcode 26 (Swift 6.2)
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift build
+      - run: scripts/test.sh
+      - run: swift build -c release
