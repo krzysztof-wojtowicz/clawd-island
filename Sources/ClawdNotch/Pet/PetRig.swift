@@ -22,6 +22,16 @@ struct PetRig {
     let badge: CAShapeLayer
     /// Handle and head, held by the right arm so it swings with it.
     let hammer = CALayer()
+    /// Handle, bristles and two paws; pivots at the top of the handle and sweeps in front of the body.
+    let broom = CALayer()
+    /// Band and cups, orthogonal to every pose: it lives in the torso, between the body and the eyes.
+    let headphones = CALayer()
+    /// Dust puffs at the two ends of the sweep.
+    let dust: [CAShapeLayer]
+    /// Juggling balls; their model positions are the Reduce Motion pose, the loop moves them along `ballOrbit`.
+    let balls: [CAShapeLayer]
+    /// The flattened ellipse above the head that the balls follow (unit-box coordinates).
+    static let ballOrbit = CGRect(x: 6, y: 20.6, width: 20, height: 2.4)
 
     private let eyeGroup = CALayer()
     private let fullBox = CGRect(origin: .zero, size: PetTokens.unitBox)
@@ -31,6 +41,7 @@ struct PetRig {
     private let raisedArmPivot = CGPoint(x: 28, y: 18.5)
     private let raisedArmAngle: CGFloat = 110 * .pi / 180
     // The hammer is cocked up and to the right, so it stays near the unit box instead of towering over the head.
+    private let jugglingArmAngle: CGFloat = 35 * .pi / 180
     private let cockedArmAngle: CGFloat = 65 * .pi / 180
 
     init() {
@@ -49,6 +60,11 @@ struct PetRig {
         }
         cloud = [(26, 21, 0.8), (28.2, 22, 1.1), (30.5, 22.5, 1.5)].map { Self.circle(x: $0.0, y: $0.1, radius: $0.2, color: PetTokens.bubbleFill) }
         dots = [3.2, 5.75, 8.3].map { Self.circle(x: $0, y: 3, radius: 0.8, color: PetTokens.eye) }
+        dust = [18.5, 31].map { Self.circle(x: $0, y: 4.5, radius: 0.9, color: PetTokens.bubbleFill) }
+        balls = [PetTokens.ball1, PetTokens.ball2, PetTokens.ball3].enumerated().map { index, color in
+            let angle = CGFloat(index) * 2 * .pi / 3
+            return Self.circle(x: Self.ballOrbit.midX + 10 * cos(angle), y: Self.ballOrbit.midY + 1.2 * sin(angle), radius: 1.3, color: color)
+        }
         badge = Self.circle(x: 3.5, y: 21, radius: 2.8, color: PetTokens.badgeAlert)
 
         root.bounds = fullBox
@@ -58,19 +74,25 @@ struct PetRig {
         eyeGroup.frame = fullBox
         eyes.forEach(eyeGroup.addSublayer)
         // Arms sit behind the body so their inner ends merge into it.
-        [leftArm, rightArm, body, eyeGroup].forEach(torso.addSublayer)
+        configureHeadphones()
+        [leftArm, rightArm, body, headphones, eyeGroup].forEach(torso.addSublayer)
+        // Above the body so the broom reads in front of it; the dust follows the torso's bob.
+        torso.addSublayer(broom)
+        dust.forEach(torso.addSublayer)
 
         configureBubble()
         configureText()
         legs.forEach(root.addSublayer)
         configureHammer()
+        configureBroom()
         [torso, zzz, bubble, badge].forEach(root.addSublayer)
+        balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
-        for accessory in accessories { accessory.opacity = 0 }
+        for accessory in accessories + dust + [headphones] { accessory.opacity = 0 }
     }
 
     /// Accessory layers that cross-fade between states.
-    private var accessories: [CALayer] { [zzz, bubble, badge, hammer] + cloud }
+    private var accessories: [CALayer] { [zzz, bubble, badge, hammer, broom] + balls + cloud }
 
     /// Sets the model values of the pose parts (eyes, torso height, right arm) for `state`.
     func applyPose(_ state: PetState) {
@@ -79,6 +101,14 @@ struct PetRig {
         eyeGroup.position = CGPoint(x: fullBox.midX, y: fullBox.midY + (state == .thinking ? 1 : 0))
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom - (state == .sleeping ? 1 : 0))
         let raised = state == .done || state == .needsInput || state == .usingTools
+        // Juggling: both paws up and out, so the balls read as thrown by them.
+        let juggling = state == .juggling
+        leftArm.transform = juggling ? CATransform3DMakeRotation(-jugglingArmAngle, 0, 0, 1) : CATransform3DIdentity
+        if juggling {
+            rightArm.position = armPivot
+            rightArm.transform = CATransform3DMakeRotation(jugglingArmAngle, 0, 0, 1)
+            return
+        }
         rightArm.position = raised ? raisedArmPivot : armPivot
         let angle = state == .usingTools ? cockedArmAngle : raisedArmAngle
         rightArm.transform = raised ? CATransform3DMakeRotation(angle, 0, 0, 1) : CATransform3DIdentity
@@ -89,6 +119,8 @@ struct PetRig {
         zzz.opacity = state == .sleeping ? 1 : 0
         bubble.opacity = state == .talking ? 1 : 0
         hammer.opacity = state == .usingTools ? 1 : 0
+        broom.opacity = state == .compacting ? 1 : 0
+        for ball in balls { ball.opacity = state == .juggling ? 1 : 0 }
         badge.opacity = state == .needsInput ? 1 : 0
         for circle in cloud { circle.opacity = state == .thinking ? 1 : 0 }
     }
@@ -124,6 +156,38 @@ struct PetRig {
         hammer.addSublayer(handle)
         hammer.addSublayer(head)
         rightArm.addSublayer(hammer)
+    }
+
+    /// Broom-local coordinates (4 × 12): the 1 × 9 handle stands on a 4 × 3 bristle head. The pivot is the handle's top,
+    /// at (24.5, 15) in the torso, right of the eyes so the face stays clear. Two paws sit on the handle, so both arms hold it.
+    private func configureBroom() {
+        broom.bounds = CGRect(x: 0, y: 0, width: 4, height: 12)
+        broom.anchorPoint = CGPoint(x: 0.5, y: 1)
+        broom.position = CGPoint(x: 24.5, y: 15)
+        let handle = Self.roundedRect(CGRect(x: 1.5, y: 3, width: 1, height: 9), radius: 0.4, color: PetTokens.broomHandle)
+        let bristles = Self.roundedRect(CGRect(x: 0, y: 0, width: 4, height: 3), radius: 0.8, color: PetTokens.broomBristle)
+        let paws = [9.5, 6.5].map { Self.roundedRect(CGRect(x: 0.8, y: $0, width: 2.4, height: 2), radius: 0.9, color: PetTokens.body) }
+        [handle, bristles].forEach(broom.addSublayer)
+        paws.forEach(broom.addSublayer)
+    }
+
+    /// A band arcing over the head, ending in two 3 × 5 cups that straddle the body's upper sides.
+    private func configureHeadphones() {
+        headphones.frame = fullBox
+        let band = CAShapeLayer()
+        band.frame = fullBox
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 3.7, y: 18))
+        path.addCurve(to: CGPoint(x: 28.3, y: 18), control1: CGPoint(x: 3.7, y: 25.5), control2: CGPoint(x: 28.3, y: 25.5))
+        band.path = path
+        band.fillColor = nil
+        band.strokeColor = PetTokens.headphonesBand
+        band.lineWidth = 1.2
+        band.lineCap = .round
+        headphones.addSublayer(band)
+        for x in [2.2, 26.8] {
+            headphones.addSublayer(Self.roundedRect(CGRect(x: x, y: 14.5, width: 3, height: 5), radius: 1.2, color: PetTokens.headphonesCup))
+        }
     }
 
     private func configureText() {

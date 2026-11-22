@@ -52,6 +52,12 @@ final class AppModel {
         }
     }
 
+    /// Applies a Music or Spotify play-state report (REQ-13).
+    func receive(nowPlaying: NowPlaying) {
+        store.apply(nowPlaying: nowPlaying)
+        publish()
+    }
+
     /// Applies a held `PermissionRequest`: the event moves the session to `needsInput` and a card appears.
     func receive(permission event: ClawdEvent, responder: PermissionResponder) {
         store.apply(event, now: .now)

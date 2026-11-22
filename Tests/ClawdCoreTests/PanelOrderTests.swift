@@ -7,7 +7,7 @@ import Testing
 
 @Suite("Panel order")
 struct PanelOrderTests {
-    @Test("Sessions are ranked needsInput > unread done > usingTools > talking > thinking > idle, decay applied first")
+    @Test("Sessions are ranked needsInput > unread done > juggling > compacting > usingTools > talking > thinking > idle, decay applied first")
     func mixedStatesRankInOrder() {
         var store = SessionStore()
         let base = Date(timeIntervalSince1970: 1_000)
@@ -16,6 +16,8 @@ struct PanelOrderTests {
         store.apply(event(.permissionRequest, session: "needs"), now: base.addingTimeInterval(1))
         store.apply(event(.stop, session: "doneUnread"), now: base.addingTimeInterval(2))
         store.apply(event(.preToolUse, session: "tools"), now: base.addingTimeInterval(3))
+        store.apply(event(.subagentStart, session: "juggle", agent: "a"), now: base.addingTimeInterval(0.2))
+        store.apply(event(.preCompact, session: "compact"), now: base.addingTimeInterval(0.5))
         store.apply(event(.messageDisplay, session: "talkDecayed"), now: base.addingTimeInterval(4))
         store.apply(event(.messageDisplay, session: "talkFresh"), now: base.addingTimeInterval(9))
         store.apply(event(.stop, session: "doneRead"), now: base.addingTimeInterval(7))
@@ -23,7 +25,7 @@ struct PanelOrderTests {
 
         let now = base.addingTimeInterval(10)
         let order = store.snapshot(now: now).sessions.map(\.id)
-        #expect(order == ["needs", "doneUnread", "tools", "talkFresh", "thinkNew", "talkDecayed", "doneRead", "idleOld"])
+        #expect(order == ["needs", "doneUnread", "juggle", "compact", "tools", "talkFresh", "thinkNew", "talkDecayed", "doneRead", "idleOld"])
     }
 
     @Test("Equal rank: newest lastEventAt first, regardless of arrival order")

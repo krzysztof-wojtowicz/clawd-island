@@ -31,6 +31,39 @@ extension PetRig {
             rightArm.add(strike, forKey: "loop.strike")
             let dip = Self.keyframes("position.y", [0, -0.5, 0], period: 0.7, keyTimes: [0, 0.2, 1], additive: true)
             torso.add(dip, forKey: "loop.dip")
+        case .compacting:
+            // Sweeps between two extremes (t = 0 and 0.5 s); a dust puff bursts at each end as the bristles turn.
+            let sweep = Self.keyframes("transform.rotation.z", [-18, 18, -18].map(Self.radians), period: 1)
+            broom.add(sweep, forKey: "loop.sweep")
+            broom.add(Self.keyframes("position.x", [-1.5, 1.5, -1.5], period: 1, additive: true), forKey: "loop.slide")
+            for (index, puff) in dust.enumerated() {
+                let burst = CAAnimationGroup()
+                burst.animations = [
+                    Self.keyframes("opacity", [0, 0.9, 0, 0], period: 1, keyTimes: [0, 0.1, 0.45, 1]),
+                    Self.keyframes("transform.scale", [0.4, 1.4, 1.4, 1.4], period: 1, keyTimes: [0, 0.45, 0.5, 1]),
+                    Self.keyframes("position.y", [0, 2, 2, 2], period: 1, keyTimes: [0, 0.45, 0.5, 1], additive: true),
+                ]
+                burst.duration = 1
+                burst.repeatCount = .infinity
+                burst.timeOffset = index == 0 ? 0 : 0.5
+                puff.add(burst, forKey: "loop.puff")
+            }
+        case .juggling:
+            // A cascade: every ball rides the same orbit, a third of the period apart.
+            let orbit = CGPath(ellipseIn: Self.ballOrbit, transform: nil)
+            for (index, ball) in balls.enumerated() {
+                let arc = CAKeyframeAnimation(keyPath: "position")
+                arc.path = orbit
+                arc.duration = 1.2
+                arc.repeatCount = .infinity
+                arc.calculationMode = .paced
+                arc.timeOffset = Double(index) * 0.4
+                ball.add(arc, forKey: "loop.arc")
+            }
+            let bob = Self.keyframes("transform.rotation.z", [0, 6, 0, -6, 0].map(Self.radians), period: 1.2, additive: true)
+            rightArm.add(bob, forKey: "loop.bob")
+            bob.timeOffset = 0.6
+            leftArm.add(bob, forKey: "loop.bob")
         case .talking:
             for (index, dot) in dots.enumerated() {
                 let light = Self.keyframes("opacity", [0.3, 1, 0.3, 0.3], period: 0.9, keyTimes: [0, 0.17, 0.33, 1])
@@ -53,6 +86,13 @@ extension PetRig {
             shake.repeatCount = 1
             torso.add(shake, forKey: "loop.shake")
         }
+    }
+
+    /// A tiny 0.4 u nod to the beat, only while the headphones are on in a calm pose (REQ-13 AC3).
+    func setHeadBob(_ on: Bool) {
+        torso.removeAnimation(forKey: "loop.headbob")
+        guard on else { return }
+        torso.add(Self.keyframes("position.y", [0, 0.4, 0], period: 0.5, additive: true), forKey: "loop.headbob")
     }
 
     /// Removes every loop and entry animation, leaving pop-out springs alone.

@@ -64,17 +64,17 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - `SoundCues`: cached `NSSound(named:)`, played once per edge (needsInput, unread done) using the `popToken` edge logic; `soundCues` config key, default on; Settings checkbox "Sound cues".
 - AC: REQ-12 AC1–AC4. No timers added.
 
-### WP-16 — `compacting` sweeping pose · owner: core-engineer + pet-animator · deps: none (parallel with WP-12) · status: `todo`
+### WP-16 — `compacting` sweeping pose · owner: core-engineer + pet-animator · deps: none (parallel with WP-12) · status: `done` (Core state + priority + tests, broom/dust pose, simulator `compact`)
 - Core: `PreCompact` → `compacting`; `SessionStart(compact)` and other state-setting events leave it; priority and panel text ("compacting"); tests (`04`).
 - Pet: broom + dust puff, `broom.*` tokens, Reduce Motion pose (`07`). Simulator `compact` scenario + skill row.
 - AC: REQ-03 AC1, AC3, AC4, AC5.
 
-### WP-17 — `juggling` pose · owner: core-engineer + pet-animator · deps: WP-16 · status: `todo`
+### WP-17 — `juggling` pose · owner: core-engineer + pet-animator · deps: WP-16 · status: `done` (derived in `SessionStore.snapshot`, balls on an elliptical orbit, simulator `subagents`)
 - Core: derived `juggling` (`activeSubagents > 0`, not needsInput/done); counter resets on `Stop`, `StopFailure`, `UserPromptSubmit`; panel text "N subagents"; tests.
 - Pet: three balls on keyframed arcs, `ball.1–3` tokens. Simulator `subagents` scenario + skill row.
 - AC: REQ-03 AC1, AC3, AC4, AC5, AC6.
 
-### WP-18 — Music → headphones · owner: integration-engineer + core-engineer + pet-animator · deps: WP-17 · status: `todo`
+### WP-18 — Music → headphones · owner: integration-engineer + core-engineer + pet-animator · deps: WP-17 · status: `done` (NowPlaying + store, NowPlayingWatcher, headphones overlay, `--debug-headphones`)
 - Integration: `NowPlayingWatcher` (ADR-0007, `05`). Core: `NowPlaying` in `Snapshot`. Pet: headphones overlay orthogonal to every pose and to hide mode (`07`).
 - AC: REQ-13 AC1–AC5. Verify with a real Music or Spotify play/pause; CPU stays at the idle budget.
 

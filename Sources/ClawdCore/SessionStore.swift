@@ -17,6 +17,9 @@ public struct SessionStore: Sendable {
     var sessions: [Session] = []
     var permissions: [PendingPermission] = []
     var usage: UsageSnapshot?
+    private var players: [NowPlaying.App: NowPlaying] = [:]
+    /// The app whose state is shown: the latest one that played, or, when it stops, the other if that still plays.
+    private var nowPlayingSource: NowPlaying.App?
     private var popToken = 0
     private var lastAggregate = PetState.sleeping
     private var lastAttentionCount = 0
@@ -91,6 +94,16 @@ public struct SessionStore: Sendable {
         sessions[index].lastEventAt = now
     }
 
+    /// Records one music app's play state (REQ-13). Playing wins over paused; the latest playing app is the source.
+    public mutating func apply(nowPlaying report: NowPlaying) {
+        players[report.app] = report
+        if report.isPlaying {
+            nowPlayingSource = report.app
+        } else if nowPlayingSource == report.app || nowPlayingSource == nil {
+            nowPlayingSource = players.values.first { $0.isPlaying }?.app ?? report.app
+        }
+    }
+
     /// Stores the latest usage window from the statusline.
     public mutating func apply(usage: UsageSnapshot) {
         self.usage = usage
@@ -150,17 +163,20 @@ public struct SessionStore: Sendable {
             hasNeedsInput: visible.contains { $0.state == .needsInput },
             sessions: visible,
             usage: usage,
+            nowPlaying: nowPlayingSource.flatMap { players[$0] },
             popToken: popToken,
             pendingPermissions: permissions.reversed()
         )
     }
 
+    /// The session as the UI sees it: talking decay applied, then `juggling` derived from running subagents.
     private func decayed(_ session: Session, now: Date) -> Session {
-        guard session.state == .talking, let talkedAt = session.lastTalkingAt,
-              now.timeIntervalSince(talkedAt) >= Self.talkingDecay
-        else { return session }
         var copy = session
-        copy.state = .thinking
+        if copy.state == .talking, let talkedAt = copy.lastTalkingAt,
+           now.timeIntervalSince(talkedAt) >= Self.talkingDecay {
+            copy.state = .thinking
+        }
+        if copy.activeSubagents > 0, copy.state != .needsInput, copy.state != .done { copy.state = .juggling }
         return copy
     }
 

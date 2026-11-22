@@ -19,7 +19,7 @@ extension StatusCounts {
             switch session.state {
             case .needsInput: needsInput += 1
             case .done where session.unread: done += 1
-            case .thinking, .usingTools, .talking: working += 1
+            case .thinking, .usingTools, .talking, .compacting, .juggling: working += 1
             case .idle, .done: idle += 1
             }
         }
@@ -40,6 +40,8 @@ public struct Snapshot: Equatable, Sendable {
     /// Sessions in panel order (rank, then newest `lastEventAt`), with talking decay already applied.
     public let sessions: [Session]
     public let usage: UsageSnapshot?
+    /// The music app currently shown, if any has reported; the pet wears headphones while `isPlaying` (REQ-13).
+    public let nowPlaying: NowPlaying?
     /// Increments once per pop-out edge; the UI pops the pet when it sees a new value.
     public let popToken: Int
     /// Permission prompts held open for a notch decision, newest first (REQ-V2-01).
@@ -48,7 +50,7 @@ public struct Snapshot: Equatable, Sendable {
 
 extension PetState {
     /// The highest-priority state across sessions (REQ-03 AC3):
-    /// `needsInput > done (unread) > usingTools > talking > thinking > idle > sleeping`.
+    /// `needsInput > done (unread) > juggling > compacting > usingTools > talking > thinking > idle > sleeping`.
     init(aggregating sessions: [Session]) {
         if sessions.isEmpty {
             self = .sleeping
@@ -56,6 +58,10 @@ extension PetState {
             self = .needsInput
         } else if sessions.contains(where: { $0.state == .done && $0.unread }) {
             self = .done
+        } else if sessions.contains(where: { $0.state == .juggling }) {
+            self = .juggling
+        } else if sessions.contains(where: { $0.state == .compacting }) {
+            self = .compacting
         } else if sessions.contains(where: { $0.state == .usingTools }) {
             self = .usingTools
         } else if sessions.contains(where: { $0.state == .talking }) {

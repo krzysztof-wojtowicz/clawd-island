@@ -25,6 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         markRead: { [model] in model.markRead($0) },
         mode: { [preferences] in preferences.focusReadMode })
 
+    private lazy var nowPlayingWatcher = NowPlayingWatcher { [model] in model.receive(nowPlaying: $0) }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         model.recordProject = { [unowned self] in preferences.noteRecentProject($0) }  // lazy: not created before startServer()
         startServer()
@@ -51,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pausePetWhileUnseen()
         bindSnapshot(controller)
         focusWatcher.start()
+        nowPlayingWatcher.start()
     }
 
     private static func embed(_ view: NSView, in slot: NSView) {
@@ -66,6 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.onSnapshotChange = { [pet, hud, controller, focusWatcher, model] old, new in
             focusWatcher.snapshotChanged(from: old.sessions, to: new.sessions)
             pet.setState(new.aggregate)
+            if new.nowPlaying?.isPlaying != old.nowPlaying?.isPlaying { pet.setHeadphones(new.nowPlaying?.isPlaying == true) }
             if new.popToken > old.popToken { pet.popOut() }
             if new.aggregate != old.aggregate || new.popToken > old.popToken {
                 controller.popOut(hold: new.aggregate == .needsInput)
