@@ -136,7 +136,7 @@ Order: v3.1 (WP-20 ∥ WP-21) → WP-22 → WP-23 → WP-24 (WP-23 and WP-24 bot
 ## v5 — waving pet, no headphones, mini mode, ClawdIsland
 Older entries above keep the names of their time ("hide mode", headphones, REQ-13). v5 removes REQ-13 (WP-25) and renames hide mode to mini mode (WP-27). Order: WP-25 → (WP-26 ∥ WP-27, disjoint directories) → WP-28 → WP-29. Every WP runs `swift build`, `scripts/test.sh` and the release `scripts/perf-suite.sh` within the `08` budget, then `reviewer`, then one local commit.
 
-### WP-25 — Remove headphones and now-playing · owner: core-engineer + pet-animator + macos-ui-engineer (sequential) · deps: none · status: `todo`
+### WP-25 — Remove headphones and now-playing · owner: core-engineer + pet-animator + macos-ui-engineer (sequential) · deps: none · status: `done` (perf: steady RSS 38.0–38.7 MB, footprint 11 MB, unchanged vs v4)
 - Core: delete `NowPlaying`, `Snapshot.nowPlaying`, the `SessionStore` player state and `AppConfig.headphones` (the decoder ignores the leftover key; test it); delete `NowPlayingTests` and the headphones cases in `AppConfigTests`.
 - App: delete `NowPlayingWatcher` and its wiring (`AppModel`, `AppDelegate`, `Preferences`, the Settings checkbox).
 - Pet: remove the headphone layers, tokens and `setHeadBob` (`PetRig`, `PetTokens`, `PetAnimations`, `PetView`, `PetDemo`, `PoseRenderer`); delete `docs/media/*-headphones.gif`; drop `headphones` from `record-gif.sh`.

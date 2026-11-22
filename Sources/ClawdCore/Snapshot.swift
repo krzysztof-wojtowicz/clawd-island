@@ -40,8 +40,6 @@ public struct Snapshot: Equatable, Sendable {
     /// Sessions in panel order (rank, then newest `lastEventAt`), with talking decay already applied.
     public let sessions: [Session]
     public let usage: UsageSnapshot?
-    /// The music app currently shown, if any has reported; the pet wears headphones while `isPlaying` (REQ-13).
-    public let nowPlaying: NowPlaying?
     /// Increments once per pop-out edge; the UI pops the pet when it sees a new value.
     public let popToken: Int
     /// Permission prompts held open for a notch decision, newest first (REQ-V2-01).

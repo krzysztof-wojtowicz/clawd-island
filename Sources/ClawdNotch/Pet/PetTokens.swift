@@ -27,9 +27,6 @@ enum PetTokens {
     static let ball1 = rgb(0xFF9F0A)
     static let ball2 = rgb(0x64D2FF)
     static let ball3 = rgb(0xBF5AF2)
-    /// Headphones overlay (REQ-13).
-    static let headphonesBand = rgb(0xE5E5EA)
-    static let headphonesCup = rgb(0xAEAEB2)
     static let hpHigh = rgb(0x34C759)
     static let hpMid = rgb(0xFFCC00)
     static let hpLow = rgb(0xFF3B30)

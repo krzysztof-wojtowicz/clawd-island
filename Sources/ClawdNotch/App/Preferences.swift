@@ -12,7 +12,6 @@ final class Preferences {
 
     private(set) var hideMode: Bool
     private(set) var soundCues: Bool
-    private(set) var headphones: Bool
     private(set) var focusReadMode: AppConfig.FocusReadMode
     /// "Approve permissions from the notch" (REQ-V2-01). Read per request on the server queue, hence a lock.
     nonisolated let notchPermissions: OSAllocatedUnfairLock<Bool>
@@ -21,15 +20,11 @@ final class Preferences {
     /// Called after `hideMode` changes.
     var onHideModeChange: ((Bool) -> Void)?
 
-    /// Called after `headphones` changes.
-    var onHeadphonesChange: ((Bool) -> Void)?
-
     init() {
         let config = AppConfig.load()
         hideMode = config?.hideMode ?? false
         focusReadMode = config?.focusReadMode ?? .tab
         soundCues = config?.soundCues ?? true
-        headphones = config?.headphones ?? true
         notchPermissions = OSAllocatedUnfairLock(initialState: config?.notchPermissions ?? true)
     }
 
@@ -44,14 +39,6 @@ final class Preferences {
     func setSoundCues(_ value: Bool) {
         soundCues = value
         persist { $0.soundCues = value }
-    }
-
-    /// Sets and persists "Show headphones when music plays" (REQ-13 AC7).
-    func setHeadphones(_ value: Bool) {
-        guard value != headphones else { return }
-        headphones = value
-        persist { $0.headphones = value }
-        onHeadphonesChange?(value)
     }
 
     /// Sets and persists hide mode.

@@ -26,8 +26,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         markRead: { [model] in model.markRead($0) },
         mode: { [preferences] in preferences.focusReadMode })
 
-    private lazy var nowPlayingWatcher = NowPlayingWatcher { [model] in model.receive(nowPlaying: $0) }
-
     func applicationDidFinishLaunching(_ notification: Notification) {
         model.recordProject = { [unowned self] in preferences.noteRecentProject($0) }  // lazy: not created before startServer()
         startServer()
@@ -55,16 +53,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bindSnapshot(controller)
         focusWatcher.start()
         openSettingsIfRequested()
-        if preferences.headphones { nowPlayingWatcher.start() }
-        preferences.onHeadphonesChange = { [nowPlayingWatcher, pet, model] on in
-            if on {
-                nowPlayingWatcher.start()
-            } else {
-                nowPlayingWatcher.stop()
-                model.clearNowPlaying()
-                pet.setHeadphones(false)
-            }
-        }
     }
 
     /// `--open-settings` opens Settings once after launch; `--close-settings-after <s>` closes it again (perf-suite.sh).
@@ -95,9 +83,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.onSnapshotChange = { [pet, hud, controller, focusWatcher, model, preferences, sounds] old, new in
             focusWatcher.snapshotChanged(from: old.sessions, to: new.sessions)
             pet.setState(new.aggregate)
-            if new.nowPlaying?.isPlaying != old.nowPlaying?.isPlaying {
-                pet.setHeadphones(preferences.headphones && new.nowPlaying?.isPlaying == true)
-            }
             if new.popToken > old.popToken {
                 pet.popOut()
                 if preferences.soundCues { sounds.playEdge(from: old, to: new) }

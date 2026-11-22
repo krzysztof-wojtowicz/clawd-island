@@ -88,13 +88,6 @@ extension PetRig {
         }
     }
 
-    /// A tiny 0.4 u nod to the beat, only while the headphones are on in a calm pose (REQ-13 AC3).
-    func setHeadBob(_ on: Bool) {
-        torso.removeAnimation(forKey: "loop.headbob")
-        guard on else { return }
-        torso.add(Self.keyframes("position.y", [0, 0.4, 0], period: 0.5, additive: true), forKey: "loop.headbob")
-    }
-
     /// Removes every loop and entry animation, leaving pop-out springs alone.
     func stopLoops() {
         for layer in allLayers {

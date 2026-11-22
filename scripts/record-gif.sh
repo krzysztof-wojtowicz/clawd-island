@@ -46,10 +46,9 @@ case "$scene" in
     *) echo "unknown scene $scene" >&2; exit 1 ;;
 esac
 
-# Quiet, deterministic config for the recording: no sound, no headphones, chosen hide mode.
+# Quiet, deterministic config for the recording: no sound, chosen hide mode.
 plutil -replace hideMode -bool "$hide" "$config"
 plutil -replace soundCues -bool false "$config"
-plutil -replace headphones -bool false "$config"
 
 swift scripts/hover.swift off 2>/dev/null || true
 pkill -x ClawdNotch 2>/dev/null || true

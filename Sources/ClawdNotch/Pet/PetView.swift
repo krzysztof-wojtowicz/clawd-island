@@ -15,7 +15,6 @@ final class PetView: NSView {
     private var placementCount = 0
     private var state: PetState = .sleeping
     private var isPaused = false
-    private var wearsHeadphones = false
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -60,17 +59,6 @@ final class PetView: NSView {
         CATransaction.commit()
         startLoops()
         updateAccessibilityLabel()
-    }
-
-    /// Fades the headphones in or out over 150 ms (REQ-13). They are independent of the state; setting the current value does nothing.
-    func setHeadphones(_ on: Bool) {
-        guard on != wearsHeadphones else { return }
-        wearsHeadphones = on
-        CATransaction.begin()
-        CATransaction.setAnimationDuration(0.15)
-        rig.headphones.opacity = on ? 1 : 0
-        CATransaction.commit()
-        if !Self.reduceMotion { rig.setHeadBob(wearsHeadphones && (state == .idle || state == .sleeping)) }
     }
 
     /// Plays the pop-out spring (used on `done` / `needsInput` and when un-hiding). No-op under Reduce Motion.
@@ -167,7 +155,6 @@ final class PetView: NSView {
     private func startLoops() {
         guard !Self.reduceMotion else { return }
         rig.startLoops(for: state)
-        rig.setHeadBob(wearsHeadphones && (state == .idle || state == .sleeping))
     }
 
     @objc private func reduceMotionDidChange() {

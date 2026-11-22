@@ -13,7 +13,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var loginCheck: NSButton?
     private var permissionCheck: NSButton?
     private var soundCheck: NSButton?
-    private var headphonesCheck: NSButton?
     private var focusPopUp: NSPopUpButton?
 
     init(preferences: Preferences) {
@@ -37,7 +36,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         hideCheck?.state = preferences.hideMode ? .on : .off
         loginCheck?.state = LoginItem.isEnabled ? .on : .off
         soundCheck?.state = preferences.soundCues ? .on : .off
-        headphonesCheck?.state = preferences.headphones ? .on : .off
         permissionCheck?.state = preferences.notchPermissions.withLock { $0 } ? .on : .off
         if let index = AppConfig.FocusReadMode.allCases.firstIndex(of: preferences.focusReadMode) {
             focusPopUp?.selectItem(at: index)
@@ -51,7 +49,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         loginCheck = nil
         permissionCheck = nil
         soundCheck = nil
-        headphonesCheck = nil
         focusPopUp = nil
     }
 
@@ -62,12 +59,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             checkboxWithTitle: "Approve permissions from the notch", target: self, action: #selector(permissionsChanged(_:))
         )
         let sound = NSButton(checkboxWithTitle: "Sound cues", target: self, action: #selector(soundChanged(_:)))
-        let headphones = NSButton(
-            checkboxWithTitle: "Show headphones when music plays", target: self, action: #selector(headphonesChanged(_:))
-        )
         let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
         let focusLabel = NSTextField(labelWithString: "Mark as read on terminal focus:")
-        for control in [hide, login, permissions, sound, headphones, popUp, focusLabel] as [NSControl] {
+        for control in [hide, login, permissions, sound, popUp, focusLabel] as [NSControl] {
             control.font = HUDStyle.font(size: 13)
         }
         // Titles follow `FocusReadMode.allCases` order; `focusChanged` and `refresh` index by it.
@@ -81,7 +75,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         popUp.target = self
         popUp.action = #selector(focusChanged(_:))
         let focusRow = NSStackView(views: [focusLabel, popUp])
-        let stack = NSStackView(views: [hide, focusRow, permissions, sound, headphones, login])
+        let stack = NSStackView(views: [hide, focusRow, permissions, sound, login])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 14
@@ -97,7 +91,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         loginCheck = login
         permissionCheck = permissions
         soundCheck = sound
-        headphonesCheck = headphones
         focusPopUp = popUp
         return window
     }
@@ -112,10 +105,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     @objc private func soundChanged(_ sender: NSButton) {
         preferences.setSoundCues(sender.state == .on)
-    }
-
-    @objc private func headphonesChanged(_ sender: NSButton) {
-        preferences.setHeadphones(sender.state == .on)
     }
 
     @objc private func loginChanged(_ sender: NSButton) {

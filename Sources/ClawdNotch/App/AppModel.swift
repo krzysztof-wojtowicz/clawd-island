@@ -51,18 +51,6 @@ final class AppModel {
         }
     }
 
-    /// Applies a Music or Spotify play-state report (REQ-13).
-    func receive(nowPlaying: NowPlaying) {
-        store.apply(nowPlaying: nowPlaying)
-        publish()
-    }
-
-    /// Drops stale music state when the headphones switch goes off (REQ-13 AC7).
-    func clearNowPlaying() {
-        store.clearNowPlaying()
-        publish()
-    }
-
     /// Applies a held `PermissionRequest`: the event moves the session to `needsInput` and a card appears.
     func receive(permission event: ClawdEvent, responder: PermissionResponder) {
         store.apply(event, now: .now)

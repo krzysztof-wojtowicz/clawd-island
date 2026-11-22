@@ -24,8 +24,6 @@ struct PetRig {
     let hammer = CALayer()
     /// Handle, bristles and two paws; pivots at the top of the handle and sweeps in front of the body.
     let broom = CALayer()
-    /// Band and cups, orthogonal to every pose: it lives in the torso, above the body, below the arms and eyes.
-    let headphones = CALayer()
     /// Dust puffs at the two ends of the sweep.
     let dust: [CAShapeLayer]
     /// Juggling balls; their model positions are the Reduce Motion pose, the loop moves them along `ballOrbit`.
@@ -37,7 +35,7 @@ struct PetRig {
     private let fullBox = CGRect(origin: .zero, size: PetTokens.unitBox)
     private let bodyBottom: CGFloat = 6
     private let armPivot = CGPoint(x: 28, y: 13)
-    // Raised from just below the cup (cups start at y 17.5), so the paw points up and out beside the headphones.
+    // Raised two units above the resting pivot, so the paw points up and out.
     private let raisedArmPivot = CGPoint(x: 28, y: 15)
     private let raisedArmAngle: CGFloat = 55 * .pi / 180
     // The hammer is cocked up and to the right, so it stays near the unit box instead of towering over the head.
@@ -73,9 +71,8 @@ struct PetRig {
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom)
         eyeGroup.frame = fullBox
         eyes.forEach(eyeGroup.addSublayer)
-        // Arms share the body colour, so above it they still merge; above the headphones too, so a paw never vanishes behind a cup.
-        configureHeadphones()
-        [body, headphones, leftArm, rightArm, eyeGroup].forEach(torso.addSublayer)
+        // Arms share the body colour, so above it they still merge.
+        [body, leftArm, rightArm, eyeGroup].forEach(torso.addSublayer)
         // Above the body so the broom reads in front of it; the dust follows the torso's bob.
         torso.addSublayer(broom)
         dust.forEach(torso.addSublayer)
@@ -88,7 +85,7 @@ struct PetRig {
         [torso, zzz, bubble, badge].forEach(root.addSublayer)
         balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
-        for accessory in accessories + dust + [headphones] { accessory.opacity = 0 }
+        for accessory in accessories + dust { accessory.opacity = 0 }
     }
 
     /// Accessory layers that cross-fade between states.
@@ -169,25 +166,6 @@ struct PetRig {
         let paws = [9.5, 6.5].map { Self.roundedRect(CGRect(x: 0.8, y: $0, width: 2.4, height: 2), radius: 0.9, color: PetTokens.body) }
         [handle, bristles].forEach(broom.addSublayer)
         paws.forEach(broom.addSublayer)
-    }
-
-    /// A band arcing over the head from cup to cup, and two 4 × 6.5 cups on the body's upper corners, above the shoulder pivot.
-    private func configureHeadphones() {
-        headphones.frame = fullBox
-        let band = CAShapeLayer()
-        band.frame = fullBox
-        let path = CGMutablePath()
-        path.move(to: CGPoint(x: 3.5, y: 22))
-        path.addCurve(to: CGPoint(x: 28.5, y: 22), control1: CGPoint(x: 3.5, y: 26.5), control2: CGPoint(x: 28.5, y: 26.5))
-        band.path = path
-        band.fillColor = nil
-        band.strokeColor = PetTokens.headphonesBand
-        band.lineWidth = 1.4
-        band.lineCap = .round
-        headphones.addSublayer(band)
-        for x in [1.5, 26.5] {
-            headphones.addSublayer(Self.roundedRect(CGRect(x: x, y: 17.5, width: 4, height: 6.5), radius: 1.5, color: PetTokens.headphonesCup))
-        }
     }
 
     private func configureText() {

@@ -35,14 +35,11 @@ enum PoseRenderer {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             guard let device = MTLCreateSystemDefaultDevice() else { throw RenderError.noMetal }
             for state in PetState.allCases {
-                for headphones in [false, true] {
-                    let name = headphones ? "\(state.rawValue)-headphones" : state.rawValue
-                    let scene = Scene(tiles: [Tile(state: state, headphones: headphones)], columns: 1, tileSize: petSize)
-                    try scene.write(to: directory.appendingPathComponent("\(name).gif"), duration: loopLength[state] ?? 1, fps: fps, device: device)
-                }
+                let scene = Scene(tiles: [Tile(state: state)], columns: 1, tileSize: petSize)
+                try scene.write(to: directory.appendingPathComponent("\(state.rawValue).gif"), duration: loopLength[state] ?? 1, fps: fps, device: device)
             }
             let hero = Scene(
-                tiles: PetState.allCases.map { Tile(state: $0, headphones: false) },
+                tiles: PetState.allCases.map { Tile(state: $0) },
                 columns: 3,
                 tileSize: CGSize(width: 96, height: 72)
             )
@@ -61,7 +58,7 @@ enum PoseRenderer {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             guard let device = MTLCreateSystemDefaultDevice() else { throw RenderError.noMetal }
             let tile = 824.0
-            let scene = Scene(tiles: [Tile(state: .idle, headphones: false)], columns: 1, tileSize: CGSize(width: tile, height: tile))
+            let scene = Scene(tiles: [Tile(state: .idle)], columns: 1, tileSize: CGSize(width: tile, height: tile))
             scene.root.cornerRadius = tile * 0.2237
             scene.root.masksToBounds = true
             // An idle pose from the middle of its blink cycle, not a half-transitioned first frame.
@@ -103,7 +100,6 @@ enum PoseRenderer {
 
     private struct Tile {
         let state: PetState
-        let headphones: Bool
     }
 
     /// A black canvas with a grid of pets, each in its own state.
@@ -146,14 +142,13 @@ enum PoseRenderer {
             CATransaction.commit()
             for (view, tile) in zip(views, tiles) {
                 view.setState(tile.state)
-                view.setHeadphones(tile.headphones)
                 // The entry poses play their one-shot motion from the first frame.
                 if tile.state == .done || tile.state == .needsInput { view.popOut() }
             }
         }
 
         func write(to url: URL, duration: Double, fps: Double, device: MTLDevice) throws {
-            // Settle the 0.2 s pose change and the headphone fade, except for the one-shot poses.
+            // Settle the 0.2 s pose change, except for the one-shot poses.
             let name = url.lastPathComponent
             let warmup = name.hasPrefix("done") || name.hasPrefix("needsInput") || name == "hero.gif" ? 0 : 0.5
             try Self.encode(frames(duration: duration, fps: fps, warmup: warmup, device: device), to: url, delay: 1 / fps)

@@ -45,14 +45,11 @@ struct AppConfigTests {
         #expect(config == AppConfig(port: 1234, token: "t", originalStatusLine: "echo", hideMode: false, focusReadMode: .tab))
     }
 
-    @Test("The headphones switch defaults to on and survives a round-trip")
-    func headphonesKey() throws {
-        let legacy = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port": 1, "token": "t"}"#.utf8))
-        #expect(legacy.headphones)
-        let url = FileManager.default.temporaryDirectory.appending(path: "clawd-\(UUID().uuidString)/config.json")
-        let config = AppConfig(token: "t", headphones: false)
-        try config.write(to: url)
-        #expect(AppConfig.load(from: url)?.headphones == false)
+    @Test("A config file that still holds the removed headphones key decodes")
+    func legacyHeadphonesKey() throws {
+        let json = #"{"port": 1, "token": "t", "headphones": true}"#
+        let config = try JSONDecoder().decode(AppConfig.self, from: Data(json.utf8))
+        #expect(config.token == "t")
     }
 
     @Test("Hide mode and focus-read mode survive a round-trip")

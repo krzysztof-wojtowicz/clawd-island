@@ -17,9 +17,6 @@ public struct SessionStore: Sendable {
     var sessions: [Session] = []
     var permissions: [PendingPermission] = []
     var usage: UsageSnapshot?
-    private var players: [NowPlaying.App: NowPlaying] = [:]
-    /// The app whose state is shown: the latest one that played, or, when it stops, the other if that still plays.
-    private var nowPlayingSource: NowPlaying.App?
     private var popToken = 0
     private var lastAggregate = PetState.sleeping
     private var lastAttentionCount = 0
@@ -94,23 +91,6 @@ public struct SessionStore: Sendable {
         sessions[index].lastEventAt = now
     }
 
-    /// Records one music app's play state (REQ-13). Playing wins over paused; the latest playing app is the source.
-    public mutating func apply(nowPlaying report: NowPlaying) {
-        players[report.app] = report
-        if report.isPlaying {
-            nowPlayingSource = report.app
-        } else if nowPlayingSource == report.app || nowPlayingSource == nil {
-            nowPlayingSource = players.values.first { $0.isPlaying }?.app ?? report.app
-        }
-    }
-
-    /// Forgets every music report, e.g. when the headphones switch is turned off: the watcher misses changes while
-    /// off, so stale state would otherwise hide the next play (REQ-13 AC7).
-    public mutating func clearNowPlaying() {
-        players.removeAll()
-        nowPlayingSource = nil
-    }
-
     /// Stores the latest usage window from the statusline.
     public mutating func apply(usage: UsageSnapshot) {
         self.usage = usage
@@ -170,7 +150,6 @@ public struct SessionStore: Sendable {
             hasNeedsInput: visible.contains { $0.state == .needsInput },
             sessions: visible,
             usage: usage,
-            nowPlaying: nowPlayingSource.flatMap { players[$0] },
             popToken: popToken,
             pendingPermissions: permissions.reversed()
         )
