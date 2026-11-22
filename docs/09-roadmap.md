@@ -69,7 +69,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - Pet: broom + dust puff, `broom.*` tokens, Reduce Motion pose (`07`). Simulator `compact` scenario + skill row.
 - AC: REQ-03 AC1, AC3, AC4, AC5.
 
-### WP-17 — `juggling` pose · owner: core-engineer + pet-animator · deps: WP-16 · status: `todo`
+### WP-17 — `juggling` pose · owner: core-engineer + pet-animator · deps: WP-16 · status: `done` (derived in `SessionStore.snapshot`, balls on an elliptical orbit, simulator `subagents`)
 - Core: derived `juggling` (`activeSubagents > 0`, not needsInput/done); counter resets on `Stop`, `StopFailure`, `UserPromptSubmit`; panel text "N subagents"; tests.
 - Pet: three balls on keyframed arcs, `ball.1–3` tokens. Simulator `subagents` scenario + skill row.
 - AC: REQ-03 AC1, AC3, AC4, AC5, AC6.

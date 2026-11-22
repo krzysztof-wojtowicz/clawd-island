@@ -154,12 +154,14 @@ public struct SessionStore: Sendable {
         )
     }
 
+    /// The session as the UI sees it: talking decay applied, then `juggling` derived from running subagents.
     private func decayed(_ session: Session, now: Date) -> Session {
-        guard session.state == .talking, let talkedAt = session.lastTalkingAt,
-              now.timeIntervalSince(talkedAt) >= Self.talkingDecay
-        else { return session }
         var copy = session
-        copy.state = .thinking
+        if copy.state == .talking, let talkedAt = copy.lastTalkingAt,
+           now.timeIntervalSince(talkedAt) >= Self.talkingDecay {
+            copy.state = .thinking
+        }
+        if copy.activeSubagents > 0, copy.state != .needsInput, copy.state != .done { copy.state = .juggling }
         return copy
     }
 

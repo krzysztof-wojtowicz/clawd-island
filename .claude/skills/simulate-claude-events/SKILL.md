@@ -19,7 +19,7 @@ Scenarios. Implement all of these in WP-0/WP-4 and keep this list in sync with t
 | `done` | Stop | done (paw raised) + pop-out |
 | `fail` | StopFailure | done (failed) |
 | `compact` | think → PreCompact → hold 6 s → `/session-meta` with `source: compact` | thinking → compacting (broom, dust) → idle |
-| `subagents` | SubagentStart ×2, hold, SubagentStop ×2 | juggling (3 balls) → previous state. Planned, added in WP-17 |
+| `subagents` | think → SubagentStart ×2 → hold 6 s → SubagentStop ×2 → Stop | thinking → juggling (3 balls, panel "2 subagents") → done |
 | `end` | SessionEnd | session removed |
 | `usage <pct>` | statusline with `rate_limits.five_hour.used_percentage=<pct>` | HP = 100 − pct |
 | `turn` | think → tool → text → done, with realistic delays | full cycle |

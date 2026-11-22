@@ -19,7 +19,7 @@ extension StatusCounts {
             switch session.state {
             case .needsInput: needsInput += 1
             case .done where session.unread: done += 1
-            case .thinking, .usingTools, .talking, .compacting: working += 1
+            case .thinking, .usingTools, .talking, .compacting, .juggling: working += 1
             case .idle, .done: idle += 1
             }
         }
@@ -48,7 +48,7 @@ public struct Snapshot: Equatable, Sendable {
 
 extension PetState {
     /// The highest-priority state across sessions (REQ-03 AC3):
-    /// `needsInput > done (unread) > compacting > usingTools > talking > thinking > idle > sleeping`.
+    /// `needsInput > done (unread) > juggling > compacting > usingTools > talking > thinking > idle > sleeping`.
     init(aggregating sessions: [Session]) {
         if sessions.isEmpty {
             self = .sleeping
@@ -56,6 +56,8 @@ extension PetState {
             self = .needsInput
         } else if sessions.contains(where: { $0.state == .done && $0.unread }) {
             self = .done
+        } else if sessions.contains(where: { $0.state == .juggling }) {
+            self = .juggling
         } else if sessions.contains(where: { $0.state == .compacting }) {
             self = .compacting
         } else if sessions.contains(where: { $0.state == .usingTools }) {

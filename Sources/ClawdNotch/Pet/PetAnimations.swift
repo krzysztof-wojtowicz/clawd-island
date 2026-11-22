@@ -48,6 +48,22 @@ extension PetRig {
                 burst.timeOffset = index == 0 ? 0 : 0.5
                 puff.add(burst, forKey: "loop.puff")
             }
+        case .juggling:
+            // A cascade: every ball rides the same orbit, a third of the period apart.
+            let orbit = CGPath(ellipseIn: Self.ballOrbit, transform: nil)
+            for (index, ball) in balls.enumerated() {
+                let arc = CAKeyframeAnimation(keyPath: "position")
+                arc.path = orbit
+                arc.duration = 1.2
+                arc.repeatCount = .infinity
+                arc.calculationMode = .paced
+                arc.timeOffset = Double(index) * 0.4
+                ball.add(arc, forKey: "loop.arc")
+            }
+            let bob = Self.keyframes("transform.rotation.z", [0, 6, 0, -6, 0].map(Self.radians), period: 1.2, additive: true)
+            rightArm.add(bob, forKey: "loop.bob")
+            bob.timeOffset = 0.6
+            leftArm.add(bob, forKey: "loop.bob")
         case .talking:
             for (index, dot) in dots.enumerated() {
                 let light = Self.keyframes("opacity", [0.3, 1, 0.3, 0.3], period: 0.9, keyTimes: [0, 0.17, 0.33, 1])

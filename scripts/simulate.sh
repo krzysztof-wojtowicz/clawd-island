@@ -67,6 +67,12 @@ case "$scenario" in
         hook PreCompact "$sid" '"trigger":"auto"'; sleep 6
         post /session-meta "{\"session_id\":\"$sid\",\"cwd\":\"/tmp/$sid\",\"source\":\"compact\"}"
         ;;
+    subagents)
+        hook UserPromptSubmit "$sid"; sleep 1
+        for a in a1 a2; do hook SubagentStart "$sid" "\"agent_id\":\"$a\",\"agent_type\":\"Explore\""; done; sleep 6
+        for a in a1 a2; do hook SubagentStop "$sid" "\"agent_id\":\"$a\",\"agent_type\":\"Explore\""; done; sleep 1
+        hook Stop "$sid" '"stop_hook_active":false'
+        ;;
     multi)
         start sim-a; hook UserPromptSubmit sim-a
         start sim-b; hook PreToolUse sim-b '"tool_name":"Edit"'
@@ -81,7 +87,7 @@ case "$scenario" in
         done
         ;;
     *)
-        echo "usage: $0 {start|think|tool|tools|compact|text|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
+        echo "usage: $0 {start|think|tool|tools|compact|subagents|text|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
         exit 1
         ;;
 esac

@@ -82,6 +82,7 @@ enum HUDStyle {
         case .usingTools: "using \(session.toolName ?? "a tool")"
         case .talking: "writing"
         case .compacting: "compacting"
+        case .juggling: "\(session.activeSubagents) subagent\(session.activeSubagents == 1 ? "" : "s")"
         case .needsInput: "needs input"
         case .done: session.failed ? "failed" : "done"
         }

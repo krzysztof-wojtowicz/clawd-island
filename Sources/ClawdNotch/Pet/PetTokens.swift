@@ -23,6 +23,10 @@ enum PetTokens {
     /// Broom handle and bristles (`compacting`).
     static let broomHandle = rgb(0x8B5A2B)
     static let broomBristle = rgb(0xC9A66B)
+    /// Juggling balls (`juggling`).
+    static let ball1 = rgb(0xFF9F0A)
+    static let ball2 = rgb(0x64D2FF)
+    static let ball3 = rgb(0xBF5AF2)
     static let hpHigh = rgb(0x34C759)
     static let hpMid = rgb(0xFFCC00)
     static let hpLow = rgb(0xFF3B30)

@@ -23,6 +23,9 @@ struct SessionStoreTests {
         AggregateCase(sessions: [(.thinking, false), (.talking, false)], expected: .talking),
         AggregateCase(sessions: [(.talking, false), (.usingTools, false)], expected: .usingTools),
         AggregateCase(sessions: [(.usingTools, false), (.thinking, false), (.idle, false)], expected: .usingTools),
+        AggregateCase(sessions: [(.juggling, false), (.compacting, false), (.usingTools, false)], expected: .juggling),
+        AggregateCase(sessions: [(.juggling, false), (.done, true)], expected: .done),
+        AggregateCase(sessions: [(.juggling, false), (.needsInput, false)], expected: .needsInput),
         AggregateCase(sessions: [(.usingTools, false), (.compacting, false), (.talking, false)], expected: .compacting),
         AggregateCase(sessions: [(.compacting, false), (.thinking, false)], expected: .compacting),
         AggregateCase(sessions: [(.compacting, false), (.done, true)], expected: .done),
@@ -110,6 +113,41 @@ struct SessionStoreTests {
         let first = store.snapshot(now: t0)
         store.apply(event(.messageDisplay), now: t0.addingTimeInterval(0.5))
         #expect(store.snapshot(now: t0.addingTimeInterval(0.5)) == first)
+    }
+
+    @Test("Running subagents derive juggling unless the session needs input or is done; counters reset (REQ-03 AC6)")
+    func jugglingDerivation() {
+        var store = SessionStore()
+        store.apply(event(.userPromptSubmit), now: t0)
+        store.apply(event(.subagentStart, agent: "a"), now: t0)
+        store.apply(event(.subagentStart, agent: "b"), now: t0)
+        var snapshot = store.snapshot(now: t0)
+        #expect(snapshot.aggregate == .juggling)
+        #expect(snapshot.sessions.first?.state == .juggling)
+        #expect(snapshot.sessions.first?.activeSubagents == 2)
+        #expect(snapshot.statusCounts.working == 1)
+        store.apply(event(.preToolUse, tool: "Bash"), now: t0)
+        #expect(store.snapshot(now: t0).aggregate == .juggling)
+        store.apply(event(.permissionRequest), now: t0)
+        #expect(store.snapshot(now: t0).aggregate == .needsInput)
+        store.apply(event(.postToolUse), now: t0)
+        store.apply(event(.stop, agent: "a"), now: t0)
+        #expect(store.snapshot(now: t0).aggregate == .juggling)
+        store.apply(event(.stop), now: t0)
+        snapshot = store.snapshot(now: t0)
+        #expect(snapshot.aggregate == .done)
+        #expect(snapshot.sessions.first?.activeSubagents == 0)
+    }
+
+    @Test("UserPromptSubmit and StopFailure reset the subagent counter")
+    func subagentCounterResets() {
+        var store = SessionStore()
+        store.apply(event(.subagentStart, agent: "a"), now: t0)
+        store.apply(event(.userPromptSubmit), now: t0)
+        #expect(store.snapshot(now: t0).aggregate == .thinking)
+        store.apply(event(.subagentStart, agent: "a"), now: t0)
+        store.apply(event(.stopFailure), now: t0)
+        #expect(store.sessions.first?.activeSubagents == 0)
     }
 
     @Test("Subagent Stop does not mark the parent done")

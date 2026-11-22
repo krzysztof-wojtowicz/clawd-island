@@ -26,6 +26,10 @@ struct PetRig {
     let broom = CALayer()
     /// Dust puffs at the two ends of the sweep.
     let dust: [CAShapeLayer]
+    /// Juggling balls; their model positions are the Reduce Motion pose, the loop moves them along `ballOrbit`.
+    let balls: [CAShapeLayer]
+    /// The flattened ellipse above the head that the balls follow (unit-box coordinates).
+    static let ballOrbit = CGRect(x: 6, y: 20.6, width: 20, height: 2.4)
 
     private let eyeGroup = CALayer()
     private let fullBox = CGRect(origin: .zero, size: PetTokens.unitBox)
@@ -35,6 +39,7 @@ struct PetRig {
     private let raisedArmPivot = CGPoint(x: 28, y: 18.5)
     private let raisedArmAngle: CGFloat = 110 * .pi / 180
     // The hammer is cocked up and to the right, so it stays near the unit box instead of towering over the head.
+    private let jugglingArmAngle: CGFloat = 35 * .pi / 180
     private let cockedArmAngle: CGFloat = 65 * .pi / 180
 
     init() {
@@ -54,6 +59,10 @@ struct PetRig {
         cloud = [(26, 21, 0.8), (28.2, 22, 1.1), (30.5, 22.5, 1.5)].map { Self.circle(x: $0.0, y: $0.1, radius: $0.2, color: PetTokens.bubbleFill) }
         dots = [3.2, 5.75, 8.3].map { Self.circle(x: $0, y: 3, radius: 0.8, color: PetTokens.eye) }
         dust = [18.5, 31].map { Self.circle(x: $0, y: 4.5, radius: 0.9, color: PetTokens.bubbleFill) }
+        balls = [PetTokens.ball1, PetTokens.ball2, PetTokens.ball3].enumerated().map { index, color in
+            let angle = CGFloat(index) * 2 * .pi / 3
+            return Self.circle(x: Self.ballOrbit.midX + 10 * cos(angle), y: Self.ballOrbit.midY + 1.2 * sin(angle), radius: 1.3, color: color)
+        }
         badge = Self.circle(x: 3.5, y: 21, radius: 2.8, color: PetTokens.badgeAlert)
 
         root.bounds = fullBox
@@ -74,12 +83,13 @@ struct PetRig {
         configureHammer()
         configureBroom()
         [torso, zzz, bubble, badge].forEach(root.addSublayer)
+        balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
         for accessory in accessories { accessory.opacity = 0 }
     }
 
     /// Accessory layers that cross-fade between states.
-    private var accessories: [CALayer] { [zzz, bubble, badge, hammer, broom] + cloud }
+    private var accessories: [CALayer] { [zzz, bubble, badge, hammer, broom] + balls + cloud }
 
     /// Sets the model values of the pose parts (eyes, torso height, right arm) for `state`.
     func applyPose(_ state: PetState) {
@@ -88,6 +98,14 @@ struct PetRig {
         eyeGroup.position = CGPoint(x: fullBox.midX, y: fullBox.midY + (state == .thinking ? 1 : 0))
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom - (state == .sleeping ? 1 : 0))
         let raised = state == .done || state == .needsInput || state == .usingTools
+        // Juggling: both paws up and out, so the balls read as thrown by them.
+        let juggling = state == .juggling
+        leftArm.transform = juggling ? CATransform3DMakeRotation(-jugglingArmAngle, 0, 0, 1) : CATransform3DIdentity
+        if juggling {
+            rightArm.position = armPivot
+            rightArm.transform = CATransform3DMakeRotation(jugglingArmAngle, 0, 0, 1)
+            return
+        }
         rightArm.position = raised ? raisedArmPivot : armPivot
         let angle = state == .usingTools ? cockedArmAngle : raisedArmAngle
         rightArm.transform = raised ? CATransform3DMakeRotation(angle, 0, 0, 1) : CATransform3DIdentity
@@ -99,6 +117,7 @@ struct PetRig {
         bubble.opacity = state == .talking ? 1 : 0
         hammer.opacity = state == .usingTools ? 1 : 0
         broom.opacity = state == .compacting ? 1 : 0
+        for ball in balls { ball.opacity = state == .juggling ? 1 : 0 }
         badge.opacity = state == .needsInput ? 1 : 0
         for circle in cloud { circle.opacity = state == .thinking ? 1 : 0 }
     }

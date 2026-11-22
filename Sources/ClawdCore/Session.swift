@@ -13,6 +13,9 @@ public enum SessionState: Equatable, Sendable {
     case talking
     /// Context compaction from `PreCompact`. Never decays; the next state-setting event or `SessionStart(compact)` ends it.
     case compacting
+    /// Derived, never stored: `SessionStore.snapshot` shows a session with `activeSubagents > 0` (and not
+    /// `needsInput` or `done`) as `juggling`.
+    case juggling
     case needsInput
     case done
 }
@@ -54,17 +57,18 @@ public struct Session: Equatable, Sendable, Identifiable {
             && lhs.toolName == rhs.toolName && lhs.activeSubagents == rhs.activeSubagents
     }
 
-    /// Sort key for the panel, lower first: `needsInput`, unread `done`, `compacting`, `usingTools`, `talking`, `thinking`, then everything else.
+    /// Sort key for the panel, lower first: `needsInput`, unread `done`, `juggling`, `compacting`, `usingTools`, `talking`, `thinking`, then everything else.
     /// Read `done` ranks as idle, matching the status buckets.
     var panelRank: Int {
         switch state {
         case .needsInput: 0
         case .done where unread: 1
-        case .compacting: 2
-        case .usingTools: 3
-        case .talking: 4
-        case .thinking: 5
-        case .idle, .done: 6
+        case .juggling: 2
+        case .compacting: 3
+        case .usingTools: 4
+        case .talking: 5
+        case .thinking: 6
+        case .idle, .done: 7
         }
     }
 
@@ -85,6 +89,7 @@ public struct Session: Equatable, Sendable, Identifiable {
             state = .thinking
             unread = false
             failed = false
+            activeSubagents = 0
         case .preToolUse:
             state = .usingTools
             toolName = event.toolName
@@ -110,6 +115,7 @@ public struct Session: Equatable, Sendable, Identifiable {
             guard event.agentID == nil else { return }
             state = .done
             unread = true
+            activeSubagents = 0
             if event.kind == .stopFailure { failed = true }
         case .sessionEnd, .unknown:
             break
