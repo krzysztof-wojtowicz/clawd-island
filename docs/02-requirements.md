@@ -56,8 +56,8 @@ The collapsed island is laid out as `counter | notch | HP bar · pet` (see the s
 
 ## REQ-05 Hide mode
 A toggle (right-click menu or Settings) hides the wings and tucks the pet into the notch's **bottom-right corner, upside down**: it is turned 180° and then a further 30° (about 150° clockwise in total), so its legs and lower body stay hidden behind the notch while its head, eyes and arms stick out down and to the right. Its state animations (blinking, hammer, bubbles, the "!" badge) stay visible.
-- AC1: In hide mode, any aggregate state change makes the pet pop out (wings shown) for about 4 s, then retract. The 4 s is by design and applies to every state.
-- AC2: `needsInput` stays popped out until it is resolved (it does not retract after 4 s).
+- AC1: In hide mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done`, `needsInput` or `juggling`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s (v3.1).
+- AC2: `needsInput` stays popped out until it is resolved (it does not retract after 3 s).
 - AC3: Hovering over the peeking pet expands the island temporarily.
 - AC4: Every transition (hidden ↔ popped ↔ expanded, and switching hide mode on or off in any of them) moves the pet continuously: its position and tilt animate together with the island resize, with no jumps.
 
@@ -126,6 +126,8 @@ While the session panel is expanded (on hover), a soft orange (`clawd.body`) glo
   - AC1: Driven only by the apps' play-state notifications (`05`, ADR-0007): no login, no private API, no polling, no AppleScript.
   - AC2: `Playing` shows the headphones (150 ms cross-fade); `Paused` / `Stopped` hides them.
   - AC3: The headphones are an overlay orthogonal to every pose, including hide mode. Only in `idle` and `sleeping` may the head bob slightly.
+  - AC6 (v3.1): The band and cups read clearly on the black island (light colours, `07`), and in every pose — the raised arm in `done` / `needsInput`, the hammer, the broom, the balls — nothing hides them, and they never cover the eyes.
+  - AC7 (v3.1): Settings has "Show headphones when music plays" (`headphones` in config.json, default on). Off: the watcher stops observing and the headphones hide at once. On: they appear at the next play / pause / track change (AC5).
   - AC4: Title, artist and album are stored in `Snapshot.nowPlaying` for later features and are not displayed.
   - AC5: Known limit: after launching the app, the headphones appear at the next play, pause or track change. Reduce Motion: no bob.
 - **REQ-14 Typography**: all HUD and panel text (counters, footer, session rows, cards, Settings) uses **JetBrains Mono**.

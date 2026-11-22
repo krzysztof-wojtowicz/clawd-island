@@ -84,6 +84,21 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - Requirements to list: macOS 14+ (tested on macOS 26), Apple silicon; Claude Code with hooks and statusline; Pro/Max plan for HP and WK; Swift 6.2 Command Line Tools to build; optional permissions: Automation (Terminal.app / iTerm2), Accessibility (VS Code / JetBrains window focus), login item.
 - AC: every pose has media; README claims match the specs.
 
+## v3.1 polish
+WP-20 (Pet/) and WP-21 (Window/, App/, HUD/) touch disjoint directories, so they run in parallel (one in a worktree).
+
+### WP-20 — Headphones redesign and bigger juggling balls · owner: pet-animator · deps: WP-19 · status: `todo`
+- Balls about 3.6 u, orbit raised to clear the head and the band.
+- Headphones: bigger cups on the body's upper corners, below the arms in z-order; wider, lighter band; new token colours (`07`). Check every pose (raised arm, hammer, broom, balls) and the upside-down peek.
+- Regenerate `docs/media/` GIFs with the DEBUG `--render-poses docs/media` mode, and update README.md's headphones line.
+- AC: REQ-13 AC3, AC6; `07` anatomy. Release `perf.sh` settled within budget.
+
+### WP-21 — Selective 3 s hide-mode pop-out and the headphones switch · owner: macos-ui-engineer (+ core-engineer for the config test) · deps: WP-19 · status: `todo`
+- Pop-out 3 s; triggers: `popToken` advance or the aggregate entering `talking`, `done`, `needsInput`, `juggling`; other changes only re-pose the peeking pet; `needsInput` holds.
+- Settings checkbox "Show headphones when music plays" (`headphones`, default on, `decodeIfPresent`, Core test); off stops `NowPlayingWatcher` and hides the headphones at once.
+- README.md: hide-mode text (3 s, which states pop out) and the headphones switch.
+- AC: REQ-05 AC1–AC2, REQ-13 AC7. Release `perf.sh` settled within budget.
+
 ## Checks left for a human
 These need eyes, a hover, a click or a system permission:
 - Notch fit, full-screen hover, right-click without focus, no slide on Space switch (WP-2, WP-2.1).
@@ -94,7 +109,13 @@ These need eyes, a hover, a click or a system permission:
 - Accessibility prompt on the first click on a VS Code session; the right window comes forward (WP-10).
 - "+ New" menu, Choose Folder…, a new Terminal.app / iTerm2 window running `claude` there (WP-11).
 - `scripts/perf.sh 30` with the mouse on the expanded panel (glow, REQ-11).
-- v3: pill look and Always allow on a real prompt (WP-12), JetBrains window focus (WP-14), sounds audible (WP-15), broom / juggling at notch size (WP-16/17), headphones with Music and Spotify (WP-18).
+- v3: Always allow on a real prompt (WP-12), JetBrains window focus (WP-14), headphones with Music and Spotify (WP-18).
+- v3.1: headphones clear of the raised arm and visible on black, bigger balls (WP-20); 3 s pop-out only on talking / done / needsInput / juggling, headphones switch (WP-21).
+
+## Next (after v3.1)
+1. Production / install phase: stable signature, `/Applications`, bundled JetBrains Mono (OFL), install steps in README.md, a license.
+2. Perf pass (below).
+3. Optional: show the now-playing title (already in `Snapshot.nowPlaying`); a hide-mode / island GIF for README.md.
 
 ## Deferred
 - Install to `/Applications` with a stable signature (Developer ID or a self-made certificate), so Automation, Accessibility and login-item grants survive rebuilds.
