@@ -9,7 +9,7 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 | burst: 50 hook events/s for 10 s, and after it | < 3 % during | < 20 MB | < 48 MB |
 | launch (first 10 s) | — | < 20 MB | spike allowed (LaunchServices mapping, unmapped by the system ~10 s later) |
 | `clawd-bridge statusline` | < 20 ms wall time per run | — | — |
-- Accepted exception: the Settings window (rarely open) — 60 MB RSS open, 55 MB after close, footprint 19 MB.
+- Accepted exception: the Settings window (rarely open) — 60 MB RSS open, 55 MB after close, footprint 19 MB. WP-33 (v6) tries to bring the closed state back to <= 45 MB RSS (footprint < 20 MB); if it fails, this exception stays and the attempt is recorded below.
 
 ## Rules
 1. **Event-driven only.** The only repeating timer is the 30 s liveness check, and it is suspended while there are no sessions. The talking-decay check is a one-shot timer that is rescheduled, never a repeating one. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3).
@@ -70,7 +70,7 @@ What moved what:
 Remaining over target, with the cause:
 - **Launch peak 41.3 MB (target 38) and steady 38.5 (target 37):** `footprint` is 11 MB. An empty accessory `NSApplication` (about 20 lines, no window) peaks at 31.8 MB and settles at 29.6 MB, so about 30 MB of our RSS is AppKit and shared-cache pages we cannot shed; our own share is about 9 MB (Network, Core Animation, 3 MB of malloc). The first 10 s peak is the LaunchServices database (`com.apple.LaunchServices-*.csstore`, 2.6 MB resident) which the system unmaps on its own about 10 s after launch (the empty app does the same, -2.1 MB). Needs a budget decision, not code.
 - **Burst / post-burst 42 MB (target 40):** each hook connection costs about 7.8 KB of Network.framework state (`Endpoint`, `ProtocolStack`, path parameters) that stays alive about 30 s after the client closed, and the allocator keeps those pages (`malloc_zone_pressure_relief` and breaking the closure retention gave nothing, measured). Only dropping `NWListener` for a plain socket accept loop would remove it (and `Network.framework` from the launch set); not done here.
-- **Settings window open 60 MB / closed 55 MB (`footprint` 19 MB):** plain AppKit controls, released on close (`windowWillClose` drops all references), but the AppKit controls/text-system pages stay resident. Opened rarely; accepted, with these numbers.
+- **Settings window open 60 MB / closed 55 MB (`footprint` 19 MB):** plain AppKit controls, released on close (`windowWillClose` drops all references), but the AppKit controls/text-system pages stay resident. Opened rarely; accepted, with these numbers. WP-33 (v6, timeboxed) retries with lighter construction; the fallback is to keep these numbers.
 
 ## v5 measured (WP-29, release bundle, `scripts/perf-suite.sh`, scratch port)
 | Scenario | CPU avg / max | RSS max | footprint |

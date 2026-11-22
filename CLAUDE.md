@@ -2,7 +2,7 @@
 
 Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** v1–v5 are done (v5: waving pet, mini mode, Settings-only hooks/login, rename to ClawdIsland, scratch-port GIF recording and perf runs). See `docs/09-roadmap.md` for history and what is next.
+**Status:** v1–v5 are done (v5: waving pet, mini mode, Settings-only hooks/login, rename to ClawdIsland, scratch-port GIF recording and perf runs). **v6 (public 1.0.0, WP-30…WP-35) is specified in `docs/09-roadmap.md`** (signing identity "ClawdIsland", onboarding, CI, Settings memory, mini-mode triggers, release and README); nothing of it is implemented yet.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
@@ -28,14 +28,14 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 |---|---|
 | `swift build` | Build all targets (debug) |
 | `scripts/test.sh` | Run `ClawdCoreTests` (wraps `swift test`; with Command Line Tools only, plain `swift test` silently runs nothing) |
-| `scripts/bundle.sh [debug\|release]` | Assemble + sign `dist/ClawdIsland.app` ("ClawdIsland Dev" identity if present, else ad-hoc; ADR-0008) |
+| `scripts/bundle.sh [debug\|release]` | Assemble + sign `dist/ClawdIsland.app` ("ClawdIsland" identity if present, else ad-hoc; ADR-0008) |
 | `scripts/run.sh` | Kill running instance, bundle debug, launch |
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU/RSS of the running app against the budget |
 | `scripts/perf-suite.sh` | Every `08` scenario on a release bundle on a scratch port and token, one table (WP-22, WP-29) |
 | `scripts/record-gif.sh <island\|mini-mode>` | Record the README GIF into `docs/media/` (release bundle, scratch port; needs Screen Recording, sandbox off) |
 | `scripts/install.sh` / `uninstall.sh` / `package.sh` | Install, remove, zip a release build (from WP-24; agents test only against temp destinations) |
-| `scripts/make-signing-cert.sh` | One-time local signing identity; **the user runs it** (asks for the login password) |
+| `scripts/make-signing-cert.sh` | One-time local "ClawdIsland" signing identity; **the user runs it** (asks for the login password) |
 | `swift scripts/window-info.swift` | Print screens and the app's window level and bounds (no Screen Recording permission needed) |
 
 ### Environment gotchas

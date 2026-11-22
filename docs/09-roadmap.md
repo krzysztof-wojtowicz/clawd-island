@@ -167,16 +167,42 @@ Older entries above keep the names of their time ("hide mode", headphones, REQ-1
 - Re-record `island.gif` and `mini-mode.gif`; check extracted frames: the first frame tilted, no foreign sessions, the wave visible in `done`.
 - AC: both GIFs < 600 KB, show motion and nothing outside the app window.
 
-## Next (after v5)
-Proposed v6 (not yet specified as WPs; the user picks):
-- **Share with friends, no paid account:** rename the signing identity to "ClawdIsland" (drop "Dev"), sign every release with it so friends' permission grants survive updates, `package.sh` → GitHub Release (`gh release create`, the user publishes), README "Install from a release" with the macOS 15+ first-launch steps (Privacy & Security → Open Anyway).
-- **Universal binary:** build arm64 and x86_64 separately and `lipo` them, so Intel Macs run it too.
-- **First-run onboarding:** open Settings once when hooks are not installed.
-- **Update check on demand:** a Settings button that compares the version with the latest GitHub release (no background polling, `08`).
-- **CI:** a GitHub Actions macOS job running `swift build` and `scripts/test.sh`.
-- **Settings window memory:** try to bring the 60 MB RSS exception down.
-- Developer ID signing, hardened runtime and notarization only if the app goes beyond friends (paid).
+## v6 — Public 1.0.0
+First public release on GitHub (Apple silicon, signed with a stable self-signed identity, no notarization). Nothing here is implemented yet. Order: (WP-30 ∥ WP-32 ∥ WP-34) → WP-31 → WP-33 → WP-35 → the user publishes. Every WP runs `swift build`, `scripts/test.sh` and, when it touches the app, the release `scripts/perf-suite.sh` within the `08` budget, then `reviewer`, then one local commit.
+
+### WP-30 — Signing identity "ClawdIsland" · owner: integration-engineer · deps: none · status: `todo`
+- `make-signing-cert.sh` and `bundle.sh` use the name "ClawdIsland" (renamed from "ClawdIsland Dev"; the user re-runs the script once). Releases are always signed with that identity, so friends' TCC grants survive updates (ADR-0008).
+- `package.sh` refuses to package an ad-hoc build unless `--adhoc` is given.
+- AC: REQ-15 AC1, AC4; `codesign -dv` shows the identity; the zip has a `.sha256`.
+
+### WP-31 — First-run onboarding · owner: macos-ui-engineer · deps: WP-30 · status: `todo`
+- On the first launch (no `onboarded` flag in config) and while the hooks are not installed, open Settings with a one-line welcome ("Install the Claude Code hooks to connect Clawd"); Install is the default button. Set the flag after the window has been shown once. No new window type.
+- AC: REQ-09 AC5; a fresh config opens Settings once, a second launch does not. Tested only with `CLAWD_CONFIG_PATH` / `CLAWD_SETTINGS_PATH` scratch files.
+
+### WP-32 — GitHub CI · owner: integration-engineer · deps: none · status: `todo`
+- `.github/workflows/ci.yml` on a `macos` runner for push and pull request: `swift build`, `scripts/test.sh` (it must also work with full Xcode on the runner), `swift build -c release`. No secrets, no signing. Pushing stays the user's action.
+- AC: REQ-15 AC6; the workflow file is valid YAML and `scripts/test.sh` works with and without Xcode.
+
+### WP-33 — Settings window memory (timeboxed) · owner: macos-ui-engineer · deps: WP-31 · status: `todo`
+- Try lighter construction and releasing everything on close; measure with `perf-suite.sh`. Target: closed returns to <= 45 MB RSS and `footprint` stays < 20 MB.
+- If it does not work, record the attempt in `08`, keep the current exception (60 / 55 MB) and mark the WP done.
+- AC: REQ-08 AC1; before → after table in `08`.
+
+### WP-34 — Mini-mode pop-out triggers · owner: macos-ui-engineer · deps: none · status: `todo`
+- Pop out only on a `popToken` advance or on entering `talking`, `done` or `needsInput`. `juggling` only re-poses the peeking pet. Update the trigger set in `AppDelegate`.
+- AC: REQ-05 AC1; `simulate.sh subagents` causes no pop-out.
+
+### WP-35 — Release 1.0.0 and README · owner: orchestrator + integration-engineer · deps: WP-30…WP-34 · status: `todo`
+- Version 1.0.0 everywhere (`bundle.sh`, CHANGELOG, README, docs). The CHANGELOG becomes one **1.0.0** "first public release" entry summarising the features.
+- Remove the ClawdNotch legacy: the support-folder migration code and its tests, and the leftover cleanup in `uninstall.sh` (nobody else ran ClawdNotch; this Mac is already migrated). ADR-0009 keeps the history.
+- README for release: intro and GIFs, **Install from a release** (download the zip, check the sha256, move to Applications, macOS 15+ first launch: Privacy & Security → Open Anyway, or `xattr -dr com.apple.quarantine`), Settings → Install hooks, permissions, uninstall, privacy, license. Building from source becomes a short "Build from source" section. No ClawdNotch mentions, no "Share a build", no doc-table bloat.
+- AC: REQ-15 AC2, AC5, AC7; `grep -rI ClawdNotch` leaves only ADR-0009 and CHANGELOG history.
+
+**Release checklist (the user runs it):** `scripts/test.sh` → `scripts/bundle.sh release` (must say it signed with "ClawdIsland") → `scripts/package.sh` → `gh release create v1.0.0 dist/ClawdIsland-1.0.0.zip*`.
 
 ## Deferred
 - Developer ID + notarization (ADR-0008 upgrade path).
 - Ghostty and Warp stay app-level (no scripting API; Ghostty tab precision dropped unless it ships one).
+- Universal binary / Intel: not needed (Apple silicon only, REQ-07).
+- Update-check button: not wanted (no network calls from the app, no polling).
+- Paid Developer ID, hardened runtime and notarization: only if the app goes beyond friends.

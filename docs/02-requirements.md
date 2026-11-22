@@ -57,7 +57,7 @@ The collapsed island is laid out as `counter | notch | HP bar · pet` (see the s
 
 ## REQ-05 Mini mode
 A toggle (right-click menu "Mini Mode", or Settings) hides the wings and tucks the pet into the notch's **bottom-right corner, upside down**: it is turned 180° and then a further 30° (about 150° clockwise in total), so its legs and lower body stay hidden behind the notch while its head, eyes and arms stick out down and to the right. Its state animations (blinking, hammer, bubbles, the "!" badge) stay visible.
-- AC1: In mini mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done`, `needsInput` or `juggling`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s (v3.1).
+- AC1: In mini mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done` or `needsInput`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `juggling`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s (v3.1). From v6 (WP-34) `juggling` (running subagents) no longer pops out.
 - AC2: `needsInput` stays popped out until it is resolved (it does not retract after 3 s).
 - AC3: Hovering over the peeking pet expands the island temporarily.
 - AC4: Every transition (hidden ↔ popped ↔ expanded, and switching mini mode on or off in any of them) moves the pet continuously: its position and tilt animate together with the island resize, with no jumps.
@@ -69,7 +69,7 @@ Orange (`#D97757` family), a rounded-rectangle body, two tall dark eyes, little 
 - AC1: Vector-only, so it is sharp on every Retina scale. There are no bitmap assets.
 
 ## REQ-07 macOS only
-macOS 14+ on Apple silicon, and also on Intel if the build allows it at no extra cost.
+macOS 14+ on Apple silicon only (v6: no universal binary, no Intel build).
 
 ## REQ-08 Minimal resource usage
 See `08-performance.md`.
@@ -81,6 +81,7 @@ See `08-performance.md`.
 - AC2: Multiple concurrent sessions (several terminals, subagents) are tracked independently.
 - AC3: Usage data comes from the statusline `rate_limits` field only (ADR-0004).
 - AC4 (v5): Install Hooks / Uninstall Hooks live in Settings only (a status row "Claude Code hooks: Installed / Not installed" plus one button), not in the right-click menu.
+- AC5 (v6, WP-31): On the first launch (no `onboarded` flag in config) while the hooks are not installed, Settings opens once with a one-line welcome ("Install the Claude Code hooks to connect Clawd") and Install as the default button; the flag is then set, so later launches do not open it.
 
 ## REQ-10 Attention / read tracking
 A `done` session becomes *read* when any of the following happens:
@@ -131,9 +132,11 @@ While the session panel is expanded (on hover), a soft orange (`clawd.body`) glo
   - AC1: Looked up with `NSFont(name:size:)`; fallback `NSFont.monospacedSystemFont` when it is not installed. No crash, no layout break.
   - AC2: The font is bundled in `Contents/Resources/Fonts/` and registered for the process at launch when JetBrains Mono is not already installed (a process-registered face costs ~3 MB RSS per face used, so an installed copy is preferred; OFL 1.1 text in `THIRD_PARTY_NOTICES.md`, REQ-15).
   - AC3: Text still fits: footer, cards and panel rows truncate rather than overflow.
-- **REQ-15 Distribution (v4)**: the app is ready to install and share from source. From v5 (WP-28, ADR-0009) it is named **ClawdIsland**: bundle id `dev.clawdisland.app`, `dist/ClawdIsland.app`, signing certificate "ClawdIsland Dev".
-  - AC1: Signed with a stable identity: the local "ClawdIsland Dev" certificate when present (ADR-0008), otherwise ad-hoc; `bundle.sh` says which. Automation, Accessibility and login-item grants survive rebuilds when signed.
-  - AC2: Info.plist carries `CFBundleShortVersionString` (1.0.0), `CFBundleVersion` (git commit count), `LSMinimumSystemVersion` 14.0, `NSHumanReadableCopyright`, and an `AppIcon.icns` drawn from the pet.
+- **REQ-15 Distribution (v4)**: the app is ready to install and share from source. From v5 (WP-28, ADR-0009) it is named **ClawdIsland**: bundle id `dev.clawdisland.app`, `dist/ClawdIsland.app`, signing certificate "ClawdIsland" (renamed from "ClawdIsland Dev" in v6, WP-30).
+  - AC1: Signed with a stable identity: the local "ClawdIsland" certificate when present (ADR-0008), otherwise ad-hoc; `bundle.sh` says which. Releases are always signed with it (WP-30). Automation, Accessibility and login-item grants survive rebuilds when signed.
+  - AC2: Info.plist carries `CFBundleShortVersionString` (1.0.0 for the first public release, WP-35), `CFBundleVersion` (git commit count), `LSMinimumSystemVersion` 14.0, `NSHumanReadableCopyright`, and an `AppIcon.icns` drawn from the pet.
   - AC3: JetBrains Mono is bundled (REQ-14 AC2).
   - AC4: `scripts/install.sh` installs a release build to `~/Applications` or `/Applications`; `scripts/uninstall.sh` uninstalls the hooks through the app's reversible uninstaller, then removes the app and its config; `scripts/package.sh` makes a zip and its sha256. None of them touches `~/.claude/settings.json` except through `HookInstaller`.
   - AC5: `LICENSE` is MIT; `THIRD_PARTY_NOTICES.md` lists JetBrains Mono (OFL 1.1); README.md documents install, first-run permissions, updating and uninstall; `CHANGELOG.md` starts at 1.0.0.
+  - AC6 (v6, WP-32): GitHub Actions builds and tests every push and pull request (`swift build`, `scripts/test.sh`, `swift build -c release`; no secrets, no signing).
+  - AC7 (v6, WP-35): Releases are GitHub releases of a signed zip with a `.sha256`, Apple silicon only; README leads with "Install from a release" (sha256 check, macOS 15+ Open Anyway) and has no ClawdNotch mentions; there is no update-check button.
