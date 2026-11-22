@@ -28,10 +28,13 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 |---|---|
 | `swift build` | Build all targets (debug) |
 | `scripts/test.sh` | Run `ClawdCoreTests` (wraps `swift test`; with Command Line Tools only, plain `swift test` silently runs nothing) |
-| `scripts/bundle.sh [debug\|release]` | Assemble + ad-hoc sign `dist/ClawdNotch.app` |
+| `scripts/bundle.sh [debug\|release]` | Assemble + sign `dist/ClawdNotch.app` ("ClawdNotch Dev" identity if present, else ad-hoc; ADR-0008) |
 | `scripts/run.sh` | Kill running instance, bundle debug, launch |
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU/RSS of the running app against the budget |
+| `scripts/perf-suite.sh` | Every `08` scenario on a release bundle, one table (from WP-22) |
+| `scripts/install.sh` / `uninstall.sh` / `package.sh` | Install, remove, zip a release build (from WP-24; agents test only against temp destinations) |
+| `scripts/make-signing-cert.sh` | One-time local signing identity; **the user runs it** (asks for the login password) |
 | `swift scripts/window-info.swift` | Print screens and the app's window level and bounds (no Screen Recording permission needed) |
 
 ### Environment gotchas

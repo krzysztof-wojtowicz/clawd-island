@@ -132,5 +132,11 @@ While the session panel is expanded (on hover), a soft orange (`clawd.body`) glo
   - AC5: Known limit: after launching the app, the headphones appear at the next play, pause or track change. Reduce Motion: no bob.
 - **REQ-14 Typography**: all HUD and panel text (counters, footer, session rows, cards, Settings) uses **JetBrains Mono**.
   - AC1: Looked up with `NSFont(name:size:)`; fallback `NSFont.monospacedSystemFont` when it is not installed. No crash, no layout break.
-  - AC2: The font is not bundled yet (OFL 1.1 license obligations, deferred to the production phase, `09`).
+  - AC2: The font is bundled in `Contents/Resources/Fonts/` and registered for the process at launch (OFL 1.1 text in `THIRD_PARTY_NOTICES.md`, REQ-15).
   - AC3: Text still fits: footer, cards and panel rows truncate rather than overflow.
+- **REQ-15 Distribution (v4)**: the app is ready to install and share from source.
+  - AC1: Signed with a stable identity: the local "ClawdNotch Dev" certificate when present (ADR-0008), otherwise ad-hoc; `bundle.sh` says which. Automation, Accessibility and login-item grants survive rebuilds when signed.
+  - AC2: Info.plist carries `CFBundleShortVersionString` (1.0.0), `CFBundleVersion` (git commit count), `LSMinimumSystemVersion` 14.0, `NSHumanReadableCopyright`, and an `AppIcon.icns` drawn from the pet.
+  - AC3: JetBrains Mono is bundled (REQ-14 AC2).
+  - AC4: `scripts/install.sh` installs a release build to `~/Applications` or `/Applications`; `scripts/uninstall.sh` uninstalls the hooks through the app's reversible uninstaller, then removes the app and its config; `scripts/package.sh` makes a zip and its sha256. None of them touches `~/.claude/settings.json` except through `HookInstaller`.
+  - AC5: `LICENSE` is MIT; `THIRD_PARTY_NOTICES.md` lists JetBrains Mono (OFL 1.1); README.md documents install, first-run permissions, updating and uninstall; `CHANGELOG.md` starts at 1.0.0.

@@ -39,5 +39,10 @@
 - **Rules learned:** no full-window `CALayer.mask` (it forced offscreen rendering in-process: +45 MB RSS and CPU spikes; an opaque notch-cover layer does the same job for free). `ps %cpu` is a decaying average: read it at least 30 s after a launch or a state change.
 - **Still to measure by a human:** `perf.sh 30` with the mouse on the expanded panel (hover glow, REQ-11 AC2). If CPU at rest rises measurably or steady RSS passes 40 MB, drop the glow and record the numbers here.
 
+## v4 targets (WP-22)
+- Launch peak ≤ 38 MB, steady ≤ 37 MB, post-burst ≤ 40 MB (cap concurrent `EventServer` connections; held `PermissionRequest`s are counted separately and never dropped), idle CPU ≈ 0 % settled, expanded panel with glow < 1 % (REQ-11 AC2).
+- `scripts/perf-suite.sh` runs every scenario on a release bundle and prints one table (CPU avg/max after a settle, RSS max, `footprint`): launch, sleeping, thinking, usingTools, burst + post-burst, hidden idle, hide-mode pop-out, expanded hover (cursor moved with `CGWarpMouseCursorPosition`, no permission needed), permission card, Settings open/close (`--open-settings`).
+- Remaining exceptions are kept only with numbers and a reason.
+
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

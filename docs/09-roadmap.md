@@ -112,13 +112,31 @@ These need eyes, a hover, a click or a system permission:
 - v3: Always allow on a real prompt (WP-12), JetBrains window focus (WP-14), headphones with Music and Spotify (WP-18).
 - v3.1: headphones clear of the raised arm and visible on black, bigger balls (WP-20); 3 s pop-out only on talking / done / needsInput / juggling, headphones switch (WP-21).
 
-## Next (after v3.1)
-1. Production / install phase: stable signature, `/Applications`, bundled JetBrains Mono (OFL), install steps in README.md, a license.
-2. Perf pass (below).
-3. Optional: show the now-playing title (already in `Snapshot.nowPlaying`); a hide-mode / island GIF for README.md.
+## v4 — performance, README GIFs, production
+Order: v3.1 (WP-20 ∥ WP-21) → WP-22 → WP-23 → WP-24 (WP-23 and WP-24 both edit README.md, so they run in sequence).
+
+### WP-22 — Performance pass · owner: core-engineer (Server) + macos-ui-engineer (app) · deps: WP-20, WP-21 · status: `todo`
+- `scripts/perf-suite.sh` with every scenario in `08` (v4 targets), including the expanded panel with the glow (REQ-11 AC2) and Settings open/close.
+- Profile launch (`vmmap --summary`, `footprint`); lazy-create what is not needed at launch; release flags (`-Osize`), no DEBUG code in release.
+- Cap concurrent `EventServer` connections (held permissions exempt); re-measure post-burst.
+- AC: REQ-08 AC1, the `08` v4 targets; before → after table in `08`.
+
+### WP-23 — README hide-mode and island GIFs · owner: macos-ui-engineer + orchestrator · deps: WP-22 · status: `todo`
+- `scripts/record-gif.sh` + `scripts/make-gif.swift`: capture only the app window (`screencapture -l <windowID> -o`, transparent, so no other screen content), composite on a dark background, loop.
+- `docs/media/island.gif` (states + hover: counter morph, panel, glow) and `docs/media/hide-mode.gif` (corner peek, a 3 s pop-out on `talking`, a pose-only change), each < 600 KB, near the top of README.md.
+- AC: both show motion and nothing outside the app window.
+
+### WP-24 — Production readiness · owner: integration-engineer + macos-ui-engineer · deps: WP-23 · status: `todo`
+- `LICENSE` (MIT), `THIRD_PARTY_NOTICES.md` (JetBrains Mono, OFL 1.1), `CHANGELOG.md` (1.0.0).
+- Bundle JetBrains Mono and register it at launch; version keys, `LSMinimumSystemVersion`, copyright, `AppIcon.icns` from the pet render.
+- `scripts/make-signing-cert.sh` (the user runs it once), signing in `bundle.sh` (ADR-0008); `scripts/install.sh`, `scripts/uninstall.sh` (with `--uninstall-hooks` in the app), `scripts/package.sh`. Agents test them against temp destinations only.
+- README.md: install, first-run permissions, updating, uninstall, license.
+- AC: REQ-14 AC2, REQ-15 AC1–AC5.
+
+## Next (after v4)
+- Developer ID signing, hardened runtime and notarization for sharing beyond this Mac.
+- Optional: show the now-playing title (already in `Snapshot.nowPlaying`).
 
 ## Deferred
-- Install to `/Applications` with a stable signature (Developer ID or a self-made certificate), so Automation, Accessibility and login-item grants survive rebuilds.
-- Perf follow-ups: cap concurrent `EventServer` connections (post-burst RSS, `08`); find about 1 MB of launch headroom.
+- Developer ID + notarization (ADR-0008 upgrade path).
 - Ghostty and Warp stay app-level (no scripting API; Ghostty tab precision dropped unless it ships one).
-- Bundle JetBrains Mono (OFL 1.1, with its license) at production time (REQ-14).
