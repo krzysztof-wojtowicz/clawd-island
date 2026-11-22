@@ -97,4 +97,19 @@ struct HookInstallerTests {
         #expect(try Data(contentsOf: installer.settingsURL) == settings)
         #expect(try String(contentsOf: installer.configURL, encoding: .utf8) == "not json")
     }
+
+    @Test("Reinstalling from a moved app replaces the old bridge path and keeps the saved statusLine")
+    func bridgePathChange() throws {
+        try put(#"{"statusLine":{"type":"command","command":"my-line"}}"#, at: installer.settingsURL)
+        try installer.install()
+        var moved = installer
+        moved.bridgePath = "/Users/me/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge"
+        try moved.install()
+        let text = try String(contentsOf: installer.settingsURL, encoding: .utf8)
+        #expect(!text.contains("/Apps/ClawdNotch.app"))
+        #expect(text.contains("/Users/me/Applications/ClawdNotch.app"))
+        try moved.uninstall()
+        let restored = try #require(try json(installer.settingsURL)["statusLine"] as? [String: Any])
+        #expect(restored["command"] as? String == "my-line")
+    }
 }
