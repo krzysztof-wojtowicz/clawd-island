@@ -1,12 +1,15 @@
 # 08 — Performance (REQ-08)
 
-## Budget (measured with `scripts/perf.sh`, Apple silicon, release build)
-| Scenario | CPU (process avg over 60 s) | RSS |
-|---|---|---|
-| sleeping (no sessions) | < 0.1 % | < 40 MB |
-| idle / thinking / usingTools / talking | < 1 % | < 40 MB |
-| burst: 50 hook events/s for 10 s | < 3 % | < 45 MB |
-| `clawd-bridge statusline` | < 20 ms wall time per run | — |
+## Budget (release build, Apple silicon; `scripts/perf-suite.sh`)
+Memory is judged by **`footprint`** (phys_footprint: the pages this process really owns). RSS also counts shared AppKit and system pages (an empty accessory AppKit app already reaches ~30 MB), so it gets a looser cap. Decision of v4 (WP-22), replacing the old "RSS < 40 MB".
+| Scenario | CPU (avg after settle) | footprint | RSS |
+|---|---|---|---|
+| sleeping (no sessions) | < 0.1 % | < 20 MB | < 45 MB |
+| idle / thinking / usingTools / talking / hidden | < 1 % | < 20 MB | < 45 MB |
+| burst: 50 hook events/s for 10 s, and after it | < 3 % during | < 20 MB | < 48 MB |
+| launch (first 10 s) | — | < 20 MB | spike allowed (LaunchServices mapping, unmapped by the system ~10 s later) |
+| `clawd-bridge statusline` | < 20 ms wall time per run | — | — |
+- Accepted exception: the Settings window (rarely open) — 60 MB RSS open, 55 MB after close, footprint 19 MB.
 
 ## Rules
 1. **Event-driven only.** The only repeating timer is the 30 s liveness check, and it is suspended while there are no sessions. The talking-decay check is a one-shot timer that is rescheduled, never a repeating one. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3).

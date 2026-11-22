@@ -70,7 +70,7 @@ macOS 14+ on Apple silicon, and also on Intel if the build allows it at no extra
 
 ## REQ-08 Minimal resource usage
 See `08-performance.md`.
-- AC1: Idle CPU < 0.3 %. Animating < 1 %. RSS < 40 MB. 0 wakeups/s while sleeping, apart from the 30 s liveness timer.
+- AC1: Idle CPU < 0.3 %. Animating < 1 %. Memory: `footprint` (phys_footprint, what the app really owns) < 20 MB, and RSS < 45 MB steady (RSS includes shared AppKit/system pages: an empty accessory AppKit app already sits near 30 MB; v4 decision). 0 wakeups/s while sleeping, apart from the 30 s liveness timer.
 - AC2: It adds no measurable latency to Claude Code (hooks are fire-and-forget).
 
 ## REQ-09 Claude Code subscription integration
