@@ -3,7 +3,7 @@
 # Usage: scripts/simulate.sh <scenario> [session_id=sim-1]   (scenario "usage" takes a percent instead)
 set -euo pipefail
 
-config="$HOME/Library/Application Support/ClawdNotch/config.json"
+config="$HOME/Library/Application Support/ClawdIsland/config.json"
 port=47474
 token=""
 if [[ -f "$config" ]]; then

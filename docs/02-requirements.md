@@ -104,7 +104,7 @@ While the session panel is expanded (on hover), a soft orange (`clawd.body`) glo
   - AC2: Allow or Deny from the notch resolves the request in Claude Code within 1 s, and the terminal dialog closes.
   - AC3: The terminal dialog still appears immediately and answering it works as before. The card disappears when the session moves on, when Claude Code closes the hook connection, or after 110 s (the app then replies with no decision).
   - AC4: When the app is not running, or "Approve permissions from the notch" is off, behaviour is exactly as without the app: no decision and no delay.
-  - AC5: The app never decides on its own; only an explicit click sends a decision. Deny sends the message "Denied from ClawdNotch".
+  - AC5: The app never decides on its own; only an explicit click sends a decision. Deny sends the message "Denied from ClawdIsland".
   - AC6 (v3): The card has three **equal-width pills with centred labels**: Allow, Deny, Always allow (layout in `06`).
   - AC7 (v3): Always allow replies `allow` with the request's first `permission_suggestions` entry, as received, in `decision.updatedPermissions` (`05`). The suggestion carries its own destination.
   - AC8 (v3): Always allow is hidden when the request has no suggestion. Its tooltip shows the rule that would be saved.

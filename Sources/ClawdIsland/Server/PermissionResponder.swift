@@ -22,7 +22,7 @@ final class PermissionResponder: Sendable {
             case .allow:
                 Data(#"{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}"#.utf8)
             case .deny:
-                Data(#"{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdNotch"}}}"#.utf8)
+                Data(#"{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdIsland"}}}"#.utf8)
             case .alwaysAllow(let suggestion):
                 Data(#"{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow","updatedPermissions":[\#(suggestion)]}}}"#.utf8)
             case .none:

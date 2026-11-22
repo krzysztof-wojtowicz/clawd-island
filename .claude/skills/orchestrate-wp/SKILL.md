@@ -1,6 +1,6 @@
 ---
 name: orchestrate-wp
-description: How the main (orchestrator) agent executes ClawdNotch work packages from docs/09-roadmap.md using the specialist subagents, review, and local commits. Use when the user says "do the next WP", "continue the roadmap", "implement WP-x", or similar.
+description: How the main (orchestrator) agent executes ClawdIsland work packages from docs/09-roadmap.md using the specialist subagents, review, and local commits. Use when the user says "do the next WP", "continue the roadmap", "implement WP-x", or similar.
 ---
 
 # Orchestrating work packages

@@ -1,4 +1,4 @@
-# ClawdNotch — agent guide
+# ClawdIsland — agent guide
 
 Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
@@ -28,7 +28,7 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 |---|---|
 | `swift build` | Build all targets (debug) |
 | `scripts/test.sh` | Run `ClawdCoreTests` (wraps `swift test`; with Command Line Tools only, plain `swift test` silently runs nothing) |
-| `scripts/bundle.sh [debug\|release]` | Assemble + sign `dist/ClawdNotch.app` ("ClawdNotch Dev" identity if present, else ad-hoc; ADR-0008) |
+| `scripts/bundle.sh [debug\|release]` | Assemble + sign `dist/ClawdIsland.app` ("ClawdIsland Dev" identity if present, else ad-hoc; ADR-0008) |
 | `scripts/run.sh` | Kill running instance, bundle debug, launch |
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU/RSS of the running app against the budget |
@@ -46,7 +46,7 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 ```
 Package.swift
 Sources/ClawdCore/      pure logic: events, SessionStore, state machine, aggregator, usage   (owner: core-engineer)
-Sources/ClawdNotch/     app: App/, Server/ (EventServer), Window/, Pet/, HUD/, Integration/
+Sources/ClawdIsland/     app: App/, Server/ (EventServer), Window/, Pet/, HUD/, Integration/
   Server/               NWListener HTTP endpoint                                            (owner: core-engineer)
   Window/, HUD/         NSPanel, notch geometry, SwiftUI HUD/panel/settings                 (owner: macos-ui-engineer)
   Pet/                  Core Animation Clawd, poses                                         (owner: pet-animator)

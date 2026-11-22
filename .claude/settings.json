@@ -9,7 +9,7 @@
       "Bash(scripts/simulate.sh:*)",
       "Bash(scripts/perf.sh:*)",
       "Bash(pgrep:*)",
-      "Bash(pkill -x ClawdNotch)",
+      "Bash(pkill -x ClawdIsland)",
       "Bash(screencapture:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",

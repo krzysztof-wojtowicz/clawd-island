@@ -1,5 +1,5 @@
 // HookSettingsTests.swift
-// Install/uninstall merge of ClawdNotch entries into Claude Code settings (docs/05, REQ-09 AC1).
+// Install/uninstall merge of ClawdIsland entries into Claude Code settings (docs/05, REQ-09 AC1).
 
 import Foundation
 import Testing

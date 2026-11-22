@@ -68,4 +68,27 @@ struct AppConfigTests {
         try config.write(to: url)
         #expect(AppConfig.load(from: url) == config)
     }
+
+    @Test("The ClawdNotch support folder moves to ClawdIsland once, keeping the config")
+    func legacyMigration() throws {
+        let home = FileManager.default.temporaryDirectory.appending(path: "clawd-home-\(UUID().uuidString)")
+        let old = home.appending(path: "Library/Application Support/ClawdNotch/config.json")
+        let config = AppConfig(port: 50001, token: "t", originalStatusLine: "echo hi")
+        try config.write(to: old)
+        #expect(AppConfig.migrateLegacySupportFolder(home: home))
+        let new = home.appending(path: "Library/Application Support/ClawdIsland/config.json")
+        #expect(AppConfig.load(from: new) == config)
+        #expect(!FileManager.default.fileExists(atPath: old.deletingLastPathComponent().path))
+        #expect(!AppConfig.migrateLegacySupportFolder(home: home))
+    }
+
+    @Test("An existing ClawdIsland folder is never replaced by the old one")
+    func legacyMigrationKeepsNew() throws {
+        let home = FileManager.default.temporaryDirectory.appending(path: "clawd-home-\(UUID().uuidString)")
+        let support = home.appending(path: "Library/Application Support")
+        try AppConfig(token: "old").write(to: support.appending(path: "ClawdNotch/config.json"))
+        try AppConfig(token: "new").write(to: support.appending(path: "ClawdIsland/config.json"))
+        #expect(!AppConfig.migrateLegacySupportFolder(home: home))
+        #expect(AppConfig.load(from: support.appending(path: "ClawdIsland/config.json"))?.token == "new")
+    }
 }

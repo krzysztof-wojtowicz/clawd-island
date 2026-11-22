@@ -104,7 +104,7 @@ These need eyes, a hover, a click or a system permission:
 - Notch fit, full-screen hover, right-click without focus, no slide on Space switch (WP-2, WP-2.1).
 - Hammer not clipped in the 56 pt wing (`scripts/simulate.sh tools`); counter morph, WK-first footer, state dots (WP-5.4, WP-5.5).
 - Mini mode (hide mode until v5): corner peek, flip into the wing and back, hover from hidden, toggled while expanded (WP-7.1, WP-7.2).
-- iTerm2 / Terminal.app: a session started before the app becomes focusable after its next statusline refresh; a click focuses the tab and then marks read; a session finishing in the watched tab is marked read. If Automation never prompts: `tccutil reset AppleEvents dev.clawdnotch.ClawdNotch` (WP-6.x).
+- iTerm2 / Terminal.app: a session started before the app becomes focusable after its next statusline refresh; a click focuses the tab and then marks read; a session finishing in the watched tab is marked read. If Automation never prompts: `tccutil reset AppleEvents dev.clawdisland.app` (WP-6.x).
 - Permissions: reinstall hooks once (right-click, Install Hooks) so `PermissionRequest` gets `timeout: 120`; a real prompt shows a card; Allow / Deny work and the terminal dialog still works (WP-9).
 - Accessibility prompt on the first click on a VS Code session; the right window comes forward (WP-10).
 - "+ New" menu, Choose Folder…, a new Terminal.app / iTerm2 window running `claude` there (WP-11).
@@ -155,7 +155,7 @@ Older entries above keep the names of their time ("hide mode", headphones, REQ-1
 - Settings: a hooks row ("Installed / Not installed" + Install / Uninstall button, `HookInstaller`, errors shown) next to Launch at login; re-measure the Settings RSS exception.
 - AC: REQ-05 AC5–AC6, REQ-09 AC4. Installer tested only against scratch files (`CLAWD_SETTINGS_PATH` / `CLAWD_CONFIG_PATH`).
 
-### WP-28 — Rename to ClawdIsland · owner: integration-engineer · deps: WP-25, WP-26, WP-27 · status: `todo`
+### WP-28 — Rename to ClawdIsland · owner: integration-engineer · deps: WP-25, WP-26, WP-27 · status: `done`
 - Package, executable target and `Sources/ClawdNotch` → `ClawdIsland`; `ClawdCore`, `clawd-bridge` and `X-Clawd-Token` keep their names (ADR-0009).
 - Bundle `dist/ClawdIsland.app`, id `dev.clawdisland.app`, usage strings, menu and window titles; version 1.1.0 and a CHANGELOG entry.
 - Application Support `ClawdNotch/` → `ClawdIsland/`, moved once at launch if the new folder is missing (keeps token, port, `originalStatusLine`); test with a temp home.

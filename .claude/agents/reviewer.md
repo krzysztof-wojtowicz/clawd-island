@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Read-only reviewer for ClawdNotch. Use after every work package or non-trivial change to check correctness against the docs, the CLAUDE.md invariants, the performance budget, code style, and Ponytail minimalism, before the orchestrator commits.
+description: Read-only reviewer for ClawdIsland. Use after every work package or non-trivial change to check correctness against the docs, the CLAUDE.md invariants, the performance budget, code style, and Ponytail minimalism, before the orchestrator commits.
 tools: Read, Grep, Glob, Bash
 ---
 

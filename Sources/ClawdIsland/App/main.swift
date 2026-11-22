@@ -1,8 +1,11 @@
 // main.swift
-// Entry point: starts ClawdNotch as an accessory app (no Dock icon, no Cmd-Tab entry).
+// Entry point: starts ClawdIsland as an accessory app (no Dock icon, no Cmd-Tab entry).
 
 import AppKit
 import ClawdCore
+
+// Before anything reads config.json, including `--uninstall-hooks`; skipped when a scratch config is in use.
+if ProcessInfo.processInfo.environment["CLAWD_CONFIG_PATH"] == nil { AppConfig.migrateLegacySupportFolder() }
 
 // `--uninstall-hooks` is the reversible uninstaller used by scripts/uninstall.sh: no UI, exit code 0 or 1.
 // CLAWD_SETTINGS_PATH and CLAWD_CONFIG_PATH redirect it to scratch files for a safe manual check (README, Development);

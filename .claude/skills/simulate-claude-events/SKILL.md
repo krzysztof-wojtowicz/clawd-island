@@ -1,11 +1,11 @@
 ---
 name: simulate-claude-events
-description: Send fake Claude Code hook / statusline events to the running ClawdNotch app to exercise pet states, counters, HP bar and pop-outs without running real Claude Code sessions. Use when testing or demoing any state-related behaviour.
+description: Send fake Claude Code hook / statusline events to the running ClawdIsland app to exercise pet states, counters, HP bar and pop-outs without running real Claude Code sessions. Use when testing or demoing any state-related behaviour.
 ---
 
 # Simulate Claude Code events
 
-`scripts/simulate.sh <scenario> [session_id]` reads the port and token from `~/Library/Application Support/ClawdNotch/config.json` and POSTs JSON with `curl` to `/hook`, `/session-meta`, and `/statusline`.
+`scripts/simulate.sh <scenario> [session_id]` reads the port and token from `~/Library/Application Support/ClawdIsland/config.json` and POSTs JSON with `curl` to `/hook`, `/session-meta`, and `/statusline`.
 
 Scenarios. Implement all of these in WP-0/WP-4 and keep this list in sync with the script:
 | Scenario | Sends | Expected pet state |

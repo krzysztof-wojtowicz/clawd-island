@@ -11,11 +11,11 @@ struct BridgeConfig {
     let token: String
     let originalStatusLine: String?
 
-    /// Loads `CLAWD_CONFIG` (a test override) or `~/Library/Application Support/ClawdNotch/config.json`;
+    /// Loads `CLAWD_CONFIG` (a test override) or `~/Library/Application Support/ClawdIsland/config.json`;
     /// nil when missing or malformed, which makes the bridge a silent no-op.
     static func load() -> BridgeConfig? {
         let path = ProcessInfo.processInfo.environment["CLAWD_CONFIG"]
-            ?? NSHomeDirectory() + "/Library/Application Support/ClawdNotch/config.json"
+            ?? NSHomeDirectory() + "/Library/Application Support/ClawdIsland/config.json"
         guard let data = FileManager.default.contents(atPath: path),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let port = json["port"] as? Int, let token = json["token"] as? String

@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 
 scene="${1:?usage: record-gif.sh <island|hide-mode> [out.gif]}"
 out="${2:-docs/media/$scene.gif}"
-config="$HOME/Library/Application Support/ClawdNotch/config.json"
+config="$HOME/Library/Application Support/ClawdIsland/config.json"
 work="$(mktemp -d)"
 backup="$work/config.json.bak"
 sim=scripts/simulate.sh
@@ -19,7 +19,7 @@ cleanup() {
     kill "${scene_pid:-}" 2>/dev/null || true
     $sim end >/dev/null 2>&1 || true
     swift scripts/hover.swift off 2>/dev/null || true
-    pkill -x ClawdNotch 2>/dev/null || true
+    pkill -x ClawdIsland 2>/dev/null || true
     cp "$backup" "$config"
 }
 trap cleanup EXIT
@@ -51,9 +51,9 @@ plutil -replace miniMode -bool "$hide" "$config"
 plutil -replace soundCues -bool false "$config"
 
 swift scripts/hover.swift off 2>/dev/null || true
-pkill -x ClawdNotch 2>/dev/null || true
-while pgrep -x ClawdNotch >/dev/null; do sleep 0.1; done
-open dist/ClawdNotch.app
+pkill -x ClawdIsland 2>/dev/null || true
+while pgrep -x ClawdIsland >/dev/null; do sleep 0.1; done
+open dist/ClawdIsland.app
 sleep 2
 
 mkdir -p "$work/bin" "$work/frames"

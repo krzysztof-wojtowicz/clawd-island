@@ -1,9 +1,9 @@
 // HookSettings.swift
-// Pure merge of ClawdNotch's hooks and statusLine into a Claude Code settings object (docs/05, REQ-09).
+// Pure merge of ClawdIsland's hooks and statusLine into a Claude Code settings object (docs/05, REQ-09).
 
 import Foundation
 
-/// Adds and removes ClawdNotch's entries in a parsed `~/.claude/settings.json` without touching anything else.
+/// Adds and removes ClawdIsland's entries in a parsed `~/.claude/settings.json` without touching anything else.
 /// Our entries are recognised by shape, not remembered: an http hook to `http://127.0.0.1:<port>/hook`
 /// carrying `X-Clawd-Token`, or a command containing `clawd-bridge`. That makes install idempotent across
 /// port changes and app moves, and lets uninstall remove exactly what install added.
@@ -41,7 +41,7 @@ public enum HookSettings {
         return object
     }
 
-    /// Returns `settings` with any old ClawdNotch entries replaced by current ones.
+    /// Returns `settings` with any old ClawdIsland entries replaced by current ones.
     /// - Parameter bridgePath: Absolute path of `clawd-bridge`; it is single-quoted into the commands.
     public static func install(into settings: [String: Any], port: Int, token: String, bridgePath: String) -> Installed {
         var result = removingHooks(from: settings)
@@ -69,7 +69,7 @@ public enum HookSettings {
         return Installed(settings: result, foreignStatusLine: foreign)
     }
 
-    /// Returns `settings` without ClawdNotch entries; our statusLine is swapped back to `originalStatusLine`,
+    /// Returns `settings` without ClawdIsland entries; our statusLine is swapped back to `originalStatusLine`,
     /// or removed when there was none. A statusLine the user changed after install is left alone.
     public static func uninstall(from settings: [String: Any], originalStatusLine: String?) -> [String: Any] {
         var result = removingHooks(from: settings)
@@ -85,7 +85,7 @@ public enum HookSettings {
         return result
     }
 
-    /// Whether any ClawdNotch hook or our statusLine is present.
+    /// Whether any ClawdIsland hook or our statusLine is present.
     public static func isInstalled(_ settings: [String: Any]) -> Bool {
         let hooks = settings["hooks"] as? [String: Any] ?? [:]
         let hasHook = hooks.values.contains { groups($0).contains { entries(of: $0).contains(where: isOurs) } }

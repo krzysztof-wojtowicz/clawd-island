@@ -12,7 +12,7 @@ import os
 final class AppModel {
     private static let coalesceInterval: TimeInterval = 0.1
     private static let livenessInterval: TimeInterval = 30
-    private static let logger = Logger(subsystem: "dev.clawdnotch", category: "model")
+    private static let logger = Logger(subsystem: "dev.clawdisland", category: "model")
 
     /// What the UI renders.
     private(set) var snapshot: Snapshot

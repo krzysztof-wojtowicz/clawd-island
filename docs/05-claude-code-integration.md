@@ -20,10 +20,10 @@ The installer recognises its own entries by their URL (`http://127.0.0.1:<any po
     // Stop, StopFailure, PreCompact, SessionEnd
     // SessionStart cannot use http hooks; the bridge forwards it together with the session metadata.
     "SessionStart": [{ "hooks": [
-      { "type": "command", "command": "'/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge' hook session-start", "async": true }
+      { "type": "command", "command": "'/Applications/ClawdIsland.app/Contents/MacOS/clawd-bridge' hook session-start", "async": true }
     ]}]
   },
-  "statusLine": { "type": "command", "command": "'/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge' statusline" }
+  "statusLine": { "type": "command", "command": "'/Applications/ClawdIsland.app/Contents/MacOS/clawd-bridge' statusline" }
 }
 ```
 
@@ -88,13 +88,13 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - **Panel click on a session:** activate the terminal app; in Terminal.app or iTerm2, also select the tab with that tty. After a successful focus, mark the session read unless the focus-read mode is `off` (REQ-10 AC2). A failed focus (unknown or quit terminal, script error) marks nothing.
 - **Finished while watched:** when a session becomes `done` and its `terminalBundleID` is the frontmost app, run the selected-tab check once; a tty match marks it read (REQ-10 AC1). An app-level terminal marks it read after the usual 2 s dwell.
 - AppleScript runs only on an activation event, a panel click, a "done while frontmost" edge, or a new-session launch, never on a timer.
-- The Automation permission belongs to the app's code signature. An ad-hoc signed development build gets a new signature on every rebuild, so macOS may ask again (or silently keep an old denial; reset with `tccutil reset AppleEvents dev.clawdnotch.ClawdNotch`).
+- The Automation permission belongs to the app's code signature. An ad-hoc signed development build gets a new signature on every rebuild, so macOS may ask again (or silently keep an old denial; reset with `tccutil reset AppleEvents dev.clawdisland.app`).
 
 ## Permissions from the notch (REQ-V2-01, ADR-0006)
 - `PermissionRequest` arrives on `/hook` with `tool_name`, `tool_input` and optional `permission_suggestions`. The decoder keeps a **summary** only: `tool_input.command` (Bash; the same summary is decoded for `PostToolUse`, `PostToolUseFailure` and `PermissionDenied` to match cards), `file_path` (Edit, Write, Read), `url` (WebFetch), `pattern` (Grep, Glob), otherwise the tool name; at most 120 characters. Nothing else from `tool_input` is stored.
 - With "Approve permissions from the notch" on, `EventServer` does **not** reply at once. It keeps the connection, and the app shows the card. The reply is one of:
   - Allow: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}`
-  - Deny: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdNotch"}}}`
+  - Deny: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdIsland"}}}`
   - Always allow (v3, REQ-V2-01 AC7): `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow","updatedPermissions":[<first permission_suggestions entry as received>]}}}`. The entry is echoed untouched (its own `destination`, rules, mode); the app never builds or edits a rule. No suggestion, or one over 2 KiB → no Always allow button.
   - No decision (empty 200): after 110 s, when the same tool with the same input summary finishes (`PostToolUse`, `PostToolUseFailure`, `PermissionDenied`; it was answered in the terminal), when the session gets `UserPromptSubmit`, `Stop`, `StopFailure` or `SessionEnd`, or when the setting is off.
 - If Claude Code closes the connection first, the card is dropped. A reply to a request that was already answered in the terminal is harmless.

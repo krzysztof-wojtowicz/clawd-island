@@ -18,10 +18,10 @@ final class EventServer: Sendable {
     /// as a silent, non-blocking hook failure. Bursts of dozens of hooks otherwise leave the allocator holding
     /// per-connection buffers (docs/08).
     private static let maxInFlight = 16
-    private static let logger = Logger(subsystem: "dev.clawdnotch", category: "server")
+    private static let logger = Logger(subsystem: "dev.clawdisland", category: "server")
 
     private let listener: NWListener
-    private let queue = DispatchQueue(label: "dev.clawdnotch.server")
+    private let queue = DispatchQueue(label: "dev.clawdisland.server")
     private let token: String
     private let holdPermissions: @Sendable () -> Bool
     private let onMessage: @Sendable (Inbound) -> Void

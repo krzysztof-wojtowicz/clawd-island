@@ -17,11 +17,11 @@ struct HookInstallerTests {
         installer = HookInstaller(
             settingsURL: dir.appending(path: "settings.json"),
             configURL: dir.appending(path: "config.json"),
-            bridgePath: "/Apps/ClawdNotch.app/Contents/MacOS/clawd-bridge")
+            bridgePath: "/Apps/ClawdIsland.app/Contents/MacOS/clawd-bridge")
     }
 
     var files: [String] { (try? FileManager.default.contentsOfDirectory(atPath: dir.path).sorted()) ?? [] }
-    var backups: [String] { files.filter { $0.hasPrefix("settings.json.clawdnotch-backup-") } }
+    var backups: [String] { files.filter { $0.hasPrefix("settings.json.clawdisland-backup-") } }
 
     func put(_ text: String, at url: URL) throws { try Data(text.utf8).write(to: url) }
 
@@ -103,11 +103,11 @@ struct HookInstallerTests {
         try put(#"{"statusLine":{"type":"command","command":"my-line"}}"#, at: installer.settingsURL)
         try installer.install()
         var moved = installer
-        moved.bridgePath = "/Users/me/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge"
+        moved.bridgePath = "/Users/me/Applications/ClawdIsland.app/Contents/MacOS/clawd-bridge"
         try moved.install()
         let text = try String(contentsOf: installer.settingsURL, encoding: .utf8)
-        #expect(!text.contains("/Apps/ClawdNotch.app"))
-        #expect(text.contains("/Users/me/Applications/ClawdNotch.app"))
+        #expect(!text.contains("/Apps/ClawdIsland.app"))
+        #expect(text.contains("/Users/me/Applications/ClawdIsland.app"))
         try moved.uninstall()
         let restored = try #require(try json(installer.settingsURL)["statusLine"] as? [String: Any])
         #expect(restored["command"] as? String == "my-line")

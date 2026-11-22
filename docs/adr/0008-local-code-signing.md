@@ -4,7 +4,7 @@
 
 **Context:** The app is ad-hoc signed, so its code identity changes on every build. macOS ties Automation (Terminal, iTerm2), Accessibility (editor window focus) and login-item grants to that identity, so every rebuild can silently drop them. A Developer ID costs a paid Apple Developer membership.
 
-**Decision:** `scripts/make-signing-cert.sh` creates a "ClawdNotch Dev" code-signing certificate in the login keychain once (the user runs it, because trusting it asks for the login password). `bundle.sh` signs with it when present and falls back to ad-hoc otherwise, printing which.
+**Decision:** `scripts/make-signing-cert.sh` creates a "ClawdIsland Dev" code-signing certificate in the login keychain once (the user runs it, because trusting it asks for the login password). `bundle.sh` signs with it when present and falls back to ad-hoc otherwise, printing which.
 
 **Consequences:**
 - Grants survive rebuilds on this Mac.

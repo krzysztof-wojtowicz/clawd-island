@@ -1,5 +1,5 @@
 // HookInstaller.swift
-// Installs and removes ClawdNotch's hooks and statusLine in Claude Code's settings file (docs/05, REQ-09 AC1).
+// Installs and removes ClawdIsland's hooks and statusLine in Claude Code's settings file (docs/05, REQ-09 AC1).
 
 import Foundation
 
@@ -11,7 +11,7 @@ public struct HookInstaller {
     /// statusLine and change the token, so the installer writes nothing.
     public struct CorruptConfig: LocalizedError {
         public var errorDescription: String? {
-            "ClawdNotch's config.json is not valid; nothing was changed."
+            "ClawdIsland's config.json is not valid; nothing was changed."
         }
     }
 
@@ -85,7 +85,7 @@ public struct HookInstaller {
         try data.write(to: target, options: .atomic)
     }
 
-    /// Copies the current file to `settings.json.clawdnotch-backup-<timestamp>`; nothing to back up if it is missing.
+    /// Copies the current file to `settings.json.clawdisland-backup-<timestamp>`; nothing to back up if it is missing.
     private func backup() throws {
         guard FileManager.default.fileExists(atPath: target.path) else { return }
         let formatter = DateFormatter()
@@ -93,7 +93,7 @@ public struct HookInstaller {
         formatter.dateFormat = "yyyyMMdd-HHmmss-SSS"
         // Next to the settings path (not the symlink target) so backups never land in a dotfiles repo.
         let url = settingsURL.deletingLastPathComponent()
-            .appending(path: "\(settingsURL.lastPathComponent).clawdnotch-backup-\(formatter.string(from: Date()))")
+            .appending(path: "\(settingsURL.lastPathComponent).clawdisland-backup-\(formatter.string(from: Date()))")
         // shortcut: backups accumulate without limit (one per install/uninstall); prune old ones if users complain.
         // Throws on a name clash rather than overwrite an older, more valuable backup.
         try FileManager.default.copyItem(at: target, to: url)

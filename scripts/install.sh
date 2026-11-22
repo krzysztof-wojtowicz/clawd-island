@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds a release ClawdNotch.app, replaces the installed copy and launches it (REQ-15 AC4).
+# Builds a release ClawdIsland.app, replaces the installed copy and launches it (REQ-15 AC4).
 # Usage: scripts/install.sh [--dest DIR]   (default ~/Applications; pass /Applications for all users)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -12,17 +12,17 @@ fi
 scripts/bundle.sh release
 
 # Quit politely, then wait: the new copy must not start while the old one still holds the port.
-osascript -e 'tell application id "dev.clawdnotch.app" to quit' >/dev/null 2>&1 || true
-for _ in {1..20}; do pgrep -x ClawdNotch >/dev/null || break; sleep 0.25; done
-pkill -x ClawdNotch 2>/dev/null || true
+osascript -e 'tell application id "dev.clawdisland.app" to quit' >/dev/null 2>&1 || true
+for _ in {1..20}; do pgrep -x ClawdIsland >/dev/null || break; sleep 0.25; done
+pkill -x ClawdIsland 2>/dev/null || true
 
 mkdir -p "$dest"
 # Copy first, swap after, so a failed copy never leaves the user without an app.
-rm -rf "$dest/ClawdNotch.app.new"
-ditto dist/ClawdNotch.app "$dest/ClawdNotch.app.new"
-rm -rf "$dest/ClawdNotch.app"
-mv "$dest/ClawdNotch.app.new" "$dest/ClawdNotch.app"
-open "$dest/ClawdNotch.app"
+rm -rf "$dest/ClawdIsland.app.new"
+ditto dist/ClawdIsland.app "$dest/ClawdIsland.app.new"
+rm -rf "$dest/ClawdIsland.app"
+mv "$dest/ClawdIsland.app.new" "$dest/ClawdIsland.app"
+open "$dest/ClawdIsland.app"
 
-echo "Installed $dest/ClawdNotch.app"
+echo "Installed $dest/ClawdIsland.app"
 echo "Open the menu → Install Hooks so hooks point at the new bridge path"

@@ -1,4 +1,4 @@
-# ClawdNotch
+# ClawdIsland
 
 A small orange pet that lives in your MacBook notch and mirrors what Claude Code is doing.
 
@@ -8,12 +8,12 @@ A small orange pet that lives in your MacBook notch and mirrors what Claude Code
 
 ## Install
 
-ClawdNotch is built from source. You need macOS 14+ and the Swift 6.2 Command Line Tools (`xcode-select --install`); Xcode is not needed.
+ClawdIsland is built from source. You need macOS 14+ and the Swift 6.2 Command Line Tools (`xcode-select --install`); Xcode is not needed.
 
 ```sh
 git clone <this repo> && cd claude-pet
-scripts/make-signing-cert.sh   # once: creates the "ClawdNotch Dev" certificate, asks for your login password
-scripts/install.sh             # release build -> ~/Applications/ClawdNotch.app, then launches it
+scripts/make-signing-cert.sh   # once: creates the "ClawdIsland Dev" certificate, asks for your login password
+scripts/install.sh             # release build -> ~/Applications/ClawdIsland.app, then launches it
 ```
 
 `scripts/install.sh --dest /Applications` installs for all users. Without the certificate the app is signed ad-hoc, which works, but macOS forgets the permissions below after every rebuild. A signed app is a stable identity, so the grants survive updates. The certificate is local to your Mac (ADR-0008); other Macs see an "unidentified developer" warning (right-click, Open).
@@ -23,20 +23,22 @@ Then open **Settings** (right-click the notch → Settings…) and click **Insta
 ### First-run permissions
 
 - **Automation** (Terminal.app, iTerm2): macOS asks the first time you click a session; allow it for tab-precise focus.
-- **Accessibility**: for VS Code and JetBrains window focus. Add ClawdNotch in System Settings, Privacy & Security, Accessibility.
+- **Accessibility**: for VS Code and JetBrains window focus. Add ClawdIsland in System Settings, Privacy & Security, Accessibility.
 - **Login item**: toggle "Launch at login" in Settings.
 
 ### Updating
+
+Coming from ClawdNotch (before 1.1.0): run `scripts/install.sh`, delete the old `ClawdNotch.app`, then click **Install Hooks** in Settings; hooks are recognised by shape, so the old entries are replaced. Your config moves to `~/Library/Application Support/ClawdIsland/` on first launch.
 
 Pull and re-run `scripts/install.sh`, then click **Install Hooks** in Settings again if the install folder changed (hooks point at the app's bridge path; re-installing replaces the old entries).
 
 ### Uninstall
 
-`scripts/uninstall.sh` (add `--dest` if you installed elsewhere, `--yes` to skip the question) removes the hooks and restores your previous statusline, then deletes the app and `~/Library/Application Support/ClawdNotch/`.
+`scripts/uninstall.sh` (add `--dest` if you installed elsewhere, `--yes` to skip the question) removes the hooks and restores your previous statusline, then deletes the app and `~/Library/Application Support/ClawdIsland/`.
 
 ### Share a build
 
-`scripts/package.sh` writes `dist/ClawdNotch-<version>.zip` and its `.sha256`.
+`scripts/package.sh` writes `dist/ClawdIsland-<version>.zip` and its `.sha256`.
 
 ## Features
 
@@ -94,7 +96,7 @@ Every pose is a Core Animation layer loop run by the render server. The GIFs are
 |---|---|
 | `swift build` | Build all targets (debug) |
 | `scripts/test.sh` | Run `ClawdCoreTests` (wraps `swift test`; with Command Line Tools only, plain `swift test` silently runs nothing) |
-| `scripts/bundle.sh [debug\|release]` | Assemble and sign `dist/ClawdNotch.app` ("ClawdNotch Dev" if present, else ad-hoc) |
+| `scripts/bundle.sh [debug\|release]` | Assemble and sign `dist/ClawdIsland.app` ("ClawdIsland Dev" if present, else ad-hoc) |
 | `scripts/run.sh` | Kill the running instance, bundle debug, launch |
 | `scripts/make-signing-cert.sh` | Create the local signing certificate (once) |
 | `scripts/install.sh`, `uninstall.sh`, `package.sh` | Install, remove, zip (see Install) |
@@ -104,9 +106,9 @@ Every pose is a Core Animation layer loop run by the render server. The GIFs are
 | `scripts/record-gif.sh <island\|hide-mode>` | Record the README island / hide-mode GIFs |
 | `swift scripts/window-info.swift` | Print screens and the app's window level and bounds |
 
-To regenerate the pose GIFs, build in debug and run `.build/debug/ClawdNotch --render-poses docs/media`. The mode exists only in debug builds.
+To regenerate the pose GIFs, build in debug and run `.build/debug/ClawdIsland --render-poses docs/media`. The mode exists only in debug builds.
 
-To try the hook uninstaller safely, point it at scratch copies: `CLAWD_SETTINGS_PATH=/tmp/settings.json CLAWD_CONFIG_PATH=/tmp/config.json dist/ClawdNotch.app/Contents/MacOS/ClawdNotch --uninstall-hooks` (it never touches `~/.claude` then). The agent guide is [`CLAUDE.md`](CLAUDE.md).
+To try the hook uninstaller safely, point it at scratch copies: `CLAWD_SETTINGS_PATH=/tmp/settings.json CLAWD_CONFIG_PATH=/tmp/config.json dist/ClawdIsland.app/Contents/MacOS/ClawdIsland --uninstall-hooks` (it never touches `~/.claude` then). The agent guide is [`CLAUDE.md`](CLAUDE.md).
 
 ## Docs
 | | |

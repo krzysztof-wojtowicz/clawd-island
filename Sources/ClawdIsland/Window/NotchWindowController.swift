@@ -177,7 +177,7 @@ final class NotchWindowController {
         })
         menu.addItem(ActionMenuItem(title: "Settings…", isEnabled: true) { [weak self] in self?.onOpenSettings?() })
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit ClawdNotch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: "Quit ClawdIsland", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         return menu
     }
 }

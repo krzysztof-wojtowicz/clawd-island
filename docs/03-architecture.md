@@ -24,8 +24,8 @@ Claude Code ──(http hooks, POST JSON)─────────────
 | Target | Kind | Depends on | Notes |
 |---|---|---|---|
 | `ClawdCore` | library | Foundation, CoreGraphics | Pure, deterministic and testable. Time is injected (`now: Date` parameters), never read from a global clock. |
-| `ClawdNotch` | executable (app) | ClawdCore, AppKit, SwiftUI, QuartzCore, Network, ServiceManagement | The `.app` main binary. |
-| `clawd-bridge` | executable (CLI) | Foundation | Bundled into `ClawdNotch.app/Contents/MacOS/`. It must start and exit in < 20 ms. |
+| `ClawdIsland` | executable (app) | ClawdCore, AppKit, SwiftUI, QuartzCore, Network, ServiceManagement | The `.app` main binary. |
+| `clawd-bridge` | executable (CLI) | Foundation | Bundled into `ClawdIsland.app/Contents/MacOS/`. It must start and exit in < 20 ms. |
 | `ClawdCoreTests` | test | ClawdCore, Testing | swift-testing. |
 
 ## Key types (contracts)
@@ -47,8 +47,8 @@ Claude Code ──(http hooks, POST JSON)─────────────
 - Swift 6 strict concurrency must be on, with no `@unchecked Sendable` unless there is a `shortcut:` comment justifying it.
 
 ## Config and runtime files
-- `~/Library/Application Support/ClawdNotch/config.json` holds the port, token, mini mode (`miniMode`), focus-read mode, `notchPermissions`, `soundCues`, `recentProjects`, and the original statusline command (for uninstall and wrapping).
-- `~/.claude/settings.json` is edited only by `HookInstaller` (see `05`). The backup goes to `~/.claude/settings.json.clawdnotch-backup-<timestamp>`.
+- `~/Library/Application Support/ClawdIsland/config.json` holds the port, token, mini mode (`miniMode`), focus-read mode, `notchPermissions`, `soundCues`, `recentProjects`, and the original statusline command (for uninstall and wrapping).
+- `~/.claude/settings.json` is edited only by `HookInstaller` (see `05`). The backup goes to `~/.claude/settings.json.clawdisland-backup-<timestamp>`.
 - The bridge reads the port and token from the config file. If the file is missing, it exits silently.
 
 ## Holding a request (REQ-V2-01)

@@ -8,7 +8,7 @@
 
 **Consequences:**
 - Only Apple Music and Spotify are supported; other players (browser, VLC) are not detected.
-- Known limit: the apps post only on change, so after launching ClawdNotch the headphones appear at the next play, pause or track change.
+- Known limit: the apps post only on change, so after launching ClawdIsland the headphones appear at the next play, pause or track change.
 - The notification payloads are not a documented API; unknown or missing keys must degrade to "not playing".
 
 **Rejected:**

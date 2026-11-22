@@ -10,7 +10,7 @@ import os
 /// the app staying frontmost for `dwell` seconds marks its `done` sessions read.
 @MainActor
 final class TerminalFocusWatcher {
-    nonisolated private static let logger = Logger(subsystem: "dev.clawdnotch", category: "focus")
+    nonisolated private static let logger = Logger(subsystem: "dev.clawdisland", category: "focus")
     private static let dwell: TimeInterval = 2
     private static let terminalApp = "com.apple.Terminal"
     private static let iTerm = "com.googlecode.iterm2"
@@ -21,7 +21,7 @@ final class TerminalFocusWatcher {
     private var dwellTimer: Timer?
     private var observer: NSObjectProtocol?
     /// Scripts run here, never on the main thread; they can block on the Automation prompt.
-    private let scriptQueue = DispatchQueue(label: "dev.clawdnotch.applescript", qos: .utility)
+    private let scriptQueue = DispatchQueue(label: "dev.clawdisland.applescript", qos: .utility)
 
     /// - Parameters:
     ///   - sessions: The current sessions, read when an activation arrives.

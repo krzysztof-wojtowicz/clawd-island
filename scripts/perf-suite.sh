@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.."
 
 settle="${1:-30}"
 sample="${2:-20}"
-config="$HOME/Library/Application Support/ClawdNotch/config.json"
+config="$HOME/Library/Application Support/ClawdIsland/config.json"
 backup="$(mktemp -t clawd-config)"
 had_config=0
 if [[ -f "$config" ]]; then cp "$config" "$backup"; had_config=1; fi
@@ -17,7 +17,7 @@ rows=()
 pid=""
 
 cleanup() {
-    pkill -x ClawdNotch 2>/dev/null || true
+    pkill -x ClawdIsland 2>/dev/null || true
     sleep 1 # let the app finish any config write before we restore
     if (( had_config )); then cp "$backup" "$config"; else rm -f "$config"; fi
     rm -f "$backup"
@@ -25,15 +25,15 @@ cleanup() {
 trap cleanup EXIT
 
 launch() {
-    pkill -x ClawdNotch 2>/dev/null || true
+    pkill -x ClawdIsland 2>/dev/null || true
     sleep 1
-    open -n dist/ClawdNotch.app ${1:+--args "$@"}
+    open -n dist/ClawdIsland.app ${1:+--args "$@"}
     for _ in $(seq 1 50); do
-        pid="$(pgrep -nx ClawdNotch || true)"
+        pid="$(pgrep -nx ClawdIsland || true)"
         [[ -n "$pid" ]] && break
         sleep 0.2
     done
-    [[ -n "$pid" ]] || { echo "ClawdNotch did not start" >&2; exit 1; }
+    [[ -n "$pid" ]] || { echo "ClawdIsland did not start" >&2; exit 1; }
 }
 
 # measure <seconds>: prints "cpu_avg cpu_max rss_max_mb" over the window.

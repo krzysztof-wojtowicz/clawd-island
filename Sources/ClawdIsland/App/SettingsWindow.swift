@@ -91,7 +91,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         stack.spacing = 14
         stack.edgeInsets = NSEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
         let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.title = "ClawdNotch Settings"
+        window.title = "ClawdIsland Settings"
         window.isReleasedWhenClosed = false
         window.contentView = stack
         window.setContentSize(stack.fittingSize)
@@ -127,7 +127,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     /// Installer pointed at the `clawd-bridge` shipped next to the app's main executable.
     private static var installer: HookInstaller {
         HookInstaller(bridgePath: Bundle.main.executableURL?.deletingLastPathComponent()
-            .appending(path: "clawd-bridge").path ?? "/Applications/ClawdNotch.app/Contents/MacOS/clawd-bridge")
+            .appending(path: "clawd-bridge").path ?? "/Applications/ClawdIsland.app/Contents/MacOS/clawd-bridge")
     }
 
     @objc private func hooksClicked(_ sender: NSButton) {

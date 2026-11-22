@@ -11,7 +11,7 @@ Clean, small, and readable code. Apply the `ponytail` skill (level `full`) on ev
 - Use `let` by default. Keep access control minimal: everything is `internal` unless another target needs it.
 - No dead code, commented-out code, or TODOs without a WP reference (`// TODO(WP-6): …`).
 - Errors at trust boundaries (HTTP bodies, the settings file, stdin) are handled explicitly and never crash the app.
-- Use `os.Logger` with subsystem `dev.clawdnotch` and one category per module. Never use `print` in the app target. The bridge may print only its statusline output.
+- Use `os.Logger` with subsystem `dev.clawdisland` and one category per module. Never use `print` in the app target. The bridge may print only its statusline output.
 
 ## Comments (English only)
 - **File header:** 1–2 lines on the file's role.

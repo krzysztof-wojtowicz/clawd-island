@@ -6,7 +6,7 @@ import Foundation
 /// One hook event from Claude Code, reduced to the fields the state machine needs.
 /// Large fields (`tool_input`, `prompt`, `last_assistant_message`) are never stored.
 public struct ClawdEvent: Equatable, Sendable {
-    /// The hook events ClawdNotch reacts to. Anything else decodes as `.unknown`.
+    /// The hook events ClawdIsland reacts to. Anything else decodes as `.unknown`.
     public enum Kind: String, Sendable {
         case userPromptSubmit = "UserPromptSubmit"
         case preToolUse = "PreToolUse"

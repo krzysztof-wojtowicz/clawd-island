@@ -1,10 +1,10 @@
 # Third-party notices
 
-ClawdNotch bundles one third-party asset.
+ClawdIsland bundles one third-party asset.
 
 ## JetBrains Mono
 
-Four static weights (Regular, Medium, SemiBold, Bold) in `Resources/Fonts/`, copied to `ClawdNotch.app/Contents/Resources/Fonts/`.
+Four static weights (Regular, Medium, SemiBold, Bold) in `Resources/Fonts/`, copied to `ClawdIsland.app/Contents/Resources/Fonts/`.
 Source: <https://github.com/JetBrains/JetBrainsMono>. Licensed under the SIL Open Font License, Version 1.1.
 The files are subset with `pyftsubset` to Latin, punctuation and arrows (no hinting) to keep the app small; the font name is unchanged because the font declares no Reserved Font Name.
 

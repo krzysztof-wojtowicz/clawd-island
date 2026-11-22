@@ -9,10 +9,10 @@ import os
 /// response to a user action, never on a timer.
 @MainActor
 enum NewSessionLauncher {
-    nonisolated private static let logger = Logger(subsystem: "dev.clawdnotch", category: "launcher")
+    nonisolated private static let logger = Logger(subsystem: "dev.clawdisland", category: "launcher")
     static let terminalApp = "com.apple.Terminal"
     static let iTerm = "com.googlecode.iterm2"
-    private static let queue = DispatchQueue(label: "dev.clawdnotch.launcher", qos: .userInitiated)
+    private static let queue = DispatchQueue(label: "dev.clawdisland.launcher", qos: .userInitiated)
 
     /// Opens a new window in the preferred terminal and runs `claude` in `directory`.
     /// - Parameter preferredTerminal: A terminal bundle ID; anything but iTerm2 means Terminal.app.

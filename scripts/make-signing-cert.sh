@@ -1,9 +1,9 @@
 #!/bin/bash
-# Creates the self-signed "ClawdNotch Dev" code-signing identity in the login keychain (ADR-0008). Run once.
+# Creates the self-signed "ClawdIsland Dev" code-signing identity in the login keychain (ADR-0008). Run once.
 # Trusting the certificate asks for your login password. Safe to re-run: it does nothing if the identity exists.
 set -euo pipefail
 
-name="ClawdNotch Dev"
+name="ClawdIsland Dev"
 keychain="$HOME/Library/Keychains/login.keychain-db"
 
 if security find-identity -v -p codesigning | grep -q "\"$name\""; then

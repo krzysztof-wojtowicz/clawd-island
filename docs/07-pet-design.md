@@ -16,7 +16,7 @@
 | `ball.1` / `ball.2` / `ball.3` | `#FF9F0A` / `#64D2FF` / `#BF5AF2` | juggling balls (`juggling`) |
 | `hp.high` / `hp.mid` / `hp.low` | `#34C759` / `#FFCC00` / `#FF3B30` | HP bar at ≥ 50 / 20–49 / < 20 (REQ-04) |
 | `island.bg` | `#000000` | island |
-Define these once, in `Sources/ClawdNotch/Pet/PetTokens.swift`. Any colour literal anywhere else is a review finding. The session counter is orange (`clawd.body`) while a `done` session is unread, and the hover glow (REQ-11) also reuses `clawd.body`, so neither needs a token of its own. `badge.empty` (grey) and `badge.active` (blue) are also used by the first expanded counter (idle + working).
+Define these once, in `Sources/ClawdIsland/Pet/PetTokens.swift`. Any colour literal anywhere else is a review finding. The session counter is orange (`clawd.body`) while a `done` session is unread, and the hover glow (REQ-11) also reuses `clawd.body`, so neither needs a token of its own. `badge.empty` (grey) and `badge.active` (blue) are also used by the first expanded counter (idle + working).
 HUD text has no token: it uses the system label colours (`labelColor`, `secondaryLabelColor`), which the panel's forced `.darkAqua` appearance resolves to light text on the black island.
 
 ## Anatomy

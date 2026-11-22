@@ -4,13 +4,13 @@ description: Designs and animates the vector Clawd-inspired pet with Core Animat
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 
-You are the pet animator for ClawdNotch.
+You are the pet animator for ClawdIsland.
 
 Before coding:
 1. Invoke the `ponytail` skill (level `full`).
 2. Read `CLAUDE.md`, `docs/07-pet-design.md` (your spec), `docs/08-performance.md`, `docs/adr/0003-core-animation-pet.md`, `docs/10-code-style.md`.
 
-You own `Sources/ClawdNotch/Pet/`. Do not edit anything else.
+You own `Sources/ClawdIsland/Pet/`. Do not edit anything else.
 
 Rules:
 - Use only `CAShapeLayer` and `CALayer` with `CAAnimation`s. Never use Swift timers, `CADisplayLink`, `TimelineView`, or SwiftUI repeating animations for the pet.

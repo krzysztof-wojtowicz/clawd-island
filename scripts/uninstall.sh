@@ -1,5 +1,5 @@
 #!/bin/bash
-# Removes ClawdNotch: its hooks (through the app's reversible uninstaller), the app and its config (REQ-15 AC4).
+# Removes ClawdIsland: its hooks (through the app's reversible uninstaller), the app and its config (REQ-15 AC4).
 # Usage: scripts/uninstall.sh [--dest DIR] [--yes]   (default ~/Applications)
 set -euo pipefail
 
@@ -13,8 +13,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-app="$dest/ClawdNotch.app"
-support="$HOME/Library/Application Support/ClawdNotch"
+app="$dest/ClawdIsland.app"
+support="$HOME/Library/Application Support/ClawdIsland"
 [[ -d "$app" ]] || { echo "No $app; use --dest if you installed elsewhere." >&2; exit 1; }
 
 if [[ "$yes" != true ]]; then
@@ -23,11 +23,12 @@ if [[ "$yes" != true ]]; then
     [[ "$answer" == [yY]* ]] || { echo "Cancelled."; exit 1; }
 fi
 
-osascript -e 'tell application id "dev.clawdnotch.app" to quit' >/dev/null 2>&1 || true
-for _ in {1..20}; do pgrep -x ClawdNotch >/dev/null || break; sleep 0.25; done
-pkill -x ClawdNotch 2>/dev/null || true
+osascript -e 'tell application id "dev.clawdisland.app" to quit' >/dev/null 2>&1 || true
+for _ in {1..20}; do pgrep -x ClawdIsland >/dev/null || break; sleep 0.25; done
+pkill -x ClawdIsland 2>/dev/null || true
 
 # Must run before the config is deleted: it holds the statusline to restore.
-"$app/Contents/MacOS/ClawdNotch" --uninstall-hooks
-rm -rf "$app" "$support"
-echo "Uninstalled ClawdNotch."
+"$app/Contents/MacOS/ClawdIsland" --uninstall-hooks
+# A pre-rename folder may linger if the app was never launched after updating.
+rm -rf "$app" "$support" "$HOME/Library/Application Support/ClawdNotch"
+echo "Uninstalled ClawdIsland."

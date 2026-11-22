@@ -4,11 +4,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "ClawdNotch",
+    name: "ClawdIsland",
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "ClawdCore"),
-        .executableTarget(name: "ClawdNotch", dependencies: ["ClawdCore"]),
+        .executableTarget(name: "ClawdIsland", dependencies: ["ClawdCore"]),
         .executableTarget(name: "clawd-bridge"),
         .testTarget(name: "ClawdCoreTests", dependencies: ["ClawdCore"]),
     ]

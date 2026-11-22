@@ -8,7 +8,7 @@ import os
 /// installer in the meantime is never overwritten with stale values.
 @MainActor
 final class Preferences {
-    private static let logger = Logger(subsystem: "dev.clawdnotch", category: "prefs")
+    private static let logger = Logger(subsystem: "dev.clawdisland", category: "prefs")
 
     private(set) var miniMode: Bool
     private(set) var soundCues: Bool

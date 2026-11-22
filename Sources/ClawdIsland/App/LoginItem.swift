@@ -7,7 +7,7 @@ import os
 /// Thin wrapper over `SMAppService.mainApp`. The status is always read back, never cached, because registration
 /// can fail (for example for an ad-hoc signed bundle outside /Applications) or be changed in System Settings.
 enum LoginItem {
-    private static let logger = Logger(subsystem: "dev.clawdnotch", category: "login")
+    private static let logger = Logger(subsystem: "dev.clawdisland", category: "login")
 
     static var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
 

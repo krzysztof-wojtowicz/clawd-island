@@ -73,4 +73,4 @@ Remaining over target, with the cause:
 - **Settings window open 60 MB / closed 55 MB (`footprint` 19 MB):** plain AppKit controls, released on close (`windowWillClose` drops all references), but the AppKit controls/text-system pages stay resident. Opened rarely; accepted, with these numbers.
 
 ## How to measure
-`scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.
+`scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdIsland` for wakeups per second.

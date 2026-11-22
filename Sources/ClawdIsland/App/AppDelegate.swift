@@ -9,7 +9,7 @@ import os
 /// for the life of the app.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private static let logger = Logger(subsystem: "dev.clawdnotch", category: "app")
+    private static let logger = Logger(subsystem: "dev.clawdisland", category: "app")
 
     private var notchController: NotchWindowController?
     private let pet = PetView(frame: .zero)
