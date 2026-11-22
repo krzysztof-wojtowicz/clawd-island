@@ -44,7 +44,7 @@ Every endpoint requires `X-Clawd-Token`. Bodies are limited to 64 KiB, with a 2 
 Every reply has an empty body and `Content-Length: 0`. The checks run in this order: 401 for a missing or wrong token (checked first, so unauthenticated clients learn nothing about routes), 404 for an unknown path or a non-`POST` method, and 413 when `Content-Length` exceeds 64 KiB (the body is not read). A malformed request line or `Content-Length` gets 400, and a head over 8 KiB gets 431. A valid request always gets 200, even if its body decodes to nothing.
 
 ## clawd-bridge
-Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the config from `AppConfig.defaultURL`, or from `$CLAWD_CONFIG` when set (used for testing).
+Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the config from `~/Library/Application Support/ClawdIsland/config.json`, or from its own `$CLAWD_CONFIG` override when set (used for testing; the app's `$CLAWD_CONFIG_PATH` does not reach it).
 
 ### `hook session-start`
 1. Reads the hook JSON from stdin and takes `session_id` and `cwd` from it.
@@ -76,7 +76,7 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
   4. If there is a foreign `statusLine`, save it as `originalStatusLine` in our config (created with a fresh token if missing). Only its `command` is swapped, so other keys such as `padding` survive.
   5. Write atomically, preserving unknown keys. A symlinked settings file is written through to its target. The backup always sits next to `~/.claude/settings.json`.
 - **Uninstall:** remove our entries, then restore `originalStatusLine` if one was saved (or remove our statusLine if none was). A statusLine the user changed after install is left alone.
-- Merge logic is the pure `ClawdCore.HookSettings` (`parse`, `install`, `uninstall`, `isInstalled`). File IO is `ClawdCore.HookInstaller` (URLs and bridge path injected by the app, so tests use temp dirs).
+- Merge logic is the pure `ClawdCore.HookSettings` (`parse`, `install`, `uninstall`, `isInstalled`). File IO is `ClawdCore.HookInstaller` (URLs and bridge path injected, so tests use temp dirs; the defaults honour `$CLAWD_SETTINGS_PATH` / `$CLAWD_CONFIG_PATH` for scratch runs of the app).
 - If the JSON is invalid, abort without writing and show an error. Never overwrite a file we failed to parse. The same holds for a `config.json` that exists but does not decode.
 - `JSONSerialization` with sorted keys and pretty printing is acceptable. Comments are not supported, and CC settings are plain JSON.
 - Tests: the install and uninstall round-trip leaves the file semantically equal to the original. Install is idempotent (installing twice gives the same result).

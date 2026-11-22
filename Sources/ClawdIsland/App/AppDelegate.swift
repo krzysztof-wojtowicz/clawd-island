@@ -52,6 +52,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bindSnapshot(controller)
         focusWatcher.start()
         openSettingsIfRequested()
+        onboardIfNeeded()
+    }
+
+    /// First launch without hooks: open Settings once with a welcome line (REQ-09 AC5, WP-31).
+    private func onboardIfNeeded() {
+        // `--open-settings` (perf-suite) already built the window without the welcome; `isInstalled` ignores the bridge path.
+        guard !CommandLine.arguments.contains("--open-settings"), !preferences.onboarded,
+            !HookInstaller(bridgePath: "").isInstalled
+        else { return }
+        settings.show(welcome: true)
+        preferences.markOnboarded()
     }
 
     /// `--open-settings` opens Settings once after launch; `--close-settings-after <s>` closes it again (perf-suite.sh).

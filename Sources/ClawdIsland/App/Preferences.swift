@@ -13,6 +13,8 @@ final class Preferences {
     private(set) var miniMode: Bool
     private(set) var soundCues: Bool
     private(set) var focusReadMode: AppConfig.FocusReadMode
+    /// Whether the first-run Settings welcome was already shown (REQ-09 AC5).
+    private(set) var onboarded: Bool
     /// "Approve permissions from the notch" (REQ-V2-01). Read per request on the server queue, hence a lock.
     nonisolated let notchPermissions: OSAllocatedUnfairLock<Bool>
     /// Called when "approve from the notch" is switched off, so held requests can be released.
@@ -25,6 +27,7 @@ final class Preferences {
         miniMode = config?.miniMode ?? false
         focusReadMode = config?.focusReadMode ?? .tab
         soundCues = config?.soundCues ?? true
+        onboarded = config?.onboarded ?? false
         notchPermissions = OSAllocatedUnfairLock(initialState: config?.notchPermissions ?? true)
     }
 
@@ -47,6 +50,12 @@ final class Preferences {
         miniMode = value
         persist { $0.miniMode = value }
         onMiniModeChange?(value)
+    }
+
+    /// Records that the first-run welcome was shown, so later launches skip it.
+    func markOnboarded() {
+        onboarded = true
+        persist { $0.onboarded = true }
     }
 
     /// Sets and persists the focus-read mode.

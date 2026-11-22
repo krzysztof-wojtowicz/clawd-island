@@ -20,8 +20,14 @@ public struct HookInstaller {
     /// Absolute path of `clawd-bridge`; the app passes the one shipped next to its executable.
     public var bridgePath: String
 
+    /// `~/.claude/settings.json`, or `$CLAWD_SETTINGS_PATH` for scratch testing.
+    public static var defaultSettingsURL: URL {
+        if let path = ProcessInfo.processInfo.environment["CLAWD_SETTINGS_PATH"] { return URL(fileURLWithPath: path) }
+        return FileManager.default.homeDirectoryForCurrentUser.appending(path: ".claude/settings.json")
+    }
+
     public init(
-        settingsURL: URL = FileManager.default.homeDirectoryForCurrentUser.appending(path: ".claude/settings.json"),
+        settingsURL: URL = HookInstaller.defaultSettingsURL,
         configURL: URL = AppConfig.defaultURL,
         bridgePath: String
     ) {

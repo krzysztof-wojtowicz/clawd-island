@@ -24,6 +24,7 @@ isolate() {
     [[ -f "$config" ]] || echo '{}' >"$config"
     plutil -replace port -integer 47499 "$config"
     plutil -replace token -string "$(uuidgen)" "$config"
+    plutil -replace onboarded -bool true "$config"  # no first-run Settings window in the measurements (WP-31)
 }
 
 cleanup() {

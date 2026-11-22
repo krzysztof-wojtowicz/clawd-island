@@ -35,6 +35,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
     /// Directories of recently seen sessions for the "New session" menu: newest first, at most `maxRecentProjects` (REQ-V2-03).
     public var recentProjects: [String]
     public static let maxRecentProjects = 5
+    /// Set once the first-run Settings welcome has been shown (REQ-09 AC5).
+    public var onboarded: Bool
 
     public init(
         port: Int = AppConfig.defaultPort,
@@ -44,7 +46,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
         focusReadMode: FocusReadMode = .tab,
         notchPermissions: Bool = true,
         soundCues: Bool = true,
-        recentProjects: [String] = []
+        recentProjects: [String] = [],
+        onboarded: Bool = false
     ) {
         self.port = port
         self.token = token
@@ -54,6 +57,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.notchPermissions = notchPermissions
         self.soundCues = soundCues
         self.recentProjects = recentProjects
+        self.onboarded = onboarded
     }
 
     /// Keys of earlier versions, read only as a fallback.
@@ -75,6 +79,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         notchPermissions = try container.decodeIfPresent(Bool.self, forKey: .notchPermissions) ?? true
         soundCues = try container.decodeIfPresent(Bool.self, forKey: .soundCues) ?? true
         recentProjects = try container.decodeIfPresent([String].self, forKey: .recentProjects) ?? []
+        onboarded = try container.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
     }
 
     /// Puts `directory` first in `recentProjects`, dropping an earlier copy and anything beyond the cap.
@@ -89,9 +94,10 @@ public struct AppConfig: Codable, Equatable, Sendable {
         AppConfig(token: UUID().uuidString)
     }
 
-    /// `~/Library/Application Support/ClawdIsland/config.json`.
+    /// `~/Library/Application Support/ClawdIsland/config.json`, or `$CLAWD_CONFIG_PATH` for scratch testing.
     public static var defaultURL: URL {
-        FileManager.default.homeDirectoryForCurrentUser
+        if let path = ProcessInfo.processInfo.environment["CLAWD_CONFIG_PATH"] { return URL(fileURLWithPath: path) }
+        return FileManager.default.homeDirectoryForCurrentUser
             .appending(path: "Library/Application Support/ClawdIsland/config.json")
     }
 

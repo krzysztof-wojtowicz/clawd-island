@@ -16,6 +16,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var permissionCheck: NSButton?
     private var soundCheck: NSButton?
     private var focusPopUp: NSPopUpButton?
+    /// Set while the window shows the first-run welcome; Install is then the default button (REQ-09 AC5).
+    private var welcomeLabel: NSTextField?
 
     init(preferences: Preferences) {
         self.preferences = preferences
@@ -23,8 +25,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     }
 
     /// Shows the window, building it first if needed, and activates the app (it is an accessory app).
-    func show() {
-        if window == nil { window = makeWindow() }
+    /// - Parameter welcome: adds the first-run welcome line when the window is built now.
+    func show(welcome: Bool = false) {
+        if window == nil { window = makeWindow(welcome: welcome) }
         refresh()
         NSApp.activate()
         window?.makeKeyAndOrderFront(nil)
@@ -40,6 +43,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let installed = Self.installer.isInstalled
         hooksLabel?.stringValue = "Claude Code hooks: " + (installed ? "Installed" : "Not installed")
         hooksButton?.title = installed ? "Uninstall" : "Install"
+        hooksButton?.keyEquivalent = welcomeLabel != nil && !installed ? "\r" : ""
         soundCheck?.state = preferences.soundCues ? .on : .off
         permissionCheck?.state = preferences.notchPermissions.withLock { $0 } ? .on : .off
         if let index = AppConfig.FocusReadMode.allCases.firstIndex(of: preferences.focusReadMode) {
@@ -57,9 +61,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         permissionCheck = nil
         soundCheck = nil
         focusPopUp = nil
+        welcomeLabel = nil
     }
 
-    private func makeWindow() -> NSWindow {
+    private func makeWindow(welcome: Bool) -> NSWindow {
         let mini = NSButton(checkboxWithTitle: "Mini mode: Clawd peeks from under the notch", target: self, action: #selector(miniChanged(_:)))
         let login = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(loginChanged(_:)))
         let permissions = NSButton(
@@ -85,7 +90,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         popUp.action = #selector(focusChanged(_:))
         let focusRow = NSStackView(views: [focusLabel, popUp])
         let hooksRow = NSStackView(views: [hooksText, hooksAction])
-        let stack = NSStackView(views: [mini, focusRow, permissions, sound, login, hooksRow])
+        var rows: [NSView] = [mini, focusRow, permissions, sound, login, hooksRow]
+        if welcome {
+            let label = NSTextField(labelWithString: "Install the Claude Code hooks to connect Clawd")
+            label.font = HUDStyle.font(size: 13, weight: .bold)
+            rows.insert(label, at: rows.count - 1)  // just above the hooks row (docs/06)
+            welcomeLabel = label
+        }
+        let stack = NSStackView(views: rows)
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 14

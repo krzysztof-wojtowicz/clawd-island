@@ -175,7 +175,7 @@ First public release on GitHub (Apple silicon, signed with a stable self-signed 
 - `package.sh` refuses to package an ad-hoc build unless `--adhoc` is given.
 - AC: REQ-15 AC1, AC4; `codesign -dvv` shows the identity; the zip has a `.sha256`.
 
-### WP-31 — First-run onboarding · owner: macos-ui-engineer · deps: WP-30 · status: `todo`
+### WP-31 — First-run onboarding · owner: macos-ui-engineer · deps: WP-30 · status: `done` (scratch e2e: first launch opened Settings and wrote `onboarded`, the second did not; `CLAWD_CONFIG_PATH` / `CLAWD_SETTINGS_PATH` now redirect the whole app; perf-suite and record-gif pre-set `onboarded`)
 - On the first launch (no `onboarded` flag in config) and while the hooks are not installed, open Settings with a one-line welcome ("Install the Claude Code hooks to connect Clawd"); Install is the default button. Set the flag after the window has been shown once. No new window type.
 - AC: REQ-09 AC5; a fresh config opens Settings once, a second launch does not. Tested only with `CLAWD_CONFIG_PATH` / `CLAWD_SETTINGS_PATH` scratch files.
 

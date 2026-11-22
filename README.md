@@ -108,7 +108,7 @@ Every pose is a Core Animation layer loop run by the render server. The GIFs are
 
 To regenerate the pose GIFs, build in debug and run `.build/debug/ClawdIsland --render-poses docs/media`. The mode exists only in debug builds.
 
-To try the hook uninstaller safely, point it at scratch copies: `CLAWD_SETTINGS_PATH=/tmp/settings.json CLAWD_CONFIG_PATH=/tmp/config.json dist/ClawdIsland.app/Contents/MacOS/ClawdIsland --uninstall-hooks` (it never touches `~/.claude` then). The agent guide is [`CLAUDE.md`](CLAUDE.md).
+To try Install, first-run onboarding or the uninstaller safely, point the app at scratch copies, always both variables together: `CLAWD_SETTINGS_PATH=/tmp/settings.json CLAWD_CONFIG_PATH=/tmp/config.json dist/ClawdIsland.app/Contents/MacOS/ClawdIsland [--uninstall-hooks]` (it never touches `~/.claude` then; the bridge still reads the real config). The agent guide is [`CLAUDE.md`](CLAUDE.md).
 
 ## Docs
 | | |
