@@ -2,6 +2,8 @@
 
 A small orange pet that lives in your MacBook notch and mirrors what Claude Code is doing.
 
+![The island: session counter, panel and glow](docs/media/island.gif)
+
 ![Clawd in nine poses](docs/media/hero.gif)
 
 > **Status: in development; installation instructions will come before the first release.**
@@ -22,6 +24,9 @@ A small orange pet that lives in your MacBook notch and mirrors what Claude Code
 - **Permissions from the notch.** Answer Claude Code permission requests with Deny, Allow or Always allow, without switching windows.
 - **"+ New" session.** Start a new Claude Code session from the panel.
 - **Hide mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes, needs you or runs subagents; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
+
+  ![Hide mode: corner peek, pose-only change, 3 s pop-out](docs/media/hide-mode.gif)
+
 - **Sound cues** for needs-input and done.
 - **Music headphones.** The pet puts on headphones and nods while Apple Music or Spotify plays (switch in Settings).
 - **JetBrains Mono** for the numbers, with a monospaced fallback.

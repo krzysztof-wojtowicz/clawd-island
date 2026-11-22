@@ -121,7 +121,7 @@ Order: v3.1 (WP-20 ∥ WP-21) → WP-22 → WP-23 → WP-24 (WP-23 and WP-24 bot
 - Cap concurrent `EventServer` connections (held permissions exempt); re-measure post-burst.
 - AC: REQ-08 AC1, the `08` v4 targets; before → after table in `08`.
 
-### WP-23 — README hide-mode and island GIFs · owner: macos-ui-engineer + orchestrator · deps: WP-22 · status: `todo`
+### WP-23 — README hide-mode and island GIFs · owner: macos-ui-engineer + orchestrator · deps: WP-22 · status: `done` (`scripts/record-gif.sh <island|hide-mode>`, `make-gif.swift`, `window-id.swift`; frames aligned by the window's left edge because the island is asymmetric around the notch; the scenes show the live Claude session of the machine too)
 - `scripts/record-gif.sh` + `scripts/make-gif.swift`: capture only the app window (`screencapture -l <windowID> -o`, transparent, so no other screen content), composite on a dark background, loop.
 - `docs/media/island.gif` (states + hover: counter morph, panel, glow) and `docs/media/hide-mode.gif` (corner peek, a 3 s pop-out on `talking`, a pose-only change), each < 600 KB, near the top of README.md.
 - AC: both show motion and nothing outside the app window.
