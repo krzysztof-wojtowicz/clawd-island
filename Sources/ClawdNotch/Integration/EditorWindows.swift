@@ -1,5 +1,5 @@
 // EditorWindows.swift
-// Window-level lookup and raise for the VS Code family through the Accessibility API (REQ-V2-02).
+// Window-level lookup and raise for the VS Code family and JetBrains IDEs through the Accessibility API (REQ-V2-02).
 
 import AppKit
 import ApplicationServices
@@ -14,6 +14,11 @@ enum EditorWindows {
         "com.microsoft.VSCode", "com.microsoft.VSCodeInsiders", "com.vscodium",
         "com.todesktop.230313mzl4w4u92", "com.exafunction.windsurf",
     ]
+
+    /// Whether `bundleID` is a VS Code-family editor or any JetBrains IDE (`com.jetbrains.` prefix).
+    static func handles(_ bundleID: String) -> Bool {
+        bundleIDs.contains(bundleID) || bundleID.hasPrefix("com.jetbrains.")
+    }
 
     private static let timeout: Float = 0.2
 
@@ -33,14 +38,14 @@ enum EditorWindows {
     @MainActor private static var asked = false
 
     /// Raises the best window of `pid` for `project` (see `WindowTitle`). Returns whether one was raised.
-    nonisolated static func raise(project: String, pid: pid_t) -> Bool {
+    nonisolated static func raise(project: String, pid: pid_t, family: WindowTitle.Family) -> Bool {
         let element = AXUIElementCreateApplication(pid)
         AXUIElementSetMessagingTimeout(element, timeout)
         var value: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXWindowsAttribute as CFString, &value) == .success,
               let windows = value as? [AXUIElement] else { return false }
         let titles = windows.map { title(of: $0) ?? "" }
-        guard let index = WindowTitle.bestMatch(project: project, in: titles) else { return false }
+        guard let index = WindowTitle.bestMatch(project: project, in: titles, family: family) else { return false }
         return AXUIElementPerformAction(windows[index], kAXRaiseAction as CFString) == .success
     }
 
