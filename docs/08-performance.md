@@ -9,7 +9,7 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 | burst: 50 hook events/s for 10 s, and after it | < 3 % during | < 20 MB | < 48 MB |
 | launch (first 10 s) | — | < 20 MB | spike allowed (LaunchServices mapping, unmapped by the system ~10 s later) |
 | `clawd-bridge statusline` | < 20 ms wall time per run | — | — |
-- Accepted exception: the Settings window (rarely open) — 60 MB RSS open, 55 MB after close, footprint 19 MB. WP-33 (v6) tries to bring the closed state back to <= 45 MB RSS (footprint < 20 MB); if it fails, this exception stays and the attempt is recorded below.
+- Accepted exception: the Settings window (rarely open) — 60 MB RSS open, 55 MB after close, footprint 19 MB. WP-33 (v6) tried to bring the closed state back to <= 45 MB RSS and could not (an empty titled window already costs it); the exception stays, see "WP-33" below.
 
 ## Rules
 1. **Event-driven only.** The only repeating timer is the 30 s liveness check, and it is suspended while there are no sessions. The talking-decay check is a one-shot timer that is rescheduled, never a repeating one. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3).
@@ -88,3 +88,17 @@ Launch peak 0.12 / 3.10 %, 40.6 MB RSS. All within budget (footprint <= 20 MB); 
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdIsland` for wakeups per second.
 
 `perf-suite.sh` and `record-gif.sh` swap the config `port` (47499) and `token` (random) for the run: real Claude Code HTTP hooks (old port) and the bridge (reads the same config at runtime) can no longer reach the app, so real traffic cannot pollute the numbers. `simulate.sh` reads the same config. The backed-up config is restored on exit.
+
+## WP-33 — Settings window memory (v6, timeboxed)
+Quick A/B on a release bundle with a scratch config (`--open-settings --close-settings-after 10`, sampled 30 s after close; RSS KB):
+
+| Variant | Open | Closed | footprint |
+|---|---|---|---|
+| current window | 64 176 | 59 328 | 20 MB |
+| + `malloc_zone_pressure_relief` after close | 63 856 | 59 056 | 20 MB |
+| system font instead of JetBrains Mono | 59 280 | 59 296 | 20 MB |
+| empty titled window (no controls at all) | 57 040 | 57 072 | 18 MB |
+
+The controls cost about 2 MB; the rest is AppKit's titled-window and activation machinery (window server, title bar, key-window and menu state), which stays resident after close. No lighter construction can reach 45 MB, so nothing was changed and the 60 / 55 MB exception stays (REQ-08 AC1 fallback).
+
+Before → after v6 (`scripts/perf-suite.sh`, release, scratch port; before = `1a6e1df`, after = WP-30…WP-34): every row within 1 MB and 0.1 % CPU. Settings open / closed 59.9 / 55.0 → 60.0 / 55.1 MB, footprint 19 → 18 MB; permission card 40.8 → 40.8 MB; launch peak 40.7 → 40.7 MB; mini-mode pop-out 41.2 → 41.4 MB.

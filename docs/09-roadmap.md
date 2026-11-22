@@ -183,7 +183,7 @@ First public release on GitHub (Apple silicon, signed with a stable self-signed 
 - `.github/workflows/ci.yml` on a `macos` runner for push and pull request: `swift build`, `scripts/test.sh` (it must also work with full Xcode on the runner), `swift build -c release`. No secrets, no signing. Pushing stays the user's action.
 - AC: REQ-15 AC6; the workflow file is valid YAML and `scripts/test.sh` works with and without Xcode.
 
-### WP-33 — Settings window memory (timeboxed) · owner: macos-ui-engineer · deps: WP-31 · status: `todo`
+### WP-33 — Settings window memory (timeboxed) · owner: macos-ui-engineer · deps: WP-31 · status: `done` (not reachable: an empty titled window already stays at 57 MB after close; exception kept, attempt in `08`)
 - Try lighter construction and releasing everything on close; measure with `perf-suite.sh`. Target: closed returns to <= 45 MB RSS and `footprint` stays < 20 MB.
 - If it does not work, record the attempt in `08`, keep the current exception (60 / 55 MB) and mark the WP done.
 - AC: REQ-08 AC1; before → after table in `08`.
