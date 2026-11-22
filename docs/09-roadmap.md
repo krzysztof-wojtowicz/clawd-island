@@ -188,7 +188,7 @@ First public release on GitHub (Apple silicon, signed with a stable self-signed 
 - If it does not work, record the attempt in `08`, keep the current exception (60 / 55 MB) and mark the WP done.
 - AC: REQ-08 AC1; before → after table in `08`.
 
-### WP-34 — Mini-mode pop-out triggers · owner: macos-ui-engineer · deps: none · status: `todo`
+### WP-34 — Mini-mode pop-out triggers · owner: macos-ui-engineer · deps: none · status: `done`
 - Pop out only on a `popToken` advance or on entering `talking`, `done` or `needsInput`. `juggling` only re-poses the peeking pet. Update the trigger set in `AppDelegate`.
 - AC: REQ-05 AC1; `simulate.sh subagents` causes no pop-out.
 

@@ -73,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// States whose entry pops a hidden island out (REQ-05 AC1); other changes only re-pose the peeking pet.
-    private static let popsOut: Set<PetState> = [.talking, .done, .needsInput, .juggling]
+    private static let popsOut: Set<PetState> = [.talking, .done, .needsInput]
 
     /// Renders every new snapshot: the pet's state (REQ-03 AC2), a pop-out on each new `popToken`, and the HUD.
     private func bindSnapshot(_ controller: NotchWindowController) {
