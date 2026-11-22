@@ -2,7 +2,7 @@
 
 ## Panel setup
 - The window is an `NSPanel` subclass with `styleMask: [.borderless, .nonactivatingPanel]`, `isFloatingPanel = true`, `hidesOnDeactivate = false`, `backgroundColor = .clear`, `isOpaque = false`, and `hasShadow = false`.
-- `level`: `.mainMenu + 3` (window server layer 27, above the menu bar at 24). **Spike A (WP-0):** the panel sits exactly over the built-in notch (verified with `window-info.swift`). Visibility over full-screen apps and other Spaces needs a visual check by the user, because the Screen Recording permission is missing. If it is hidden there, try `CGShieldingWindowLevel()`.
+- `level`: `.mainMenu + 3` (window server layer 27, above the menu bar at 24). Verified with `window-info.swift`: the panel sits exactly over the built-in notch, and it is visible over full-screen apps (confirmed by the user).
 - `constrainFrameRect(_:to:)` is overridden to return the frame unchanged. Otherwise AppKit pushes the panel below the menu bar.
 - `collectionBehavior: [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]`. On its own, this still lets the island slide during a Space switch, so it serves only as the fallback.
 - **Space pinning (REQ-02 AC4, ADR-0005, WP-2.1):** right after the first `orderFrontRegardless()`, `SpaceAnchor.pin(panel)` adds the panel to its own SkyLight Space at a high absolute level. It loads the calls with `dlopen`/`dlsym` and skips silently if any are missing. The island then stays fixed during swipes, Ctrl+arrow and full-screen transitions.
@@ -38,12 +38,13 @@
   - **HP bar:** vertical and continuous, 3 pt wide, as tall as the pet, filling bottom-up in `hp.*` colours. It is hidden while usage is unknown, and full and dimmed while stale. The hover tooltip shows the same line as the panel footer, computed when it is shown.
   - **Clawd:** 26 pt tall (`07`). It may shrink to about 22 pt if that is needed to meet the width target.
 - **Expanded counters (REQ-04):** on expand, three 16 pt circles slide out of the single counter's position into the top row, left of the notch, in the order: idle + working (`badge.empty` at 0, otherwise `badge.active`), done and unread (`clawd.body`), needs input (`badge.alert`). Position and opacity animate in the same `NSAnimationContext` group as the expand; on collapse they merge back into the single circle. All three are always shown, so the layout never jumps; a 0 in the orange or red circle is drawn at 35 % opacity. There are no captions; each circle has a tooltip and an accessibility label ("2 idle or working", "1 done", …).
-- The expanded panel stays centred under the notch, at least 360 pt wide (`expandedMinWidth`). It lists up to 5 sessions, sorted by importance (`04`, "Panel order"), then "+n more", with the usage line and "Mark all read" in the footer. There is no status-count row any more, so the panel reaches about 164 pt below the top row (`expandedExtraHeight`).
+- The expanded panel stays centred under the notch, at least 360 pt wide (`expandedMinWidth`). It lists up to 5 sessions, sorted by importance (`04`, "Panel order"), then "+n more", with the usage line and "Mark all read" in the footer. The panel reaches about 164 pt below the top row (`expandedExtraHeight`).
   - **Usage footer:** `WK 81% · HP 63% · resets in 1h 12m`. Each percentage is tinted with its `hp.*` level colour, and the rest is secondary text. If the line does not fit beside the buttons, "resets in" shortens to "resets". WK has no countdown and is omitted when unknown (the line then starts at HP). The HP-bar tooltip shows the same line.
   - **State dot** before each session name: red (`badge.alert`) for `needsInput`, orange (`clawd.body`) for `done` and unread, blue (`badge.active`) for working (`thinking`, `usingTools`, `talking`); idle and read sessions have no dot.
   - **"+ New"** (REQ-V2-03) opens the recent-projects menu (`05`).
-  - **Permission cards** (REQ-V2-01): while requests are pending, up to 2 cards sit above the session list, newest first: `proj-a · Bash` on one line, the input summary (secondary text, one line, truncated in the middle) on the next, and **Allow** / **Deny** buttons on the right. Each card takes about 40 pt; the session list shows fewer rows while cards are present (the panel height does not change). The buttons work without activating the app (non-activating panel). Settings and hide live in the right-click menu (WP-7).
+  - **Permission cards** (REQ-V2-01): while requests are pending, up to 2 cards sit above the session list, newest first. Each card is about 44 pt: on the left, `proj-a · Bash` and below it the input summary (secondary text, one line, truncated in the middle); on the right, **three equal-width pills in one row — Deny / Allow / Always**, each label centred in its pill. "Always" is omitted (the other two keep their size) when the request has no suggestion; its tooltip shows the rule. With 2 cards the list shows 1 session row plus "+n more" (the panel height does not change). The buttons work without activating the app (non-activating panel).
   - **Clicking a session row** focuses its terminal and tab (REQ-10 AC2, `05`); it does not mark the session read by itself.
+- **Font (REQ-14):** all HUD and panel text uses JetBrains Mono via `NSFont(name:size:)`, falling back to `NSFont.monospacedSystemFont`; one helper owns the lookup. Text truncates rather than overflowing. Colours stay system label colours.
 - The island is black (`#000`), so it merges with the physical notch. Corners use a continuous (squircle) curve.
 - **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext`.
 - Hover uses `NSTrackingArea` and expands after 150 ms of hover. It collapses 300 ms after the mouse leaves.
@@ -63,10 +64,4 @@
 - The setting is `hideMode` in config.json; it is toggled from the right-click menu or Settings.
 
 ## Settings window (AppKit)
-A plain AppKit window (WP-7), built when opened and released on close: SwiftUI would cost too much RSS (docs/08). It activates the app while open. It currently holds hide mode, focus-read mode (`tab` / `app` / `off`), "Approve permissions from the notch" (`notchPermissions`, default on, REQ-V2-01) and launch at login; port and hook status are not built yet. The full set:
-- Port.
-- Hide mode default.
-- Focus-read mode: tab, app, or off.
-- Launch at login (`SMAppService.mainApp`).
-- Install/Uninstall hooks.
-- Hook status (whether the last event was received and when).
+A plain AppKit window, built when opened and released on close (SwiftUI would cost too much RSS, `08`). It activates the app while open. Current items: hide mode, focus-read mode (`tab` / `app` / `off`), "Approve permissions from the notch" (`notchPermissions`, default on), **"Sound cues"** (`soundCues`, default on, REQ-12, WP-15) and launch at login. Port and hook status are not built yet (Install/Uninstall hooks is in the right-click menu).

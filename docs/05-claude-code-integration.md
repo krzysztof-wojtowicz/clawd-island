@@ -63,8 +63,8 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 4. It exits 0.
 
 ## Usage / HP (ADR-0004)
-- Source: `rate_limits.five_hour.used_percentage` (0–100) and `rate_limits.five_hour.resets_at` (Unix seconds) for HP, and `rate_limits.seven_day.used_percentage` / `resets_at` for the panel's `WEEK` value (REQ-04 AC5). The weekly reset is used only to detect staleness and is never displayed.
-- These are present only for Pro and Max subscribers, after the first API response. Each window can be absent. If they are missing, `UsageSnapshot` stays nil and the HP bar is hidden. If only `seven_day` is missing, the `WEEK` part is omitted.
+- Source: `rate_limits.five_hour.used_percentage` (0–100) and `rate_limits.five_hour.resets_at` (Unix seconds) for HP, and `rate_limits.seven_day.used_percentage` / `resets_at` for the panel's `WK` value (REQ-04 AC5). The weekly reset is used only to detect staleness and is never displayed.
+- These are present only for Pro and Max subscribers, after the first API response. Each window can be absent. If they are missing, `UsageSnapshot` stays nil and the HP bar is hidden. If only `seven_day` is missing, the `WK` part is omitted.
 - The statusline refreshes on assistant messages, so the data is as fresh as the last active session.
 - **Forbidden:** the undocumented OAuth usage endpoint, and any Keychain or credentials access.
 
@@ -95,16 +95,28 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - With "Approve permissions from the notch" on, `EventServer` does **not** reply at once. It keeps the connection, and the app shows the card. The reply is one of:
   - Allow: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}`
   - Deny: `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdNotch"}}}`
+  - Always allow (v3, REQ-V2-01 AC7): `{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow","updatedPermissions":[<first permission_suggestions entry as received>]}}}`. The entry is echoed untouched (its own `destination`, rules, mode); the app never builds or edits a rule. No suggestion, or one over 2 KiB → no Always allow button.
   - No decision (empty 200): after 110 s, when the same tool with the same input summary finishes (`PostToolUse`, `PostToolUseFailure`, `PermissionDenied`; it was answered in the terminal), when the session gets `UserPromptSubmit`, `Stop`, `StopFailure` or `SessionEnd`, or when the setting is off.
 - If Claude Code closes the connection first, the card is dropped. A reply to a request that was already answered in the terminal is harmless.
-- **Verified** (2026-11-22, `claude` with scratch `--settings`, a hook server holding 8 s): the terminal dialog appeared 0.2 s after the hook request, without waiting for it; the hook's `allow` 8 s later applied and closed the dialog. Answering in the terminal first also works while the hook is held.
+- **Verified** (2026-11-22, ADR-0006): the terminal dialog appears 0.2 s after the request, without waiting for the hook; a hook `allow` 8 s later closes it; answering in the terminal first also works.
 - The 64 KiB body cap stays. A larger `PermissionRequest` (for example a big `Write`) gets 413, which Claude Code treats as a non-blocking error, so it simply uses the terminal dialog.
 
-## Focus for the VS Code family (REQ-V2-02)
-- Bundle IDs: `com.microsoft.VSCode`, `com.microsoft.VSCodeInsiders`, `com.vscodium`, `com.todesktop.230313mzl4w4u92` (Cursor), `com.exafunction.windsurf`.
-- Click: `AXUIElementCreateApplication(pid)` → `kAXWindowsAttribute`, pick the first window whose `kAXTitleAttribute` has a segment equal to the session's project name, else the first that contains it (`WindowTitle`; segments split on " — " and " - ", app name dropped), `AXRaise` it, then activate the app. Activation: read `kAXFocusedWindowAttribute`'s title and mark matching sessions read.
+## Window focus for VS Code family and JetBrains (REQ-V2-02)
+- VS Code bundle IDs: `com.microsoft.VSCode`, `com.microsoft.VSCodeInsiders`, `com.vscodium`, `com.todesktop.230313mzl4w4u92` (Cursor), `com.exafunction.windsurf`.
+- **JetBrains bundle IDs (v3):** `com.jetbrains.intellij`, `com.jetbrains.CLion`, `com.jetbrains.pycharm`, `com.jetbrains.rider`, `com.jetbrains.rustrover`, plus the rest of the family (WebStorm, GoLand, PhpStorm, DataGrip, RubyMine, IDEA CE, EAP builds). Matching by the `com.jetbrains.` prefix is acceptable.
+- **Click:** `AXUIElementCreateApplication(pid)` → `kAXWindowsAttribute`; pick the first window whose title (`WindowTitle`) has a segment equal to the session's project name, else the first that contains it; `AXRaise`, then activate the app. **Activation:** read `kAXFocusedWindowAttribute`'s title and mark matching sessions read.
+- **Title rule per family** (segments split on ` — `, ` – `, ` - `): VS Code titles are `file - project - Visual Studio Code`, so the last segment (app name) is dropped; JetBrains titles are `project – file`, so the **first** segment is the project.
 - `AXIsProcessTrustedWithOptions` with the prompt option is called once, on first use. Without the permission, fall back to app level. Like Automation, the grant is tied to the code signature.
-- Ghostty and Warp have no API to select or read a tab or window: app level only.
+- Ghostty and Warp have no API to select or read a tab or window: app level only. Tab precision inside any IDE terminal is not possible.
+
+## Now playing (REQ-13, ADR-0007)
+- `NowPlayingWatcher` observes `DistributedNotificationCenter` for `com.apple.Music.playerInfo` and `com.spotify.client.PlaybackStateChanged`. `userInfo` keys: `Player State` (`Playing` / `Paused` / `Stopped`), `Name`, `Artist`, `Album`. Missing keys become nil; unknown states count as not playing.
+- Event-driven only: no polling, no AppleScript, no Automation permission, no login. Works with AirPlay, because the apps post the notification themselves.
+- It feeds `NowPlaying(isPlaying, title, artist, album, app)` into the store; the snapshot carries it (`03`). Titles are stored, not shown.
+- **Known limit:** the apps post only on change, so after launching ClawdNotch the headphones appear at the next play, pause or track change.
+
+## Sound cues (REQ-12)
+`SoundCues` (App) watches `Snapshot.popToken` edges and plays a cached `NSSound(named:)`: "Funk" for needsInput, "Glass" for unread done. It does not play for user-caused changes and is skipped when `soundCues` is off. Event-driven; no timer.
 
 ## New session (REQ-V2-03)
 - Terminal.app: `tell application "Terminal"` → `do script "cd <dir> && claude"` and `activate`.

@@ -3,25 +3,26 @@
 Claude Code hooks give no explicit "thinking" signal, so the phases are **inferred** from the event sequence.
 
 ## Per-session states
-`idle` · `thinking` · `usingTools` · `talking` · `needsInput` · `done` (plus `unread: Bool` and `failed: Bool` flags)
+`idle` · `thinking` · `usingTools` · `talking` · `compacting` · `needsInput` · `done` (plus `unread: Bool` and `failed: Bool` flags). `juggling` is **derived**, not stored (below).
 
 ## Transitions
 | Hook event (`hook_event_name`) | Condition | New state | Side effects |
 |---|---|---|---|
 | `/session-meta` with `source: "statusline"` | — | unchanged | Attach or refresh `meta` (and the project name). Create the session as `idle` if unknown. |
-| `SessionStart` (via bridge `/session-meta`) | — | `idle` | Create the session if unknown. The `source` may be startup, resume, clear, compact, or fork. Arrives through the bridge, because `SessionStart` has no http hooks. |
-| `UserPromptSubmit` | — | `thinking` | `unread = false`, `failed = false` |
-| `PreToolUse` | — | `usingTools` | Store `tool_name` (shown in the panel, for example "using Bash"). |
+| `SessionStart` (via bridge `/session-meta`) | `source != compact` | `idle` | Create the session if unknown. The `source` may be startup, resume, clear, compact, or fork. Arrives through the bridge, because `SessionStart` has no http hooks. |
+| `SessionStart` (via bridge) | `source == compact` | `idle` | Ends `compacting`. |
+| `UserPromptSubmit` | — | `thinking` | `unread = false`, `failed = false`, `activeSubagents = 0` |
+| `PreToolUse` | — | `usingTools` | Store `tool_name` (shown in the panel, for example "using Bash"; panel text for the new states: "compacting", "N subagents"). |
 | `MessageDisplay` | — | `talking` | High-frequency event; the aggregate is debounced. |
 | `PostToolUse`, `PostToolBatch`, `PostToolUseFailure` | — | `thinking` | |
-| `PreCompact` | — | `thinking` | |
-| `PermissionRequest` | — | `needsInput` | If the app holds the request (REQ-V2-01), add a `PendingPermission` with the input summary. The card is removed by: a `PostToolUse` / `PostToolUseFailure` of the same session with the same `tool_name` and input summary (a `PermissionDenied` likewise, or for the whole session when it has no summary); `UserPromptSubmit`, `Stop`, `StopFailure` or `SessionEnd` of the session; the reply, a hang-up, the 110 s cap or session removal. `PreToolUse`, `MessageDisplay`, `PreCompact`, `Notification` and `Subagent*` leave it, because tools run in parallel. |
+| `PreCompact` | — | `compacting` | Left by the next state-setting event or `SessionStart(compact)`. |
+| `PermissionRequest` | — | `needsInput` | If the app holds the request (REQ-V2-01), add a `PendingPermission` with the input summary and `suggestion` (first `permission_suggestions` entry as raw JSON, at most 2 KiB, else nil). The card is removed by: a `PostToolUse` / `PostToolUseFailure` of the same session with the same `tool_name` and input summary (a `PermissionDenied` likewise, or for the whole session when it has no summary); `UserPromptSubmit`, `Stop`, `StopFailure` or `SessionEnd` of the session; the reply, a hang-up, the 110 s cap or session removal. `PreToolUse`, `MessageDisplay`, `PreCompact`, `Notification` and `Subagent*` leave it, because tools run in parallel. |
 | `Notification` | `notification_type` ∈ {`permission_prompt`, `elicitation_dialog`, `agent_needs_input`} | `needsInput` | |
 | `Notification` | `idle_prompt` | unchanged | If the session is `done`, it stays `done`. |
 | `PermissionDenied` | state == `needsInput` | `thinking` | |
-| `SubagentStart` / `SubagentStop` | — | unchanged | `activeSubagents ± 1` (floored at 0) |
-| `Stop` | event has no `agent_id` | `done` | `unread = true` |
-| `StopFailure` | — | `done` | `unread = true`, `failed = true` |
+| `SubagentStart` / `SubagentStop` | — | unchanged | `activeSubagents ± 1` (floored at 0); drives the derived `juggling` |
+| `Stop` | event has no `agent_id` | `done` | `unread = true`, `activeSubagents = 0` |
+| `StopFailure` | — | `done` | `unread = true`, `failed = true`, `activeSubagents = 0` |
 | `SessionEnd` | — | (removed) | |
 | any unknown event | — | unchanged | Update `lastEventAt` only. Never crash on unknown input. |
 
@@ -29,6 +30,8 @@ Notes:
 - A `needsInput` session leaves that state on the next event whose row sets a new state (in practice `PostToolUse`, `PreToolUse`, `UserPromptSubmit`, `PermissionDenied`, or `Stop`). `Notification` of other types, `Subagent*` and unknown events leave it in place.
 - **Talking decay:** if a session has been in `talking` (text) for 2 s with no new talking event, it returns to `thinking`. `usingTools` **never decays**: a long Bash run sends no events, so it stays until `PostToolUse`/`PostToolBatch`/`PostToolUseFailure` (→ `thinking`), `PermissionRequest` (→ `needsInput`), `Stop` or `UserPromptSubmit`. Implement this as a computed check against `lastTalkingAt` when building the snapshot. The app schedules a single one-shot re-evaluation 2 s after the last talking event. This is not a periodic timer.
 - Events from subagents (`agent_id` present) update `lastEventAt` and the subagent counter. They never move the parent to `done`: `Stop` and `StopFailure` with an `agent_id` change nothing else.
+- **Derived `juggling`:** a session whose `activeSubagents > 0` and whose state is not `needsInput` or `done` shows as `juggling` (computed in the snapshot, like talking decay). The counter resets on `Stop`, `StopFailure` and `UserPromptSubmit`, so a missed `SubagentStop` cannot stick.
+- **`compacting`** does not decay; it ends on the next row that sets a state, or on `SessionStart(compact)` → `idle`.
 - **Unknown sessions:** any event for an unknown `session_id` creates the session (the app may have started mid-session).
 
 ## Read tracking (REQ-10)
@@ -43,6 +46,8 @@ Notes:
 no sessions                                   → sleeping
 any needsInput                                → needsInput
 any done && unread                            → done
+any juggling (derived)                        → juggling
+any compacting                                → compacting
 any usingTools                                → usingTools
 any talking                                   → talking
 any thinking                                  → thinking
@@ -52,12 +57,12 @@ otherwise                                     → idle
 - `activeCount` = the number of live sessions (the number in the counter, REQ-04).
 - The counter colour uses `hasNeedsInput` → red, `attentionCount > 0` → orange, `activeCount > 0` → blue, otherwise grey.
 - `attentionCount` = the number of sessions that are `needsInput`, or `done && unread`. It is no longer displayed, but it still drives the counter colour, the pop-out, and "Mark all read".
-- **Status counts** (`Snapshot.statusCounts`, shown as the three expanded counters; the UI adds idle + working into the first one) put each live session in exactly one bucket: `needsInput` → needsInput, `done && unread` → done, `thinking | usingTools | talking` → working, and everything else (`idle`, read `done`) → idle. The buckets add up to `activeCount`.
+- **Status counts** (`Snapshot.statusCounts`, shown as the three expanded counters; the UI adds idle + working into the first one) put each live session in exactly one bucket: `needsInput` → needsInput, `done && unread` → done, `thinking | usingTools | talking | compacting | juggling` → working, and everything else (`idle`, read `done`) → idle. The buckets add up to `activeCount`.
 - **Pop-out trigger:** fires when `attentionCount` increases, or when the aggregate enters `done` or `needsInput`. The UI sees this as a `Snapshot.popToken` counter that increments, so the trigger is edge-based and the same transition never fires twice.
 
 ## Panel order
 `Snapshot.sessions` is sorted in Core by rank, the same order as the aggregate:
-`needsInput` → `done && unread` → `usingTools` → `talking` → `thinking` → `idle` (a read `done` counts as `idle`).
+`needsInput` → `done && unread` → `juggling` → `compacting` → `usingTools` → `talking` → `thinking` → `idle` (a read `done` counts as `idle`).
 Within a rank, the newest `lastEventAt` comes first. The panel shows the first 5 and then "+n more", so only the least important sessions are hidden.
 
 ## Sample payloads (trimmed)
@@ -77,5 +82,9 @@ Decode leniently. Read only the fields we need, ignore extra fields, and drop la
 - Panel order: rank first, then the newest `lastEventAt`.
 - Status counts: one session per bucket state, and the sum equals `activeCount`.
 - Subagent `Stop` does not mark the parent done.
+- `PreCompact` → `compacting`; `SessionStart(compact)` → `idle`; another state-setting event also leaves `compacting`.
+- `juggling`: derived when `activeSubagents > 0`; suppressed in `needsInput` and `done`; counter reset on `Stop`, `StopFailure`, `UserPromptSubmit`; never negative.
+- Priority table includes `juggling` and `compacting`; panel order and status buckets match.
+- `PendingPermission.suggestion`: kept when present and at most 2 KiB, nil otherwise.
 - Liveness expiry, using an injected `isAlive` closure.
 - `popToken` increments exactly once per qualifying edge.
