@@ -78,7 +78,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - Integration: `NowPlayingWatcher` (ADR-0007, `05`). Core: `NowPlaying` in `Snapshot`. Pet: headphones overlay orthogonal to every pose and to hide mode (`07`).
 - AC: REQ-13 AC1–AC5. Verify with a real Music or Spotify play/pause; CPU stays at the idle budget.
 
-### WP-19 — README + pose GIFs · owner: pet-animator + orchestrator · deps: WP-18 · status: `todo`
+### WP-19 — README + pose GIFs · owner: pet-animator + orchestrator · deps: WP-18 · status: `done`
 - `README.md`: features, states and poses, notch layout, hide mode, permissions, focus support matrix, sound cues, requirements, "status: in development; install instructions later", JetBrains Mono note.
 - GIFs in `docs/media/`, one per pose with and without headphones, from a DEBUG-only `--render-poses <dir>` mode: `PetView` offscreen via `CARenderer` into a Metal texture at fixed time steps, GIFs through ImageIO, no Screen Recording permission. Fallback if `CARenderer` cannot capture animations: one static PNG per pose (risk).
 - Requirements to list: macOS 14+ (tested on macOS 26), Apple silicon; Claude Code with hooks and statusline; Pro/Max plan for HP and WK; Swift 6.2 Command Line Tools to build; optional permissions: Automation (Terminal.app / iTerm2), Accessibility (VS Code / JetBrains window focus), login item.

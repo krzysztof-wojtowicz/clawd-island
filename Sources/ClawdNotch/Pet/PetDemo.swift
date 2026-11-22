@@ -9,6 +9,7 @@ import ClawdCore
 enum PetDemo {
     static func startIfRequested(on view: PetView) {
         #if DEBUG
+        PoseRenderer.runIfRequested()
         if CommandLine.arguments.contains("--debug-headphones") { view.setHeadphones(true) }
         guard CommandLine.arguments.contains("--pet-demo") else { return }
         Task {
