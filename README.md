@@ -42,7 +42,7 @@ Every pose is a Core Animation layer loop run by the render server. The GIFs are
 | `done` | turn finished | ![done](docs/media/done.gif) | ![done with headphones](docs/media/done-headphones.gif) |
 | `needsInput` | permission or question waiting | ![needsInput](docs/media/needsInput.gif) | ![needsInput with headphones](docs/media/needsInput-headphones.gif) |
 
-Headphones are independent of the state: they appear on top of any pose while music plays. The nod only shows in the calm poses.
+Headphones are independent of the state: they appear on top of any pose while music plays. The cups sit on the body's upper corners, clear of the raised paw, and the nod only shows in the calm poses.
 
 ## Requirements
 
