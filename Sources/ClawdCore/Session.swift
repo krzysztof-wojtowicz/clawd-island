@@ -11,6 +11,8 @@ public enum SessionState: Equatable, Sendable {
     case usingTools
     /// Streaming text; decays to `thinking` after `SessionStore.talkingDecay`.
     case talking
+    /// Context compaction from `PreCompact`. Never decays; the next state-setting event or `SessionStart(compact)` ends it.
+    case compacting
     case needsInput
     case done
 }
@@ -52,16 +54,17 @@ public struct Session: Equatable, Sendable, Identifiable {
             && lhs.toolName == rhs.toolName && lhs.activeSubagents == rhs.activeSubagents
     }
 
-    /// Sort key for the panel, lower first: `needsInput`, unread `done`, `usingTools`, `talking`, `thinking`, then everything else.
+    /// Sort key for the panel, lower first: `needsInput`, unread `done`, `compacting`, `usingTools`, `talking`, `thinking`, then everything else.
     /// Read `done` ranks as idle, matching the status buckets.
     var panelRank: Int {
         switch state {
         case .needsInput: 0
         case .done where unread: 1
-        case .usingTools: 2
-        case .talking: 3
-        case .thinking: 4
-        case .idle, .done: 5
+        case .compacting: 2
+        case .usingTools: 3
+        case .talking: 4
+        case .thinking: 5
+        case .idle, .done: 6
         }
     }
 
@@ -88,8 +91,10 @@ public struct Session: Equatable, Sendable, Identifiable {
         case .messageDisplay:
             state = .talking
             lastTalkingAt = now
-        case .postToolUse, .postToolBatch, .postToolUseFailure, .preCompact:
+        case .postToolUse, .postToolBatch, .postToolUseFailure:
             state = .thinking
+        case .preCompact:
+            state = .compacting
         case .permissionRequest:
             state = .needsInput
         case .notification:

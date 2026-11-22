@@ -18,7 +18,7 @@ Scenarios. Implement all of these in WP-0/WP-4 and keep this list in sync with t
 | `permission` | PermissionRequest | needsInput (red !) |
 | `done` | Stop | done (paw raised) + pop-out |
 | `fail` | StopFailure | done (failed) |
-| `compact` | PreCompact, then `SessionStart(source: compact)` after a hold | compacting (broom) → idle. Planned, added in WP-16 |
+| `compact` | think → PreCompact → hold 6 s → `/session-meta` with `source: compact` | thinking → compacting (broom, dust) → idle |
 | `subagents` | SubagentStart ×2, hold, SubagentStop ×2 | juggling (3 balls) → previous state. Planned, added in WP-17 |
 | `end` | SessionEnd | session removed |
 | `usage <pct>` | statusline with `rate_limits.five_hour.used_percentage=<pct>` | HP = 100 − pct |

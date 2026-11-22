@@ -62,6 +62,11 @@ case "$scenario" in
         hook PostToolUse "$sid" '"tool_name":"Bash","tool_input":{},"tool_use_id":"t1"'; sleep 1
         hook Stop "$sid"
         ;;
+    compact)
+        hook UserPromptSubmit "$sid"; sleep 1
+        hook PreCompact "$sid" '"trigger":"auto"'; sleep 6
+        post /session-meta "{\"session_id\":\"$sid\",\"cwd\":\"/tmp/$sid\",\"source\":\"compact\"}"
+        ;;
     multi)
         start sim-a; hook UserPromptSubmit sim-a
         start sim-b; hook PreToolUse sim-b '"tool_name":"Edit"'
@@ -76,7 +81,7 @@ case "$scenario" in
         done
         ;;
     *)
-        echo "usage: $0 {start|think|tool|tools|text|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
+        echo "usage: $0 {start|think|tool|tools|compact|text|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
         exit 1
         ;;
 esac

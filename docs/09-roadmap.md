@@ -64,7 +64,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - `SoundCues`: cached `NSSound(named:)`, played once per edge (needsInput, unread done) using the `popToken` edge logic; `soundCues` config key, default on; Settings checkbox "Sound cues".
 - AC: REQ-12 AC1–AC4. No timers added.
 
-### WP-16 — `compacting` sweeping pose · owner: core-engineer + pet-animator · deps: none (parallel with WP-12) · status: `todo`
+### WP-16 — `compacting` sweeping pose · owner: core-engineer + pet-animator · deps: none (parallel with WP-12) · status: `done` (Core state + priority + tests, broom/dust pose, simulator `compact`)
 - Core: `PreCompact` → `compacting`; `SessionStart(compact)` and other state-setting events leave it; priority and panel text ("compacting"); tests (`04`).
 - Pet: broom + dust puff, `broom.*` tokens, Reduce Motion pose (`07`). Simulator `compact` scenario + skill row.
 - AC: REQ-03 AC1, AC3, AC4, AC5.

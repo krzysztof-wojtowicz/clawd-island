@@ -20,6 +20,9 @@ enum PetTokens {
     /// Hammer handle and head (`usingTools`).
     static let toolHandle = rgb(0x8B5A2B)
     static let toolHead = rgb(0x8E8E93)
+    /// Broom handle and bristles (`compacting`).
+    static let broomHandle = rgb(0x8B5A2B)
+    static let broomBristle = rgb(0xC9A66B)
     static let hpHigh = rgb(0x34C759)
     static let hpMid = rgb(0xFFCC00)
     static let hpLow = rgb(0xFF3B30)

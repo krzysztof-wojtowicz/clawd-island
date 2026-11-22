@@ -31,6 +31,23 @@ extension PetRig {
             rightArm.add(strike, forKey: "loop.strike")
             let dip = Self.keyframes("position.y", [0, -0.5, 0], period: 0.7, keyTimes: [0, 0.2, 1], additive: true)
             torso.add(dip, forKey: "loop.dip")
+        case .compacting:
+            // Sweeps between two extremes (t = 0 and 0.5 s); a dust puff bursts at each end as the bristles turn.
+            let sweep = Self.keyframes("transform.rotation.z", [-18, 18, -18].map(Self.radians), period: 1)
+            broom.add(sweep, forKey: "loop.sweep")
+            broom.add(Self.keyframes("position.x", [-1.5, 1.5, -1.5], period: 1, additive: true), forKey: "loop.slide")
+            for (index, puff) in dust.enumerated() {
+                let burst = CAAnimationGroup()
+                burst.animations = [
+                    Self.keyframes("opacity", [0, 0.9, 0, 0], period: 1, keyTimes: [0, 0.1, 0.45, 1]),
+                    Self.keyframes("transform.scale", [0.4, 1.4, 1.4, 1.4], period: 1, keyTimes: [0, 0.45, 0.5, 1]),
+                    Self.keyframes("position.y", [0, 2, 2, 2], period: 1, keyTimes: [0, 0.45, 0.5, 1], additive: true),
+                ]
+                burst.duration = 1
+                burst.repeatCount = .infinity
+                burst.timeOffset = index == 0 ? 0 : 0.5
+                puff.add(burst, forKey: "loop.puff")
+            }
         case .talking:
             for (index, dot) in dots.enumerated() {
                 let light = Self.keyframes("opacity", [0.3, 1, 0.3, 0.3], period: 0.9, keyTimes: [0, 0.17, 0.33, 1])

@@ -23,6 +23,10 @@ struct SessionStoreTests {
         AggregateCase(sessions: [(.thinking, false), (.talking, false)], expected: .talking),
         AggregateCase(sessions: [(.talking, false), (.usingTools, false)], expected: .usingTools),
         AggregateCase(sessions: [(.usingTools, false), (.thinking, false), (.idle, false)], expected: .usingTools),
+        AggregateCase(sessions: [(.usingTools, false), (.compacting, false), (.talking, false)], expected: .compacting),
+        AggregateCase(sessions: [(.compacting, false), (.thinking, false)], expected: .compacting),
+        AggregateCase(sessions: [(.compacting, false), (.done, true)], expected: .done),
+        AggregateCase(sessions: [(.compacting, false), (.needsInput, false)], expected: .needsInput),
         AggregateCase(sessions: [(.usingTools, false), (.done, true)], expected: .done),
         AggregateCase(sessions: [(.done, true), (.needsInput, false), (.usingTools, false)],
                       expected: .needsInput),
@@ -64,6 +68,18 @@ struct SessionStoreTests {
         #expect(store.snapshot(now: t0.addingTimeInterval(1.99)).aggregate == .talking)
         #expect(store.snapshot(now: t0.addingTimeInterval(2.0)).aggregate == .thinking)
         #expect(store.snapshot(now: t0.addingTimeInterval(2.0)).sessions.first?.state == .thinking)
+    }
+
+    @Test("SessionStart(compact) ends compacting; compacting counts as working and never decays")
+    func compactingLifecycle() {
+        var store = SessionStore()
+        store.apply(event(.preCompact), now: t0)
+        let later = store.snapshot(now: t0.addingTimeInterval(600))
+        #expect(later.aggregate == .compacting)
+        #expect(later.statusCounts.working == 1)
+        store.apply(meta: SessionMeta(sessionID: "s1", cwd: "/p", source: "compact", pid: nil, tty: nil,
+                                      terminalBundleID: nil, termProgram: nil), now: t0.addingTimeInterval(601))
+        #expect(store.snapshot(now: t0.addingTimeInterval(602)).aggregate == .idle)
     }
 
     @Test("usingTools never decays and sets no decay deadline")
