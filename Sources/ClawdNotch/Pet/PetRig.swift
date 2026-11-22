@@ -24,6 +24,8 @@ struct PetRig {
     let hammer = CALayer()
     /// Handle, bristles and two paws; pivots at the top of the handle and sweeps in front of the body.
     let broom = CALayer()
+    /// Band and cups, orthogonal to every pose: it lives in the torso, between the body and the eyes.
+    let headphones = CALayer()
     /// Dust puffs at the two ends of the sweep.
     let dust: [CAShapeLayer]
     /// Juggling balls; their model positions are the Reduce Motion pose, the loop moves them along `ballOrbit`.
@@ -72,7 +74,8 @@ struct PetRig {
         eyeGroup.frame = fullBox
         eyes.forEach(eyeGroup.addSublayer)
         // Arms sit behind the body so their inner ends merge into it.
-        [leftArm, rightArm, body, eyeGroup].forEach(torso.addSublayer)
+        configureHeadphones()
+        [leftArm, rightArm, body, headphones, eyeGroup].forEach(torso.addSublayer)
         // Above the body so the broom reads in front of it; the dust follows the torso's bob.
         torso.addSublayer(broom)
         dust.forEach(torso.addSublayer)
@@ -85,7 +88,7 @@ struct PetRig {
         [torso, zzz, bubble, badge].forEach(root.addSublayer)
         balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
-        for accessory in accessories { accessory.opacity = 0 }
+        for accessory in accessories + [headphones] { accessory.opacity = 0 }
     }
 
     /// Accessory layers that cross-fade between states.
@@ -166,6 +169,25 @@ struct PetRig {
         let paws = [9.5, 6.5].map { Self.roundedRect(CGRect(x: 0.8, y: $0, width: 2.4, height: 2), radius: 0.9, color: PetTokens.body) }
         [handle, bristles].forEach(broom.addSublayer)
         paws.forEach(broom.addSublayer)
+    }
+
+    /// A band arcing over the head, ending in two 3 × 5 cups that straddle the body's upper sides.
+    private func configureHeadphones() {
+        headphones.frame = fullBox
+        let band = CAShapeLayer()
+        band.frame = fullBox
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 3.7, y: 18))
+        path.addCurve(to: CGPoint(x: 28.3, y: 18), control1: CGPoint(x: 3.7, y: 25.5), control2: CGPoint(x: 28.3, y: 25.5))
+        band.path = path
+        band.fillColor = nil
+        band.strokeColor = PetTokens.headphonesBand
+        band.lineWidth = 1.2
+        band.lineCap = .round
+        headphones.addSublayer(band)
+        for x in [2.2, 26.8] {
+            headphones.addSublayer(Self.roundedRect(CGRect(x: x, y: 14.5, width: 3, height: 5), radius: 1.2, color: PetTokens.headphonesCup))
+        }
     }
 
     private func configureText() {

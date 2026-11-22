@@ -74,7 +74,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - Pet: three balls on keyframed arcs, `ball.1–3` tokens. Simulator `subagents` scenario + skill row.
 - AC: REQ-03 AC1, AC3, AC4, AC5, AC6.
 
-### WP-18 — Music → headphones · owner: integration-engineer + core-engineer + pet-animator · deps: WP-17 · status: `todo`
+### WP-18 — Music → headphones · owner: integration-engineer + core-engineer + pet-animator · deps: WP-17 · status: `done` (NowPlaying + store, NowPlayingWatcher, headphones overlay, `--debug-headphones`)
 - Integration: `NowPlayingWatcher` (ADR-0007, `05`). Core: `NowPlaying` in `Snapshot`. Pet: headphones overlay orthogonal to every pose and to hide mode (`07`).
 - AC: REQ-13 AC1–AC5. Verify with a real Music or Spotify play/pause; CPU stays at the idle budget.
 
