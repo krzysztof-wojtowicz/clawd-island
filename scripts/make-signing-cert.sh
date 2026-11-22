@@ -11,6 +11,20 @@ if security find-identity -v -p codesigning | grep -q "\"$name\""; then
     exit 0
 fi
 
+# Imported earlier but never trusted (for example, the password dialog was cancelled): only retry the trust step,
+# so a second identity with the same name never makes `codesign -s` ambiguous.
+if security find-identity -p codesigning | grep -q "\"$name\""; then
+    cert="$(mktemp)"
+    trap 'rm -f "$cert"' EXIT
+    security find-certificate -c "$name" -p "$keychain" > "$cert"
+    echo "Trusting the existing \"$name\" certificate for code signing; macOS will ask for your login password."
+    security add-trusted-cert -p codeSign -k "$keychain" "$cert"
+    security find-identity -v -p codesigning | grep -q "\"$name\"" \
+        && echo "Done. scripts/bundle.sh now signs with \"$name\"." \
+        || { echo "\"$name\" is still not valid; check it in Keychain Access." >&2; exit 1; }
+    exit 0
+fi
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 password="$(uuidgen)" # only protects the temporary .p12
@@ -38,5 +52,10 @@ security import "$work/id.p12" -k "$keychain" -P "$password" -T /usr/bin/codesig
 echo "Trusting the certificate for code signing; macOS will ask for your login password."
 security add-trusted-cert -p codeSign -k "$keychain" "$work/cert.pem"
 
-security find-identity -v -p codesigning | grep "\"$name\"" \
-    && echo "Done. scripts/bundle.sh now signs with \"$name\"."
+if security find-identity -v -p codesigning | grep -q "\"$name\""; then
+    echo "Done. scripts/bundle.sh now signs with \"$name\"."
+    echo "The first signing may show a keychain prompt for codesign; choose \"Always Allow\"."
+else
+    echo "\"$name\" was imported but is not valid; check it in Keychain Access, then re-run this script." >&2
+    exit 1
+fi

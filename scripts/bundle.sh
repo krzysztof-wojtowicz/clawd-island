@@ -17,7 +17,7 @@ cp -R Resources/Fonts "$app/Contents/Resources/Fonts"
 cp Resources/AppIcon.icns "$app/Contents/Resources/"
 
 version=1.0.0 # keep in sync with CHANGELOG.md
-build="$(git rev-list --count HEAD)"
+build="$(git rev-list --count HEAD 2>/dev/null || echo 0)" # 0 outside a git checkout
 
 cat > "$app/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>

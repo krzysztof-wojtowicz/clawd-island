@@ -17,8 +17,11 @@ for _ in {1..20}; do pgrep -x ClawdNotch >/dev/null || break; sleep 0.25; done
 pkill -x ClawdNotch 2>/dev/null || true
 
 mkdir -p "$dest"
+# Copy first, swap after, so a failed copy never leaves the user without an app.
+rm -rf "$dest/ClawdNotch.app.new"
+ditto dist/ClawdNotch.app "$dest/ClawdNotch.app.new"
 rm -rf "$dest/ClawdNotch.app"
-ditto dist/ClawdNotch.app "$dest/ClawdNotch.app"
+mv "$dest/ClawdNotch.app.new" "$dest/ClawdNotch.app"
 open "$dest/ClawdNotch.app"
 
 echo "Installed $dest/ClawdNotch.app"

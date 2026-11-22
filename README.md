@@ -103,9 +103,13 @@ Headphones are independent of the state: they appear on top of any pose while mu
 | `scripts/install.sh`, `uninstall.sh`, `package.sh` | Install, remove, zip (see Install) |
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU and RSS of the running app against the budget |
+| `scripts/perf-suite.sh` | Every performance scenario on a release bundle, one table |
+| `scripts/record-gif.sh <island\|hide-mode>` | Record the README island / hide-mode GIFs |
 | `swift scripts/window-info.swift` | Print screens and the app's window level and bounds |
 
-To regenerate the pose GIFs, build in debug and run `.build/debug/ClawdNotch --render-poses docs/media`. The mode exists only in debug builds. The agent guide is [`CLAUDE.md`](CLAUDE.md).
+To regenerate the pose GIFs, build in debug and run `.build/debug/ClawdNotch --render-poses docs/media`. The mode exists only in debug builds.
+
+To try the hook uninstaller safely, point it at scratch copies: `CLAWD_SETTINGS_PATH=/tmp/settings.json CLAWD_CONFIG_PATH=/tmp/config.json dist/ClawdNotch.app/Contents/MacOS/ClawdNotch --uninstall-hooks` (it never touches `~/.claude` then). The agent guide is [`CLAUDE.md`](CLAUDE.md).
 
 ## Docs
 | | |
