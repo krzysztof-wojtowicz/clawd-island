@@ -126,7 +126,7 @@ Order: v3.1 (WP-20 ∥ WP-21) → WP-22 → WP-23 → WP-24 (WP-23 and WP-24 bot
 - `docs/media/island.gif` (states + hover: counter morph, panel, glow) and `docs/media/hide-mode.gif` (corner peek, a 3 s pop-out on `talking`, a pose-only change), each < 600 KB, near the top of README.md.
 - AC: both show motion and nothing outside the app window.
 
-### WP-24 — Production readiness · owner: integration-engineer + macos-ui-engineer · deps: WP-23 · status: `todo`
+### WP-24 — Production readiness · owner: integration-engineer + macos-ui-engineer · deps: WP-23 · status: `done` (fonts are subset Latin weights, registered only when JetBrains Mono is not installed: a process-registered face costs ~3 MB RSS each; `CLAWD_SETTINGS_PATH` / `CLAWD_CONFIG_PATH` redirect `--uninstall-hooks` for tests; the user runs `make-signing-cert.sh`)
 - `LICENSE` (MIT), `THIRD_PARTY_NOTICES.md` (JetBrains Mono, OFL 1.1), `CHANGELOG.md` (1.0.0).
 - Bundle JetBrains Mono and register it at launch; version keys, `LSMinimumSystemVersion`, copyright, `AppIcon.icns` from the pet render.
 - `scripts/make-signing-cert.sh` (the user runs it once), signing in `bundle.sh` (ADR-0008); `scripts/install.sh`, `scripts/uninstall.sh` (with `--uninstall-hooks` in the app), `scripts/package.sh`. Agents test them against temp destinations only.
