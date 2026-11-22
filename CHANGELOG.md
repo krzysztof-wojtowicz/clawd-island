@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-Renamed from ClawdNotch to ClawdIsland (ADR-0009). After updating, delete the old ClawdNotch app and click **Install Hooks** in Settings once (old hook entries are replaced). Your config, token and saved statusline move over automatically at first launch.
+Renamed from ClawdNotch to ClawdIsland (ADR-0009). After updating, delete the old ClawdNotch app and click **Install** in the Settings hooks row once (old hook entries are replaced). Your config, token and saved statusline move over automatically at first launch.
 
 - Mini mode: Clawd tucks under the notch and pops out on state changes (replaces hide mode).
 - Waving paw in done and needs-input; two-pair legs.

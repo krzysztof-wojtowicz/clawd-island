@@ -5,7 +5,7 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 | Scenario | CPU (avg after settle) | footprint | RSS |
 |---|---|---|---|
 | sleeping (no sessions) | < 0.1 % | < 20 MB | < 45 MB |
-| idle / thinking / usingTools / talking / hidden | < 1 % | < 20 MB | < 45 MB |
+| idle / thinking / usingTools / talking / mini mode | < 1 % | < 20 MB | < 45 MB |
 | burst: 50 hook events/s for 10 s, and after it | < 3 % during | < 20 MB | < 48 MB |
 | launch (first 10 s) | — | < 20 MB | spike allowed (LaunchServices mapping, unmapped by the system ~10 s later) |
 | `clawd-bridge statusline` | < 20 ms wall time per run | — | — |
@@ -32,7 +32,7 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 | thinking 60 s | 0.06 / 3.1 % | 38.3 MB | PASS |
 | usingTools 30 s | 0.00 / 0.00 % | 38.3 MB | PASS |
 | burst 15 s (50 `MessageDisplay`/s) | 1.85 / 9.6 % | 41.2 MB | PASS (< 3 %, < 45 MB) |
-| hidden idle (corner peek) / after pop-out | 0.00 % | 35.0 / 34.9 MB | PASS |
+| mini-mode idle (corner peek) / after pop-out | 0.00 % | 35.0 / 34.9 MB | PASS |
 | idle with permission cards, new-session menu (WP-9/11) | 0.00–0.11 % | 37.7–38.6 MB | PASS |
 | `clawd-bridge statusline` with the extra `/session-meta` POST | about 13 ms | n/a | PASS (< 20 ms) |
 

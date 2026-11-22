@@ -36,8 +36,9 @@ Claude Code ──(http hooks, POST JSON)─────────────
 - `SessionStore` (Core) is a plain struct owned by AppModel. It has `apply(_:now:)`, `apply(meta:now:)`, `apply(usage:)`, `markRead(_:)`, `markAllRead()`, `expire(now:isAlive:)` (removes dead pids, and pid-less sessions silent for 6 h), `nextDecayDeadline(now:)` (when to schedule the one-shot talking-decay re-evaluation), and `snapshot(now:) -> Snapshot` (mutating: it advances `popToken` against the previous snapshot).
 - `Snapshot` (Core, `Equatable`) holds `aggregate: PetState`, `activeCount`, `attentionCount`, `hasNeedsInput`, `statusCounts` (idle, working, done, needsInput; see `04`; the UI shows idle + working as one counter), `sessions: [Session]` (sorted by importance, see `04` "Panel order"; talking decay applied), `usage: UsageSnapshot?`, `pendingPermissions: [PendingPermission]` (id, sessionID, project, tool name, input summary, `suggestion?` raw JSON for Always allow, received time; REQ-V2-01) and `popToken: Int`. **The UI renders only Snapshot.** An unchanged snapshot does not trigger a re-render.
 - `PetState` (Core) is one of `sleeping`, `idle`, `thinking`, `usingTools`, `talking`, `compacting`, `juggling`, `done`, or `needsInput` (see `04-state-machine.md`).
-- `PetView` (App/Pet) is an `NSView` with a layer tree. Its API is `setState(_:)`, `popOut()`, and `setPaused(_:)`.
+- `PetView` (App/Pet) is an `NSView` with a layer tree. Its API is `setState(_:)`, `popOut()`, `setPlacement(tilt:from:tiltChange:animated:)` (mini-mode peek) and `setPaused(_:)`.
 - `HUDController` (App/HUD) renders each new `Snapshot` into `CountersView` (the left wing's session counter, which morphs into the three expanded counters on hover), the right wing's vertical HP bar (next to the pet), and `SessionPanelView` (expanded panel: the sorted session list and the usage footer). Both are plain AppKit views, not SwiftUI, because a SwiftUI hosting view would break the RSS budget (docs/08). `UsageSnapshot.hitPoints(now:)` (Core) is the single HP rule both views use.
+- `SettingsWindow` (App) is the plain AppKit Settings window (mini mode, focus-read, notch permissions, sound cues, hooks row via `HookInstaller`, Launch at login); the right-click menu has no hooks or login items (`06`).
 - `TerminalFocusWatcher`, `EditorWindows` (VS Code family and JetBrains window focus via Accessibility), the new-session launcher and `SoundCues` live in App/Integration (and HUD for sound). All are event-driven.
 - `EventServer` (App/Server) is an `NWListener` that accepts `POST /hook`, `/session-meta`, and `/statusline`. It reads at most 64 KiB per body and requires the `X-Clawd-Token` header.
 
@@ -49,6 +50,7 @@ Claude Code ──(http hooks, POST JSON)─────────────
 ## Config and runtime files
 - `~/Library/Application Support/ClawdIsland/config.json` holds the port, token, mini mode (`miniMode`), focus-read mode, `notchPermissions`, `soundCues`, `recentProjects`, and the original statusline command (for uninstall and wrapping).
 - `~/.claude/settings.json` is edited only by `HookInstaller` (see `05`). The backup goes to `~/.claude/settings.json.clawdisland-backup-<timestamp>`.
+- `AppConfig.migrateLegacySupportFolder()` moves a leftover `ClawdNotch/` folder to `ClawdIsland/` once at launch (ADR-0009).
 - The bridge reads the port and token from the config file. If the file is missing, it exits silently.
 
 ## Holding a request (REQ-V2-01)

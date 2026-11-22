@@ -18,7 +18,7 @@ scripts/install.sh             # release build -> ~/Applications/ClawdIsland.app
 
 `scripts/install.sh --dest /Applications` installs for all users. Without the certificate the app is signed ad-hoc, which works, but macOS forgets the permissions below after every rebuild. A signed app is a stable identity, so the grants survive updates. The certificate is local to your Mac (ADR-0008); other Macs see an "unidentified developer" warning (right-click, Open).
 
-Then open **Settings** (right-click the notch → Settings…) and click **Install Hooks**. It backs up `~/.claude/settings.json`, adds the hooks and the statusline, and can be undone from the same place (**Uninstall Hooks**).
+Then open **Settings** (right-click the notch → Settings…) and use the hooks row (**Install**). It backs up `~/.claude/settings.json`, adds the hooks and the statusline, and can be undone from the same row (**Uninstall**).
 
 ### First-run permissions
 
@@ -28,9 +28,9 @@ Then open **Settings** (right-click the notch → Settings…) and click **Insta
 
 ### Updating
 
-Coming from ClawdNotch (before 1.1.0): run `scripts/install.sh`, delete the old `ClawdNotch.app`, then click **Install Hooks** in Settings; hooks are recognised by shape, so the old entries are replaced. Your config moves to `~/Library/Application Support/ClawdIsland/` on first launch.
+Coming from ClawdNotch (before 1.1.0): run `scripts/install.sh`, delete the old `ClawdNotch.app`, then click **Install** in the Settings hooks row; hooks are recognised by shape, so the old entries are replaced. Your config moves to `~/Library/Application Support/ClawdIsland/` on first launch.
 
-Pull and re-run `scripts/install.sh`, then click **Install Hooks** in Settings again if the install folder changed (hooks point at the app's bridge path; re-installing replaces the old entries).
+Pull and re-run `scripts/install.sh`, then click **Install** in Settings again if the install folder changed (hooks point at the app's bridge path; re-installing replaces the old entries).
 
 ### Uninstall
 

@@ -2,7 +2,7 @@
 
 Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** v1–v4 are done; **v5 is in progress (WP-25…WP-29 in `docs/09-roadmap.md`)**: remove headphones, waving paw and two-pair legs, mini mode and Settings-only hooks/login, rename to ClawdIsland, new README GIFs.
+**Status:** v1–v5 are done (v5: waving pet, mini mode, Settings-only hooks/login, rename to ClawdIsland, scratch-port GIF recording and perf runs). See `docs/09-roadmap.md` for history and what is next.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
@@ -32,7 +32,8 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 | `scripts/run.sh` | Kill running instance, bundle debug, launch |
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU/RSS of the running app against the budget |
-| `scripts/perf-suite.sh` | Every `08` scenario on a release bundle, one table (from WP-22) |
+| `scripts/perf-suite.sh` | Every `08` scenario on a release bundle on a scratch port and token, one table (WP-22, WP-29) |
+| `scripts/record-gif.sh <island\|mini-mode>` | Record the README GIF into `docs/media/` (release bundle, scratch port; needs Screen Recording, sandbox off) |
 | `scripts/install.sh` / `uninstall.sh` / `package.sh` | Install, remove, zip a release build (from WP-24; agents test only against temp destinations) |
 | `scripts/make-signing-cert.sh` | One-time local signing identity; **the user runs it** (asks for the login password) |
 | `swift scripts/window-info.swift` | Print screens and the app's window level and bounds (no Screen Recording permission needed) |
@@ -46,7 +47,7 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 ```
 Package.swift
 Sources/ClawdCore/      pure logic: events, SessionStore, state machine, aggregator, usage   (owner: core-engineer)
-Sources/ClawdIsland/     app: App/, Server/ (EventServer), Window/, Pet/, HUD/, Integration/
+Sources/ClawdIsland/    app: App/, Server/ (EventServer), Window/, Pet/, HUD/, Integration/
   Server/               NWListener HTTP endpoint                                            (owner: core-engineer)
   Window/, HUD/         NSPanel, notch geometry, SwiftUI HUD/panel/settings                 (owner: macos-ui-engineer)
   Pet/                  Core Animation Clawd, poses                                         (owner: pet-animator)
@@ -54,7 +55,7 @@ Sources/ClawdIsland/     app: App/, Server/ (EventServer), Window/, Pet/, HUD/, 
                         editor window focus (VS Code, JetBrains)                         (owner: integration-engineer)
 Sources/clawd-bridge/   CLI: `hook session-start`, `statusline`                              (owner: integration-engineer)
 Tests/ClawdCoreTests/   swift-testing
-scripts/                bundle/run/simulate/perf
+scripts/                bundle/run/simulate/perf/install/record-gif
 docs/                   spec (01–10) + adr/
 .claude/agents|skills   multi-agent setup
 ```

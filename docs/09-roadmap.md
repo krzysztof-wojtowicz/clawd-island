@@ -13,7 +13,7 @@ WP-16 (compacting) ──▶ WP-17 (juggling) ──▶ WP-18 (music headphones)
 - WP-12 → WP-13 → WP-15 share the HUD files, so they run in sequence.
 - WP-16 → WP-17 → WP-18 share `PetState` / Pet files, so they run in sequence. That chain runs in parallel with the HUD chain, because Core and Pet are disjoint from HUD.
 - WP-19 is last: it needs every pose.
-- Mini-mode note (called hide mode until v5): the pop-out stays **4 s** (REQ-05 AC1) and `needsInput` stays out until resolved (AC2). That is designed behaviour, not a bug; it is not changed in v3.
+- Mini-mode note (called hide mode until v5): the pop-out is **3 s** (REQ-05 AC1) and `needsInput` stays out until resolved (AC2). That is designed behaviour, not a bug; it is not changed in v3.
 
 ## Done (v1, v2)
 | WP | What | Key files / result |
@@ -105,7 +105,7 @@ These need eyes, a hover, a click or a system permission:
 - Hammer not clipped in the 56 pt wing (`scripts/simulate.sh tools`); counter morph, WK-first footer, state dots (WP-5.4, WP-5.5).
 - Mini mode (hide mode until v5): corner peek, flip into the wing and back, hover from hidden, toggled while expanded (WP-7.1, WP-7.2).
 - iTerm2 / Terminal.app: a session started before the app becomes focusable after its next statusline refresh; a click focuses the tab and then marks read; a session finishing in the watched tab is marked read. If Automation never prompts: `tccutil reset AppleEvents dev.clawdisland.app` (WP-6.x).
-- Permissions: reinstall hooks once (right-click, Install Hooks) so `PermissionRequest` gets `timeout: 120`; a real prompt shows a card; Allow / Deny work and the terminal dialog still works (WP-9).
+- Permissions: reinstall hooks once (Settings, hooks row, Install) so `PermissionRequest` gets `timeout: 120`; a real prompt shows a card; Allow / Deny work and the terminal dialog still works (WP-9).
 - Accessibility prompt on the first click on a VS Code session; the right window comes forward (WP-10).
 - "+ New" menu, Choose Folder…, a new Terminal.app / iTerm2 window running `claude` there (WP-11).
 - `scripts/perf.sh 30` with the mouse on the expanded panel (glow, REQ-11).
@@ -168,7 +168,14 @@ Older entries above keep the names of their time ("hide mode", headphones, REQ-1
 - AC: both GIFs < 600 KB, show motion and nothing outside the app window.
 
 ## Next (after v5)
-- Developer ID signing, hardened runtime and notarization for sharing beyond this Mac.
+Proposed v6 (not yet specified as WPs; the user picks):
+- **Share with friends, no paid account:** rename the signing identity to "ClawdIsland" (drop "Dev"), sign every release with it so friends' permission grants survive updates, `package.sh` → GitHub Release (`gh release create`, the user publishes), README "Install from a release" with the macOS 15+ first-launch steps (Privacy & Security → Open Anyway).
+- **Universal binary:** build arm64 and x86_64 separately and `lipo` them, so Intel Macs run it too.
+- **First-run onboarding:** open Settings once when hooks are not installed.
+- **Update check on demand:** a Settings button that compares the version with the latest GitHub release (no background polling, `08`).
+- **CI:** a GitHub Actions macOS job running `swift build` and `scripts/test.sh`.
+- **Settings window memory:** try to bring the 60 MB RSS exception down.
+- Developer ID signing, hardened runtime and notarization only if the app goes beyond friends (paid).
 
 ## Deferred
 - Developer ID + notarization (ADR-0008 upgrade path).
