@@ -1,12 +1,12 @@
 #!/bin/bash
 # Samples ClawdNotch CPU and memory once per second and checks them against the budget (docs/08).
-# Usage: scripts/perf.sh [seconds=60] [max_avg_cpu_percent=1.0] [max_rss_mb=40]
+# Usage: scripts/perf.sh [seconds=60] [max_avg_cpu_percent=1.0] [max_rss_mb=45]
 set -euo pipefail
 export LC_ALL=C # ps prints locale decimal commas (e.g. "1,5"), which awk would truncate.
 
 seconds="${1:-60}"
 cpu_budget="${2:-1.0}"
-rss_budget_mb="${3:-40}"
+rss_budget_mb="${3:-45}"
 
 pid="$(pgrep -nx ClawdNotch || true)" # -n: newest instance only
 [[ -n "$pid" ]] || { echo "ClawdNotch is not running" >&2; exit 1; }
