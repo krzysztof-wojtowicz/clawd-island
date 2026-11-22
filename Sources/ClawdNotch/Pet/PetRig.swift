@@ -52,9 +52,9 @@ struct PetRig {
         rightArm = Self.roundedRect(CGRect(x: 28, y: 11, width: 3.5, height: 4), radius: 1, color: PetTokens.body)
         rightArm.anchorPoint = CGPoint(x: 0, y: 0.5)
         rightArm.position = armPivot
-        let legs = (1...4).map { index in
-            let centerX = 4 + 24 * CGFloat(index) / 5
-            return Self.roundedRect(CGRect(x: centerX - 1.1, y: 2, width: 2.2, height: 4), radius: 1, color: PetTokens.body)
+        // Two pairs with a middle gap, as in the original Clawd.
+        let legs = [7.5, 11, 21, 24.5].map { centerX in
+            Self.roundedRect(CGRect(x: centerX - 1.1, y: 2, width: 2.2, height: 4), radius: 1, color: PetTokens.body)
         }
         cloud = [(26, 21, 0.8), (28.2, 22, 1.1), (30.5, 22.5, 1.5)].map { Self.circle(x: $0.0, y: $0.1, radius: $0.2, color: PetTokens.bubbleFill) }
         dots = [3.2, 5.75, 8.3].map { Self.circle(x: $0, y: 3, radius: 0.8, color: PetTokens.eye) }

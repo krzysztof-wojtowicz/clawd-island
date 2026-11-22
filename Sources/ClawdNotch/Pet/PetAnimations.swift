@@ -76,10 +76,9 @@ extension PetRig {
             wiggle.timeOffset = 0.45
             rightArm.add(wiggle, forKey: "loop.wiggle")
         case .done:
-            let wave = Self.keyframes("transform.rotation.z", [0, 15, 0, -15, 0].map(Self.radians), period: 0.6, additive: true)
-            wave.repeatCount = 2
-            rightArm.add(wave, forKey: "loop.wave")
+            rightArm.add(Self.waveLoop(), forKey: "loop.wave")
         case .needsInput:
+            rightArm.add(Self.waveLoop(), forKey: "loop.wave")
             let pulse = Self.keyframes("transform.scale", [1, 1.15, 1], period: 1.2)
             badge.add(pulse, forKey: "loop.badge")
             let shake = Self.keyframes("position.x", [0, -0.6, 0.6, -0.6, 0.6, 0], period: 0.35, additive: true)
@@ -131,6 +130,19 @@ extension PetRig {
         animation.isAdditive = additive
         animation.timingFunctions = Array(repeating: CAMediaTimingFunction(name: .easeInEaseOut), count: values.count - 1)
         return animation
+    }
+
+    /// Three ±20° paw swings in 0.9 s, then a 1.5 s rest, repeating (docs/07).
+    private static func waveLoop() -> CAKeyframeAnimation {
+        let period = 2.4
+        let swing = 0.9 / period / 7
+        return keyframes(
+            "transform.rotation.z",
+            [0, 20, -20, 20, -20, 20, -20, 0, 0].map(radians),
+            period: period,
+            keyTimes: (0...7).map { NSNumber(value: Double($0) * swing) } + [1],
+            additive: true
+        )
     }
 
     /// "Zzz" fades in, rises 2 u and fades out once per breath.
