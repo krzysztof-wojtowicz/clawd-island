@@ -44,5 +44,28 @@
 - `scripts/perf-suite.sh` runs every scenario on a release bundle and prints one table (CPU avg/max after a settle, RSS max, `footprint`): launch, sleeping, thinking, usingTools, burst + post-burst, hidden idle, hide-mode pop-out, expanded hover (cursor moved with `CGWarpMouseCursorPosition`, no permission needed), permission card, Settings open/close (`--open-settings`).
 - Remaining exceptions are kept only with numbers and a reason.
 
+### WP-22 measurements (server and suite half)
+`scripts/perf-suite.sh` (settle 30 s, sample 20 s, release bundle). CPU avg / max %, RSS max MB, `footprint` MB. Before = main at `c6ef368`, after = with the `EventServer` cap (16 non-held connections in flight, extras cancelled at once; held `PermissionRequest`s are never counted).
+
+| Scenario | Before | After |
+|---|---|---|
+| launch peak (first 30 s) | 0.23 / 6.8, 40.6 MB, fp 11 | 0.18 / 5.3, 40.7 MB, fp 11 |
+| sleeping | 0.00 / 0.00, 37.9, fp 11 | 0.00 / 0.00, 37.9, fp 11 |
+| thinking | 0.00 / 0.00, 38.4, fp 11 | 0.01 / 0.10, 38.4, fp 11 |
+| usingTools | 0.05 / 1.0, 38.5, fp 11 | 0.03 / 0.6, 38.5, fp 11 |
+| burst (50 events/s, 10 s) | 2.93 / 12.5, 47.8, fp 17 | 2.18 / 7.8, 47.9, fp 17 |
+| post-burst | 0.07 / 1.3, 47.7, fp 17 | 0.02 / 0.2, 48.0, fp 17 |
+| expanded hover | 0.00 / 0.00, 49.0, fp 17 | 0.00 / 0.00, 48.8, fp 17 |
+| permission card | 0.07 / 1.2, 49.5, fp 18 | 0.00 / 0.00, 49.6, fp 18 |
+| hidden idle | 0.00 / 0.00, 44.7, fp 14 | 0.00 / 0.00, 37.9, fp 11 |
+| hide-mode pop-out | 0.06 / 0.7, 38.7, fp 13 | 0.33 / 4.2, 45.3, fp 14 |
+| Settings open/close | TODO(app): needs `--open-settings` | same |
+
+Findings (run-to-run noise on CPU max and on the hidden rows is large; they are not an effect of the cap):
+- The cap did **not** move post-burst RSS. A separate burst probe (10 s burst, 20 s wait, three builds) gave 42.7 / 42.8 / 42.6 MB for no cap / cap / cap + `autoreleasepool` around decode, footprint 14 MB each. The simulator's `curl`s rarely overlap 16-deep, and decode garbage is not the cause.
+- `vmmap --summary` before/after a burst: `MALLOC_SMALL` dirty 5.9 -> 9.4 MB and live malloc objects 20k -> 37k (allocated 2.9 -> 5.2 MB). That is retained state per event on the app side (snapshot, session or HUD work), not connection buffers. Needs an app-side look (WP-22 app half).
+- RSS (about 48 MB in the suite) is far above `footprint` (17 MB): the difference is clean framework pages touched by Network and SwiftUI, which a server change cannot shrink.
+- Launch peak 40.7 MB (target 38) and post-burst 48 MB (target 40) remain over; footprint is 11 / 17 MB, so RSS is dominated by resident shared-library pages.
+
 ## How to measure
 `scripts/perf.sh 60` samples `ps -o %cpu=,rss= -p <pid>` every second for the given number of seconds and prints the average, the maximum, and a PASS/FAIL against the budget. Use it together with `scripts/simulate.sh burst`. Optional deeper check: `sudo powermetrics --samplers tasks -n 5 -i 1000 | grep ClawdNotch` for wakeups per second.

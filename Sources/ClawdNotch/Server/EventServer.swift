@@ -14,6 +14,10 @@ import os
 /// Decoding runs on the server's serial queue; `onMessage` receives Sendable values there.
 final class EventServer: Sendable {
     private static let readTimeout: DispatchTimeInterval = .seconds(2)
+    /// Most ordinary (non-held) connections in flight; extra ones are cancelled at once, which Claude Code treats
+    /// as a silent, non-blocking hook failure. Bursts of dozens of hooks otherwise leave the allocator holding
+    /// per-connection buffers (docs/08).
+    private static let maxInFlight = 16
     private static let logger = Logger(subsystem: "dev.clawdnotch", category: "server")
 
     private let listener: NWListener
@@ -23,6 +27,8 @@ final class EventServer: Sendable {
     private let onMessage: @Sendable (Inbound) -> Void
     private let onPermission: @Sendable (ClawdEvent, PermissionResponder) -> Void
     private let onPermissionClosed: @Sendable (UUID) -> Void
+    /// Non-held connections in flight. Only touched on `queue`.
+    nonisolated(unsafe) private var inFlight = Set<ObjectIdentifier>()
 
     /// - Parameters:
     ///   - holdPermissions: Asked per request, so toggling "approve from the notch" needs no restart.
@@ -74,6 +80,12 @@ final class EventServer: Sendable {
     }
 
     private func handle(_ connection: NWConnection) {
+        guard inFlight.count < Self.maxInFlight else { return connection.cancel() }
+        let id = ObjectIdentifier(connection)
+        inFlight.insert(id)
+        connection.stateUpdateHandler = { [weak self] state in
+            if case .cancelled = state { self?.inFlight.remove(id) }
+        }
         connection.start(queue: queue)
         // Slow or stalled clients are cut off; cancelling an already finished connection is a no-op.
         // Held permission requests cancel this item, otherwise it would kill them after 2 s.
@@ -123,6 +135,7 @@ final class EventServer: Sendable {
     /// Keeps the connection open until the responder is used, or the client hangs up.
     private func hold(_ connection: NWConnection, timeout: DispatchWorkItem, event: ClawdEvent) {
         timeout.cancel()
+        inFlight.remove(ObjectIdentifier(connection)) // held requests are never counted or dropped
         let responder = PermissionResponder { [self] decision in
             queue.async { self.reply(200, body: decision.body, on: connection) }
         }
