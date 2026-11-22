@@ -6,39 +6,27 @@ A small orange pet that lives in your MacBook notch and mirrors what Claude Code
 
 ![Clawd in nine poses](docs/media/hero.gif)
 
-## Install
+## Install from a release
 
-ClawdIsland is built from source. You need macOS 14+ and the Swift 6.2 Command Line Tools (`xcode-select --install`); Xcode is not needed.
+Needs macOS 14+ on Apple silicon and Claude Code.
 
-```sh
-git clone <this repo> && cd claude-pet
-scripts/make-signing-cert.sh   # once: creates the "ClawdIsland" certificate, asks for your login password
-scripts/install.sh             # release build -> ~/Applications/ClawdIsland.app, then launches it
-```
+1. Download `ClawdIsland-<version>.zip` and `ClawdIsland-<version>.zip.sha256` from the [Releases page](../../releases).
+2. Check the download, in the download folder: `shasum -a 256 -c ClawdIsland-<version>.zip.sha256` must print `OK`.
+3. Unzip it and move `ClawdIsland.app` to `/Applications` (or `~/Applications`).
+4. Open it. The app is signed but not notarized, so macOS blocks the first launch. On macOS 15+ open System Settings → Privacy & Security and click **Open Anyway** next to ClawdIsland (on macOS 14, right-click the app → Open). Or clear the quarantine flag: `xattr -dr com.apple.quarantine /Applications/ClawdIsland.app`.
+5. Settings opens on the first launch: click **Install** in the hooks row. It backs up `~/.claude/settings.json`, adds the hooks and the statusline, and can be undone from the same row (**Uninstall**). Settings is also in the right-click menu of the notch.
 
-`scripts/install.sh --dest /Applications` installs for all users. Without the certificate the app is signed ad-hoc, which works, but macOS forgets the permissions below after every rebuild. A signed app is a stable identity, so the grants survive updates. The certificate is local to your Mac (ADR-0008); other Macs see an "unidentified developer" warning (right-click, Open).
+To update, quit ClawdIsland and replace the app with the new one. Releases share one signing identity, so the permissions below survive updates.
 
-Then open **Settings** (right-click the notch → Settings…) and use the hooks row (**Install**). It backs up `~/.claude/settings.json`, adds the hooks and the statusline, and can be undone from the same row (**Uninstall**).
-
-### First-run permissions
+### Permissions
 
 - **Automation** (Terminal.app, iTerm2): macOS asks the first time you click a session; allow it for tab-precise focus.
 - **Accessibility**: for VS Code and JetBrains window focus. Add ClawdIsland in System Settings, Privacy & Security, Accessibility.
 - **Login item**: toggle "Launch at login" in Settings.
 
-### Updating
-
-Coming from ClawdNotch (before 1.1.0): run `scripts/install.sh`, delete the old `ClawdNotch.app`, then click **Install** in the Settings hooks row; hooks are recognised by shape, so the old entries are replaced. Your config moves to `~/Library/Application Support/ClawdIsland/` on first launch.
-
-Pull and re-run `scripts/install.sh`, then click **Install** in Settings again if the install folder changed (hooks point at the app's bridge path; re-installing replaces the old entries).
-
 ### Uninstall
 
-`scripts/uninstall.sh` (add `--dest` if you installed elsewhere, `--yes` to skip the question) removes the hooks and restores your previous statusline, then deletes the app and `~/Library/Application Support/ClawdIsland/`.
-
-### Share a build
-
-`scripts/package.sh` writes `dist/ClawdIsland-<version>.zip` and its `.sha256`.
+Click **Uninstall** in the Settings hooks row (it restores your previous statusline), quit the app, then delete `ClawdIsland.app` and `~/Library/Application Support/ClawdIsland/`. From a source checkout, `scripts/uninstall.sh` does all of that (pass `--dest /Applications` if you installed there).
 
 ## Features
 
@@ -55,7 +43,7 @@ Pull and re-run `scripts/install.sh`, then click **Install** in Settings again i
 
 - **Permissions from the notch.** Answer Claude Code permission requests with Deny, Allow or Always allow, without switching windows.
 - **"+ New" session.** Start a new Claude Code session from the panel.
-- **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes, needs you or runs subagents; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
+- **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes or needs you; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
 
   ![Mini mode: corner peek, pose-only change, 3 s pop-out](docs/media/mini-mode.gif)
 
@@ -83,47 +71,18 @@ Every pose is a Core Animation layer loop run by the render server. The GIFs are
 - macOS 14 or later (tested on macOS 26), Apple silicon.
 - Claude Code with hooks and the statusline.
 - A Claude Pro or Max plan for HP and WK (the usage data is only sent on those plans).
-- Swift 6.2 Command Line Tools to build. Xcode is not needed.
-- Optional permissions:
-  - Automation for Terminal.app and iTerm2, for tab-precise focus.
-  - Accessibility for VS Code and JetBrains window focus.
-  - A login item, to start with your Mac.
-- JetBrains Mono is bundled; if it fails to load the app uses the system monospaced font.
 
-## Development
+## Build from source
 
-| Command | Purpose |
-|---|---|
-| `swift build` | Build all targets (debug) |
-| `scripts/test.sh` | Run `ClawdCoreTests` (wraps `swift test`; with Command Line Tools only, plain `swift test` silently runs nothing) |
-| `scripts/bundle.sh [debug\|release]` | Assemble and sign `dist/ClawdIsland.app` ("ClawdIsland" if present, else ad-hoc) |
-| `scripts/run.sh` | Kill the running instance, bundle debug, launch |
-| `scripts/make-signing-cert.sh` | Create the local signing certificate (once) |
-| `scripts/install.sh`, `uninstall.sh`, `package.sh` | Install, remove, zip (see Install) |
-| `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
-| `scripts/perf.sh [seconds]` | Sample CPU and RSS of the running app against the budget |
-| `scripts/perf-suite.sh` | Every performance scenario on a release bundle, one table |
-| `scripts/record-gif.sh <island\|mini-mode>` | Record the README island / mini-mode GIFs |
-| `swift scripts/window-info.swift` | Print screens and the app's window level and bounds |
+You need the Swift 6.2 Command Line Tools (`xcode-select --install`); Xcode is not needed.
 
-To regenerate the pose GIFs, build in debug and run `.build/debug/ClawdIsland --render-poses docs/media`. The mode exists only in debug builds.
+```sh
+git clone <this repo> && cd <repo folder>
+scripts/make-signing-cert.sh   # optional, once: a local "ClawdIsland" certificate so permissions survive rebuilds
+scripts/install.sh             # release build -> ~/Applications/ClawdIsland.app, then launches it
+```
 
-To try Install, first-run onboarding or the uninstaller safely, point the app at scratch copies, always both variables together: `CLAWD_SETTINGS_PATH=/tmp/settings.json CLAWD_CONFIG_PATH=/tmp/config.json dist/ClawdIsland.app/Contents/MacOS/ClawdIsland [--uninstall-hooks]` (it never touches `~/.claude` then; the bridge still reads the real config). The agent guide is [`CLAUDE.md`](CLAUDE.md).
-
-## Docs
-| | |
-|---|---|
-| [01 Vision](docs/01-vision.md) | what and why |
-| [02 Requirements](docs/02-requirements.md) | REQ-xx with acceptance criteria |
-| [03 Architecture](docs/03-architecture.md) | targets, types, data flow |
-| [04 State machine](docs/04-state-machine.md) | hook event → pet state |
-| [05 Claude Code integration](docs/05-claude-code-integration.md) | hooks, bridge, statusline, installer |
-| [06 Window & notch](docs/06-window-and-notch.md) | NSPanel, geometry, mini mode |
-| [07 Pet design](docs/07-pet-design.md) | tokens, anatomy, animations |
-| [08 Performance](docs/08-performance.md) | budget and rules |
-| [09 Roadmap](docs/09-roadmap.md) | work packages |
-| [10 Code style](docs/10-code-style.md) | clean code and comments |
-| [ADRs](docs/adr/) | key decisions |
+`scripts/test.sh` runs the tests, `scripts/run.sh` builds and launches a debug bundle, and `scripts/package.sh` makes the release zip and its `.sha256`. The other scripts, the spec in [`docs/`](docs/) and the agent guide are described in [`CLAUDE.md`](CLAUDE.md).
 
 ## Privacy
 

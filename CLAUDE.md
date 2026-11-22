@@ -2,7 +2,7 @@
 
 Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** v1–v5 are done (v5: waving pet, mini mode, Settings-only hooks/login, rename to ClawdIsland, scratch-port GIF recording and perf runs). **v6 (public 1.0.0, WP-30…WP-35) is specified in `docs/09-roadmap.md`** (signing identity "ClawdIsland", onboarding, CI, Settings memory, mini-mode triggers, release and README); nothing of it is implemented yet.
+**Status:** v1–v6 are done. v6 (WP-30…WP-35, `docs/09-roadmap.md`) is the public 1.0.0: signing identity "ClawdIsland", first-run onboarding, CI, mini-mode triggers, release README. Publishing (release checklist in `09`) is the user's step.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
@@ -42,6 +42,8 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 - The Claude Code Bash sandbox blocks localhost connections. Anything that talks to the app's event server (`simulate.sh`, `curl 127.0.0.1:…`, a real `claude` run with test hooks) must run with the sandbox disabled.
 - `screencapture` fails unless the terminal has the Screen Recording permission. Use `window-info.swift` for geometry, and ask the user to look when visuals matter.
 - Never test hooks against the real `~/.claude/settings.json`. Use `claude -p … --settings <scratch file>` instead.
+- To try Install, onboarding or `--uninstall-hooks` on the app, set both `CLAWD_SETTINGS_PATH` and `CLAWD_CONFIG_PATH` to scratch files (the bridge ignores them and reads the real config).
+- Pose GIFs: `.build/debug/ClawdIsland --render-poses docs/media` (debug builds only).
 
 ## Repo map
 ```

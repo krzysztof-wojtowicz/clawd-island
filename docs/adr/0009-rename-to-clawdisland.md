@@ -10,5 +10,6 @@
 - The new bundle id is a new app to macOS: Automation, Accessibility and login-item grants are asked for again.
 - Hooks are re-installed from Settings. `HookSettings` recognises the app's entries by shape, so the re-install replaces the old ones instead of duplicating them.
 - Docs 03–08, scripts, `.claude/` and CLAUDE.md are renamed in WP-28; history (CHANGELOG, ADR-0007/0008 bodies) keeps the old name.
+- v6 (WP-35) removed the support-folder migration and the `uninstall.sh` leftover cleanup: the only Mac that ran ClawdNotch is migrated, and 1.0.0 is the first public release. The 1.0.0 CHANGELOG starts fresh.
 
 **Rejected:** keeping the old bundle id for permission continuity (the name and the identifier would disagree, and no signed build has shipped yet, so little is lost).

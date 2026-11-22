@@ -192,11 +192,11 @@ First public release on GitHub (Apple silicon, signed with a stable self-signed 
 - Pop out only on a `popToken` advance or on entering `talking`, `done` or `needsInput`. `juggling` only re-poses the peeking pet. Update the trigger set in `AppDelegate`.
 - AC: REQ-05 AC1; `simulate.sh subagents` causes no pop-out.
 
-### WP-35 — Release 1.0.0 and README · owner: orchestrator + integration-engineer · deps: WP-30…WP-34 · status: `todo`
+### WP-35 — Release 1.0.0 and README · owner: orchestrator + integration-engineer · deps: WP-30…WP-34 · status: `done` (the release checklist below is the user's)
 - Version 1.0.0 everywhere (`bundle.sh`, CHANGELOG, README, docs). The CHANGELOG becomes one **1.0.0** "first public release" entry summarising the features.
 - Remove the ClawdNotch legacy: the support-folder migration code and its tests, and the leftover cleanup in `uninstall.sh` (nobody else ran ClawdNotch; this Mac is already migrated). ADR-0009 keeps the history.
 - README for release: intro and GIFs, **Install from a release** (download the zip, check the sha256, move to Applications, macOS 15+ first launch: Privacy & Security → Open Anyway, or `xattr -dr com.apple.quarantine`), Settings → Install hooks, permissions, uninstall, privacy, license. Building from source becomes a short "Build from source" section. No ClawdNotch mentions, no "Share a build", no doc-table bloat.
-- AC: REQ-15 AC2, AC5, AC7; `grep -rI ClawdNotch` leaves only ADR-0009 and CHANGELOG history.
+- AC: REQ-15 AC2, AC5, AC7; `grep -rI ClawdNotch` leaves only ADR-0009 and the docs' own history and spec lines (`02`, `09`).
 
 **Release checklist (the user runs it):** `scripts/test.sh` → `scripts/bundle.sh release` (must say it signed with "ClawdIsland") → `scripts/package.sh` → `gh release create v1.0.0 dist/ClawdIsland-1.0.0.zip*`.
 

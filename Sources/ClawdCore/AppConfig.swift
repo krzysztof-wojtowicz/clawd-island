@@ -101,20 +101,6 @@ public struct AppConfig: Codable, Equatable, Sendable {
             .appending(path: "Library/Application Support/ClawdIsland/config.json")
     }
 
-    /// One-time move of the pre-rename `Application Support/ClawdNotch` folder to `ClawdIsland` (ADR-0009),
-    /// keeping the token, port and saved statusline. Does nothing unless only the old folder exists.
-    /// - Returns: whether the folder was moved.
-    @discardableResult
-    public static func migrateLegacySupportFolder(home: URL = FileManager.default.homeDirectoryForCurrentUser) -> Bool {
-        let support = home.appending(path: "Library/Application Support")
-        let old = support.appending(path: "ClawdNotch")
-        let new = support.appending(path: "ClawdIsland")
-        let files = FileManager.default
-        guard files.fileExists(atPath: old.path), !files.fileExists(atPath: new.path) else { return false }
-        // shortcut: a failed move falls back to a fresh config (new token; the old statusline backup stays behind).
-        return (try? files.moveItem(at: old, to: new)) != nil
-    }
-
     /// Reads a config; nil when the file is missing or unreadable.
     public static func load(from url: URL = defaultURL) -> AppConfig? {
         guard let data = try? Data(contentsOf: url) else { return nil }

@@ -25,4 +25,4 @@ mv "$dest/ClawdIsland.app.new" "$dest/ClawdIsland.app"
 open "$dest/ClawdIsland.app"
 
 echo "Installed $dest/ClawdIsland.app"
-echo "Open the menu → Install Hooks so hooks point at the new bridge path"
+echo "Open Settings (right-click the notch) → Install in the hooks row so hooks point at the new bridge path"

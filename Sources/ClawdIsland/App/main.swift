@@ -4,12 +4,9 @@
 import AppKit
 import ClawdCore
 
-// Before anything reads config.json, including `--uninstall-hooks`; skipped when a scratch config is in use.
-if ProcessInfo.processInfo.environment["CLAWD_CONFIG_PATH"] == nil { AppConfig.migrateLegacySupportFolder() }
-
 // `--uninstall-hooks` is the reversible uninstaller used by scripts/uninstall.sh: no UI, exit code 0 or 1.
 // CLAWD_SETTINGS_PATH and CLAWD_CONFIG_PATH redirect it (and the whole app) to scratch files for a safe manual check
-// (README, Development); scripts never set them, so a normal uninstall always targets the real files.
+// (CLAUDE.md, Environment gotchas); scripts never set them, so a normal uninstall always targets the real files.
 if CommandLine.arguments.contains("--uninstall-hooks") {
     let bridge = Bundle.main.executableURL?.deletingLastPathComponent().appending(path: "clawd-bridge").path ?? ""
     let installer = HookInstaller(bridgePath: bridge)

@@ -29,6 +29,5 @@ pkill -x ClawdIsland 2>/dev/null || true
 
 # Must run before the config is deleted: it holds the statusline to restore.
 "$app/Contents/MacOS/ClawdIsland" --uninstall-hooks
-# A pre-rename folder may linger if the app was never launched after updating.
-rm -rf "$app" "$support" "$HOME/Library/Application Support/ClawdNotch"
+rm -rf "$app" "$support"
 echo "Uninstalled ClawdIsland."

@@ -50,7 +50,6 @@ Claude Code ──(http hooks, POST JSON)─────────────
 ## Config and runtime files
 - `~/Library/Application Support/ClawdIsland/config.json` holds the port, token, mini mode (`miniMode`), focus-read mode, `notchPermissions`, `soundCues`, `recentProjects`, `onboarded` (first-run welcome shown, REQ-09 AC5), and the original statusline command (for uninstall and wrapping).
 - `~/.claude/settings.json` is edited only by `HookInstaller` (see `05`). The backup goes to `~/.claude/settings.json.clawdisland-backup-<timestamp>`.
-- `AppConfig.migrateLegacySupportFolder()` moves a leftover `ClawdNotch/` folder to `ClawdIsland/` once at launch (ADR-0009).
 - The bridge reads the port and token from the config file. If the file is missing, it exits silently.
 
 ## Holding a request (REQ-V2-01)
