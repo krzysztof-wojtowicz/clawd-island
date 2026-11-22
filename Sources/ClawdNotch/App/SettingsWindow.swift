@@ -53,6 +53,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             checkboxWithTitle: "Approve permissions from the notch", target: self, action: #selector(permissionsChanged(_:))
         )
         let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
+        let focusLabel = NSTextField(labelWithString: "Mark as read on terminal focus:")
+        for control in [hide, login, permissions, popUp, focusLabel] as [NSControl] {
+            control.font = HUDStyle.font(size: 13)
+        }
         // Titles follow `FocusReadMode.allCases` order; `focusChanged` and `refresh` index by it.
         popUp.addItems(withTitles: AppConfig.FocusReadMode.allCases.map { mode in
             switch mode {
@@ -63,7 +67,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         })
         popUp.target = self
         popUp.action = #selector(focusChanged(_:))
-        let focusRow = NSStackView(views: [NSTextField(labelWithString: "Mark as read on terminal focus:"), popUp])
+        let focusRow = NSStackView(views: [focusLabel, popUp])
         let stack = NSStackView(views: [hide, focusRow, permissions, login])
         stack.orientation = .vertical
         stack.alignment = .leading

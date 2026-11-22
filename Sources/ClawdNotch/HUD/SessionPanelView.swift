@@ -13,6 +13,8 @@ final class SessionPanelView: NSView {
     private static let maxCards = 2
     private static let cardHeight: CGFloat = 40
     private static let cardSpacing: CGFloat = 3
+    /// Horizontal space a text field's cell adds around its text, which `NSAttributedString.size()` does not count.
+    private static let cellPadding: CGFloat = 6
 
     /// Called with a session id when its row is clicked.
     var onSelect: ((String) -> Void)?
@@ -92,7 +94,7 @@ final class SessionPanelView: NSView {
         // Shorten "resets in" to "resets" when the full line does not fit beside the button.
         if let usage = snapshot?.usage {
             let full = HUDStyle.usageLine(usage, now: footerDate)
-            usageLabel.attributedStringValue = full.size().width > usageLabel.frame.width
+            usageLabel.attributedStringValue = full.size().width + Self.cellPadding > usageLabel.frame.width
                 ? HUDStyle.usageLine(usage, now: footerDate, compact: true)
                 : full
         }

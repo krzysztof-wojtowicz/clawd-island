@@ -7,10 +7,23 @@ import ClawdCore
 /// Labels, colours and wording used by every HUD view (REQ-04 AC1: counters and panel share one vocabulary).
 @MainActor
 enum HUDStyle {
+    /// The one font lookup for all HUD, panel and Settings text (REQ-14): JetBrains Mono when installed, else the
+    /// system monospaced font. Never throws or crashes; a missing face only changes the glyphs.
+    static func font(size: CGFloat, weight: NSFont.Weight = .regular) -> NSFont {
+        let face = switch weight {
+        case .bold, .heavy, .black: "Bold"
+        case .semibold: "SemiBold"
+        case .medium: "Medium"
+        case .light, .thin, .ultraLight: "Light"
+        default: "Regular"
+        }
+        return NSFont(name: "JetBrainsMono-\(face)", size: size) ?? .monospacedSystemFont(ofSize: size, weight: weight)
+    }
+
     /// A non-editable label; the island is always dark, so the semantic label colours resolve to light text.
     static func label(size: CGFloat, weight: NSFont.Weight = .regular, color: NSColor = .labelColor) -> NSTextField {
         let label = NSTextField(labelWithString: "")
-        label.font = .monospacedDigitSystemFont(ofSize: size, weight: weight)
+        label.font = font(size: size, weight: weight)
         label.textColor = color
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -43,15 +56,17 @@ enum HUDStyle {
     /// band colour. The WK part is omitted while the weekly window is unknown, and `compact` shortens "resets in" to
     /// "resets". Computed at `now`, never ticking.
     static func usageLine(_ usage: UsageSnapshot?, now: Date, compact: Bool = false) -> NSAttributedString {
-        guard let usage, let hp = usage.hitPoints(now: now) else { return NSAttributedString(string: "Usage unknown") }
+        guard let usage, let hp = usage.hitPoints(now: now) else { return NSAttributedString(string: "Usage unknown", attributes: [.font: font(size: 11), .foregroundColor: NSColor.secondaryLabelColor]) }
         let line = NSMutableAttributedString()
+        // Attributed runs do not inherit the label's font either.
+        let font = font(size: 11)
         // Attributed strings ignore the label's textColor, so untinted runs carry the secondary colour themselves.
         func plain(_ text: String) -> NSAttributedString {
-            NSAttributedString(string: text, attributes: [.foregroundColor: NSColor.secondaryLabelColor])
+            NSAttributedString(string: text, attributes: [.foregroundColor: NSColor.secondaryLabelColor, .font: font])
         }
         func percent(_ hp: HitPoints) -> NSAttributedString {
             let text = "\(hp.percent.formatted(.number.precision(.fractionLength(0...1))))%"
-            return NSAttributedString(string: text, attributes: [.foregroundColor: color(token(for: hp.level))])
+            return NSAttributedString(string: text, attributes: [.foregroundColor: color(token(for: hp.level)), .font: font])
         }
         if let week = usage.weekRemaining(now: now) {
             line.append(plain("WK "))

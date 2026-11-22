@@ -51,7 +51,7 @@ Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions
 - UI: three equal pills **Allow / Deny / Always allow** with centred labels; Always allow hidden without a suggestion, tooltip shows the rule.
 - AC: REQ-V2-01 AC6–AC9, REQ-14 where fonts apply. E2E with real `claude` + scratch `--settings`: Always allow answers the prompt and the rule is saved.
 
-### WP-13 — JetBrains Mono typography · owner: macos-ui-engineer · deps: WP-12 · status: `todo`
+### WP-13 — JetBrains Mono typography · owner: macos-ui-engineer · deps: WP-12 · status: `done` (HUDStyle.font is the one lookup; footer compact rule re-measured with cell padding; release idle 0.00 % / 37.8 MB)
 - One font helper (HUD, panel, cards, Settings): `NSFont(name: "JetBrains Mono", …)`, fallback `NSFont.monospacedSystemFont`.
 - Check the footer, cards and counters still fit (monospace is wider); adjust `expandedMinWidth` only if needed.
 - AC: REQ-14 AC1–AC3. RSS within budget.
