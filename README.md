@@ -10,7 +10,7 @@ A small orange pet that lives in your MacBook notch and mirrors what Claude Code
 
 - **Notch island.** An asymmetric island around the notch: a session counter in the left wing, an HP bar and the pet in the right wing. On a Mac without a notch it draws a virtual one at the top of the main display. On hover the counter morphs into three counters.
 - **Usage from the statusline.** HP is your 5-hour usage and WK your weekly usage, both read from the Claude Code statusline `rate_limits` payload.
-- **Session panel.** Click the island to list sessions, each with a state dot.
+- **Session panel.** Hover the island to open the panel: sessions sorted by importance, each with a state dot, plus the usage footer.
 - **Focus on click.** Jump to the terminal or IDE of a session:
 
   | App | Focus precision |
@@ -21,7 +21,7 @@ A small orange pet that lives in your MacBook notch and mirrors what Claude Code
 
 - **Permissions from the notch.** Answer Claude Code permission requests with Deny, Allow or Always allow, without switching windows.
 - **"+ New" session.** Start a new Claude Code session from the panel.
-- **Hide mode.** The pet peeks upside down from the corner of the screen and pops out for 4 s on a state change. A pending permission request stays out until you resolve it.
+- **Hide mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 4 s on a state change. A pending permission request stays out until you resolve it.
 - **Sound cues** for needs-input and done.
 - **Music headphones.** The pet puts on headphones and nods while Apple Music or Spotify plays.
 - **JetBrains Mono** for the numbers, with a monospaced fallback.
