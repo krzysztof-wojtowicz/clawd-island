@@ -60,10 +60,20 @@ final class AppModel {
         publish()
     }
 
-    /// Answers a card from the notch (REQ-V2-01): allow or deny, once. Unknown or already closed ids are ignored.
-    func decide(permissionID: UUID, allow: Bool) {
+    /// A notch answer to a permission card.
+    enum PermissionChoice { case allow, deny, alwaysAllow }
+
+    /// Answers a card from the notch (REQ-V2-01): once. Unknown or already closed ids are ignored, and
+    /// `alwaysAllow` on a card without a suggestion is a plain allow.
+    func decide(permissionID: UUID, _ choice: PermissionChoice) {
         guard let responder = responders.removeValue(forKey: permissionID) else { return }
-        responder.reply(allow ? .allow : .deny)
+        switch choice {
+        case .allow: responder.reply(.allow)
+        case .deny: responder.reply(.deny)
+        case .alwaysAllow:
+            let suggestion = snapshot.pendingPermissions.first { $0.id == permissionID }?.suggestion
+            responder.reply(suggestion.map { .alwaysAllow(suggestion: $0.json) } ?? .allow)
+        }
         store.resolvePermission(permissionID)
         publish()
     }

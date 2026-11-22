@@ -11,6 +11,8 @@ final class PermissionResponder: Sendable {
     /// What goes back to Claude Code.
     enum Decision: Sendable {
         case allow, deny
+        /// Allow and save the given `permission_suggestions` entry (raw JSON object) as received.
+        case alwaysAllow(suggestion: String)
         /// An empty 200: no decision, Claude Code falls back to the terminal dialog.
         case none
 
@@ -21,6 +23,8 @@ final class PermissionResponder: Sendable {
                 Data(#"{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}"#.utf8)
             case .deny:
                 Data(#"{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"Denied from ClawdNotch"}}}"#.utf8)
+            case .alwaysAllow(let suggestion):
+                Data(#"{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow","updatedPermissions":[\#(suggestion)]}}}"#.utf8)
             case .none:
                 Data()
             }

@@ -35,6 +35,8 @@ public struct ClawdEvent: Equatable, Sendable {
     public let agentID: String?
     /// For `PermissionRequest`, `PostToolUse`, `PostToolUseFailure` and `PermissionDenied`: a short description of what the tool wants to do. Never the full `tool_input`.
     public var inputSummary: String? = nil
+    /// For `PermissionRequest`: the first `permission_suggestions` entry, when present and small enough.
+    public var suggestion: PermissionSuggestion? = nil
     public let receivedAt: Date
 
     /// Kinds that carry an `inputSummary`, so a finished tool can be matched to its pending permission card.
@@ -63,6 +65,7 @@ extension ClawdEvent {
             agentID: object["agent_id"] as? String,
             inputSummary: Self.summarisedKinds.contains(kind)
                 ? Self.summary(of: object["tool_input"] as? [String: Any], toolName: toolName) : nil,
+            suggestion: kind == .permissionRequest ? PermissionSuggestion(suggestions: object["permission_suggestions"]) : nil,
             receivedAt: receivedAt
         )
     }

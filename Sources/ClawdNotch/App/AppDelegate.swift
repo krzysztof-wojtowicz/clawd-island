@@ -78,14 +78,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     #if DEBUG
-    /// End-to-end test hook: with `--debug-auto-allow` or `--debug-auto-deny`, answers the newest pending permission
+    /// End-to-end test hook: with `--debug-auto-allow`, `--debug-auto-always` or `--debug-auto-deny`, answers the newest pending permission
     /// 3 s after it appears, standing in for a click on the card.
     private static func debugDecide(_ snapshot: Snapshot, model: AppModel) {
         let args = CommandLine.arguments
-        guard args.contains("--debug-auto-allow") || args.contains("--debug-auto-deny"),
-              let id = snapshot.pendingPermissions.first?.id else { return }
-        let allow = args.contains("--debug-auto-allow")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { MainActor.assumeIsolated { model.decide(permissionID: id, allow: allow) } }
+        let choice: AppModel.PermissionChoice
+        if args.contains("--debug-auto-always") { choice = .alwaysAllow }
+        else if args.contains("--debug-auto-allow") { choice = .allow }
+        else if args.contains("--debug-auto-deny") { choice = .deny }
+        else { return }
+        guard let id = snapshot.pendingPermissions.first?.id else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { MainActor.assumeIsolated { model.decide(permissionID: id, choice) } }
     }
     #endif
 

@@ -58,7 +58,8 @@ public struct SessionStore: Sendable {
               let session = sessions.first(where: { $0.id == event.sessionID }) else { return }
         permissions.append(PendingPermission(
             id: id, sessionID: session.id, projectName: session.projectName, toolName: event.toolName,
-            summary: event.inputSummary ?? event.toolName ?? "", receivedAt: event.receivedAt))
+            summary: event.inputSummary ?? event.toolName ?? "",
+            suggestion: event.suggestion, receivedAt: event.receivedAt))
     }
 
     /// Removes one pending permission, for example after the user decided.

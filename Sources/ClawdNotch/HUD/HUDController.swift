@@ -33,7 +33,7 @@ final class HUDController {
         panel.recentProjects = { [model] in model.recentProjects }
         panel.onNewSession = { [model] url in model.newSession(at: url) }
         panel.onChooseFolder = { [model] in model.chooseFolderAndStartSession() }
-        panel.onDecide = { [model] id, allow in model.decide(permissionID: id, allow: allow) }
+        panel.onDecide = { [model] id, choice in model.decide(permissionID: id, choice) }
         if let snapshot { panel.render(snapshot) }
         self.panel = panel
         return panel

@@ -45,7 +45,7 @@ WP-16 (compacting) ──▶ WP-17 (juggling) ──▶ WP-18 (music headphones)
 ## v3 work packages
 Specs: REQ-V2-01, REQ-V2-02, REQ-03, REQ-12, REQ-13, REQ-14 in `02`; transitions in `04`; formats in `05`; layout in `06`; pet parts in `07`. Follow the `add-pet-state` skill for WP-16/17/18.
 
-### WP-12 — Permission card: centred pills + Always allow · owner: core-engineer + macos-ui-engineer · deps: none · status: `todo`
+### WP-12 — Permission card: centred pills + Always allow · owner: core-engineer + macos-ui-engineer · deps: none · status: `done` (e2e with real `claude`: Always allow wrote `Bash(swift --version)` to the scratch `.claude/settings.local.json`, the repeat ran unprompted; `addDirectories` suggestions are session-only; release idle 0.00 % / 37.8 MB)
 - Core: `PendingPermission.suggestion` (first `permission_suggestions` entry, raw JSON, at most 2 KiB), decoded leniently; tests.
 - Server: reply `allow` with `updatedPermissions` (format in `05`); the 64 KiB body cap stays.
 - UI: three equal pills **Allow / Deny / Always allow** with centred labels; Always allow hidden without a suggestion, tooltip shows the rule.

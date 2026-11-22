@@ -16,8 +16,8 @@ final class SessionPanelView: NSView {
 
     /// Called with a session id when its row is clicked.
     var onSelect: ((String) -> Void)?
-    /// Called with a permission id and `true` for Allow, `false` for Deny.
-    var onDecide: ((UUID, Bool) -> Void)?
+    /// Called with a permission id and the pill that was clicked.
+    var onDecide: ((UUID, AppModel.PermissionChoice) -> Void)?
     /// The recent project paths for the "+ New" menu, newest first; asked when the menu opens.
     var recentProjects: () -> [String] = { [] }
     /// Called with a project directory picked from the "+ New" menu.
@@ -160,7 +160,7 @@ final class SessionPanelView: NSView {
     }
 
     private func card(for permission: PendingPermission) -> NSView {
-        PermissionCardView(permission: permission) { [weak self] allow in self?.onDecide?(permission.id, allow) }
+        PermissionCardView(permission: permission) { [weak self] choice in self?.onDecide?(permission.id, choice) }
     }
 
     private func row(for session: Session) -> NSView {
@@ -193,7 +193,7 @@ final class SessionPanelView: NSView {
 }
 
 /// A horizontal stack that takes every click inside it, including the first click on the never-key panel.
-private final class ClickableStack: NSStackView {
+private class ClickableStack: NSStackView {
     var onClick: (() -> Void)?
 
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -215,21 +215,65 @@ private final class ClickableStack: NSStackView {
     }
 }
 
-/// One permission card: `project · tool` over the summary, with Allow and Deny on the right (REQ-V2-01 AC1).
+/// A pill button whose label is centred in whatever frame it is given. A stack view lays a lone label out from
+/// its leading edge, which is what made the old Allow/Deny text sit off-centre.
+private final class PillView: ClickableStack {
+    private let label: NSTextField
+
+    init(_ text: String, fill: CGColor, accessibility: String, toolTip: String? = nil, action: @escaping () -> Void) {
+        label = HUDStyle.label(size: 11, weight: .semibold, color: HUDStyle.color(PetTokens.badgeGlyph))
+        super.init(frame: .zero)
+        label.stringValue = text
+        label.setAccessibilityElement(false)
+        addSubview(label)
+        wantsLayer = true
+        layer?.cornerCurve = .continuous
+        layer?.backgroundColor = fill
+        onClick = action
+        self.toolTip = toolTip
+        setAccessibilityLabel(accessibility)
+        setAccessibilityRole(.button)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    @available(*, unavailable)
+    required init(views: [NSView]) { fatalError("init(views:) is not supported") }
+
+    override func layout() {
+        super.layout()
+        layer?.cornerRadius = bounds.height / 2
+        let size = label.fittingSize
+        label.frame = CGRect(x: ((bounds.width - size.width) / 2).rounded(), y: ((bounds.height - size.height) / 2).rounded(),
+                             width: size.width, height: size.height)
+    }
+}
+
+/// One permission card: `project · tool` over the summary on the left, and one row of equal pills
+/// Deny / Allow / Always on the right (REQ-V2-01 AC1, AC6, AC8).
 /// Built with plain frames; a card is a fixed 40 pt, so constraints would only add cost.
 private final class PermissionCardView: NSView {
     private static let pillSize = CGSize(width: 48, height: 22)
+    private static let pillGap: CGFloat = 6
     private static let inset: CGFloat = 8
 
     private let title = HUDStyle.label(size: 12, weight: .medium)
     private let summary = HUDStyle.label(size: 11, color: .secondaryLabelColor)
-    private let allow: ClickableStack
-    private let deny: ClickableStack
+    /// Left to right: Deny, Allow, and Always when the request has a suggestion.
+    private let pills: [PillView]
 
-    init(permission: PendingPermission, onDecide: @escaping (Bool) -> Void) {
+    init(permission: PendingPermission, onDecide: @escaping (AppModel.PermissionChoice) -> Void) {
         let subject = permission.toolName.map { "\(permission.projectName) · \($0)" } ?? permission.projectName
-        allow = Self.pill("Allow", fill: PetTokens.badgeActive, accessibility: "Allow \(subject)") { onDecide(true) }
-        deny = Self.pill("Deny", fill: PetTokens.badgeEmpty, accessibility: "Deny \(subject)") { onDecide(false) }
+        var pills = [
+            PillView("Deny", fill: PetTokens.badgeEmpty, accessibility: "Deny \(subject)") { onDecide(.deny) },
+            PillView("Allow", fill: PetTokens.badgeActive, accessibility: "Allow \(subject)") { onDecide(.allow) },
+        ]
+        if let suggestion = permission.suggestion {
+            pills.append(PillView("Always", fill: PetTokens.badgeActive, accessibility: "Always allow \(subject)",
+                                  toolTip: "Always allow: \(suggestion.rule)") { onDecide(.alwaysAllow) })
+        }
+        self.pills = pills
         super.init(frame: .zero)
         wantsLayer = true
         layer?.cornerRadius = 6
@@ -238,7 +282,7 @@ private final class PermissionCardView: NSView {
         title.stringValue = subject
         summary.stringValue = permission.summary
         summary.lineBreakMode = .byTruncatingMiddle
-        for view in [title, summary, allow, deny] {
+        for view in [title, summary] + pills {
             addSubview(view)
         }
     }
@@ -246,31 +290,17 @@ private final class PermissionCardView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    private static func pill(_ text: String, fill: CGColor, accessibility: String, action: @escaping () -> Void) -> ClickableStack {
-        let label = HUDStyle.label(size: 11, weight: .semibold, color: HUDStyle.color(PetTokens.badgeGlyph))
-        label.stringValue = text
-        label.alignment = .center
-        label.setAccessibilityElement(false)
-        let button = ClickableStack(views: [label])
-        button.alignment = .centerY
-        button.distribution = .fill
-        button.wantsLayer = true
-        button.layer?.cornerRadius = pillSize.height / 2
-        button.layer?.cornerCurve = .continuous
-        button.layer?.backgroundColor = fill
-        button.onClick = action
-        button.setAccessibilityLabel(accessibility)
-        button.setAccessibilityRole(.button)
-        return button
-    }
-
     override func layout() {
         super.layout()
         let pill = Self.pillSize
         let y = (bounds.height - pill.height) / 2
-        deny.frame = CGRect(x: bounds.maxX - Self.inset - pill.width, y: y, width: pill.width, height: pill.height)
-        allow.frame = CGRect(x: deny.frame.minX - 6 - pill.width, y: y, width: pill.width, height: pill.height)
-        let textWidth = allow.frame.minX - 2 * Self.inset
+        var x = bounds.maxX - Self.inset
+        for view in pills.reversed() {
+            x -= pill.width
+            view.frame = CGRect(x: x, y: y, width: pill.width, height: pill.height)
+            x -= Self.pillGap
+        }
+        let textWidth = x + Self.pillGap - 2 * Self.inset
         title.frame = CGRect(x: Self.inset, y: bounds.midY, width: textWidth, height: 16)
         summary.frame = CGRect(x: Self.inset, y: bounds.midY - 16, width: textWidth, height: 15)
     }
