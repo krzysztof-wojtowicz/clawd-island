@@ -1,5 +1,6 @@
 // PoseRenderer.swift
-// Debug-only offscreen renderer behind `--render-poses <dir>`: writes one GIF per pose for the README (WP-19).
+// Debug-only offscreen renderer behind `--render-poses <dir>` (one GIF per pose for the README, WP-19) and
+// `--render-icon <dir>` (the app icon's iconset PNGs, WP-24).
 
 #if DEBUG
 import AppKit
@@ -25,6 +26,9 @@ enum PoseRenderer {
     /// Runs when launched with `--render-poses <dir>`; renders everything, then exits the process.
     static func runIfRequested() {
         let arguments = CommandLine.arguments
+        if let flag = arguments.firstIndex(of: "--render-icon"), flag + 1 < arguments.count {
+            renderIcon(into: URL(fileURLWithPath: arguments[flag + 1], isDirectory: true))
+        }
         guard let flag = arguments.firstIndex(of: "--render-poses"), flag + 1 < arguments.count else { return }
         let directory = URL(fileURLWithPath: arguments[flag + 1], isDirectory: true)
         do {
@@ -48,6 +52,49 @@ enum PoseRenderer {
             FileHandle.standardError.write(Data("render-poses failed: \(error)\n".utf8))
             exit(1)
         }
+    }
+
+    /// Writes `icon_<size>x<size>[@2x].png` for an `.iconset`: the idle pet on a dark rounded square, on Apple's
+    /// 824 pt tile inside a 1024 pt canvas. Exits the process.
+    private static func renderIcon(into directory: URL) -> Never {
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            guard let device = MTLCreateSystemDefaultDevice() else { throw RenderError.noMetal }
+            let tile = 824.0
+            let scene = Scene(tiles: [Tile(state: .idle, headphones: false)], columns: 1, tileSize: CGSize(width: tile, height: tile))
+            scene.root.cornerRadius = tile * 0.2237
+            scene.root.masksToBounds = true
+            // An idle pose from the middle of its blink cycle, not a half-transitioned first frame.
+            let art = try scene.frames(duration: 0.1, fps: 10, warmup: 1, device: device)[0]
+            let sizes = [16, 32, 128, 256, 512]
+            for size in sizes {
+                for scale in [1, 2] {
+                    let pixels = size * scale
+                    let name = "icon_\(size)x\(size)\(scale == 2 ? "@2x" : "").png"
+                    try writePNG(art, canvas: 1024, tile: tile, pixels: pixels, to: directory.appendingPathComponent(name))
+                }
+            }
+            exit(0)
+        } catch {
+            FileHandle.standardError.write(Data("render-icon failed: \(error)\n".utf8))
+            exit(1)
+        }
+    }
+
+    private static func writePNG(_ art: CGImage, canvas: Double, tile: Double, pixels: Int, to url: URL) throws {
+        guard let context = CGContext(
+            data: nil, width: pixels, height: pixels, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { throw RenderError.noTexture }
+        context.interpolationQuality = .high
+        let scale = Double(pixels) / canvas
+        let inset = (canvas - tile) / 2 * scale
+        context.draw(art, in: CGRect(x: inset, y: inset, width: tile * scale, height: tile * scale))
+        guard let image = context.makeImage(),
+              let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)
+        else { throw RenderError.noDestination }
+        CGImageDestinationAddImage(destination, image, nil)
+        guard CGImageDestinationFinalize(destination) else { throw RenderError.noDestination }
     }
 
     private enum RenderError: Error {
@@ -106,6 +153,14 @@ enum PoseRenderer {
         }
 
         func write(to url: URL, duration: Double, fps: Double, device: MTLDevice) throws {
+            // Settle the 0.2 s pose change and the headphone fade, except for the one-shot poses.
+            let name = url.lastPathComponent
+            let warmup = name.hasPrefix("done") || name.hasPrefix("needsInput") || name == "hero.gif" ? 0 : 0.5
+            try Self.encode(frames(duration: duration, fps: fps, warmup: warmup, device: device), to: url, delay: 1 / fps)
+        }
+
+        /// Renders `duration` seconds at `fps` after `warmup` seconds of unrecorded animation.
+        func frames(duration: Double, fps: Double, warmup: Double, device: MTLDevice) throws -> [CGImage] {
             let width = Int(size.width), height = Int(size.height)
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: width, height: height, mipmapped: false)
             descriptor.usage = [.renderTarget, .shaderRead]
@@ -117,9 +172,6 @@ enum PoseRenderer {
 
             CATransaction.flush()
             let start = CACurrentMediaTime()
-            // Settle the 0.2 s pose change and the headphone fade, except for the one-shot poses.
-            let name = url.lastPathComponent
-            let warmup = name.hasPrefix("done") || name.hasPrefix("needsInput") || name == "hero.gif" ? 0 : 0.5
             var images: [CGImage] = []
             let frames = Int((duration * fps).rounded())
             for index in -Int(warmup * fps)..<frames {
@@ -132,7 +184,7 @@ enum PoseRenderer {
                 usleep(25_000)
                 if index >= 0 { images.append(try Self.image(of: texture, width: width, height: height)) }
             }
-            try Self.encode(images, to: url, delay: 1 / fps)
+            return images
         }
 
         private static func image(of texture: MTLTexture, width: Int, height: Int) throws -> CGImage {

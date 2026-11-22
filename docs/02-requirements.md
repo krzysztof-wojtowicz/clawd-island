@@ -132,7 +132,7 @@ While the session panel is expanded (on hover), a soft orange (`clawd.body`) glo
   - AC5: Known limit: after launching the app, the headphones appear at the next play, pause or track change. Reduce Motion: no bob.
 - **REQ-14 Typography**: all HUD and panel text (counters, footer, session rows, cards, Settings) uses **JetBrains Mono**.
   - AC1: Looked up with `NSFont(name:size:)`; fallback `NSFont.monospacedSystemFont` when it is not installed. No crash, no layout break.
-  - AC2: The font is bundled in `Contents/Resources/Fonts/` and registered for the process at launch (OFL 1.1 text in `THIRD_PARTY_NOTICES.md`, REQ-15).
+  - AC2: The font is bundled in `Contents/Resources/Fonts/` and registered for the process at launch when JetBrains Mono is not already installed (a process-registered face costs ~3 MB RSS per face used, so an installed copy is preferred; OFL 1.1 text in `THIRD_PARTY_NOTICES.md`, REQ-15).
   - AC3: Text still fits: footer, cards and panel rows truncate rather than overflow.
 - **REQ-15 Distribution (v4)**: the app is ready to install and share from source.
   - AC1: Signed with a stable identity: the local "ClawdNotch Dev" certificate when present (ADR-0008), otherwise ad-hoc; `bundle.sh` says which. Automation, Accessibility and login-item grants survive rebuilds when signed.

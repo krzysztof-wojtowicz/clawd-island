@@ -10,5 +10,5 @@ First release.
 - Permission requests answered from the notch; "+ New" session launcher.
 - Hide mode with a 3 s pop-out, sound cues, music headphones.
 - One-click, reversible hook install and uninstall.
-- JetBrains Mono bundled; app icon; version keys.
+- JetBrains Mono bundled (used when not installed); app icon; version keys.
 - `scripts/make-signing-cert.sh`, `install.sh`, `uninstall.sh` and `package.sh`; signing with a local certificate (ADR-0008).
