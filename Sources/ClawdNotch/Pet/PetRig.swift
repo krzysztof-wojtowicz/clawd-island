@@ -88,7 +88,7 @@ struct PetRig {
         [torso, zzz, bubble, badge].forEach(root.addSublayer)
         balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
-        for accessory in accessories + [headphones] { accessory.opacity = 0 }
+        for accessory in accessories + dust + [headphones] { accessory.opacity = 0 }
     }
 
     /// Accessory layers that cross-fade between states.

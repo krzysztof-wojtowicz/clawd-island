@@ -5,24 +5,30 @@ import AppKit
 import ClawdCore
 
 /// Observes the distributed notifications Apple Music and Spotify post themselves on every play, pause, stop and
-/// track change, and forwards each decoded report. Needs no permission. Delivery is on the main thread.
+/// track change, and forwards each decoded report. Needs no permission. Delivery is on the main queue.
 @MainActor
-final class NowPlayingWatcher: NSObject {
+final class NowPlayingWatcher {
     private let onReport: (NowPlaying) -> Void
+    private var tokens: [any NSObjectProtocol] = []
 
     init(onReport: @escaping (NowPlaying) -> Void) {
         self.onReport = onReport
     }
 
+    // shortcut: the apps post only on change, so after launch the state is unknown until the next play, pause or
+    // track change (REQ-13 AC5). Upgrade: ask the player once at start, which needs Automation permission.
     func start() {
+        guard tokens.isEmpty else { return }
         for app in NowPlaying.App.allCases {
-            DistributedNotificationCenter.default().addObserver(
-                self, selector: #selector(received(_:)), name: Notification.Name(app.notificationName), object: nil)
+            let token = DistributedNotificationCenter.default().addObserver(
+                forName: Notification.Name(app.notificationName), object: nil, queue: .main
+            ) { [weak self] notification in
+                // Decoded first: `Notification` is not Sendable, the `NowPlaying` report is.
+                guard let report = NowPlaying(
+                    notificationName: notification.name.rawValue, userInfo: notification.userInfo) else { return }
+                MainActor.assumeIsolated { self?.onReport(report) }
+            }
+            tokens.append(token)
         }
-    }
-
-    @objc private func received(_ notification: Notification) {
-        guard let report = NowPlaying(notificationName: notification.name.rawValue, userInfo: notification.userInfo) else { return }
-        onReport(report)
     }
 }

@@ -107,7 +107,8 @@ public struct Session: Equatable, Sendable, Identifiable {
         case .permissionDenied:
             if state == .needsInput { state = .thinking }
         case .subagentStart:
-            activeSubagents += 1
+            // A late start after `Stop` would otherwise resurface as a stale juggling count once the session is read.
+            if state != .done { activeSubagents += 1 }
         case .subagentStop:
             activeSubagents = max(0, activeSubagents - 1)
         case .stop, .stopFailure:

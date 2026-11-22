@@ -139,6 +139,18 @@ struct SessionStoreTests {
         #expect(snapshot.sessions.first?.activeSubagents == 0)
     }
 
+    @Test("A SubagentStart after Stop is ignored, so reading the session does not resurface juggling")
+    func lateSubagentStart() {
+        var store = SessionStore()
+        store.apply(event(.userPromptSubmit), now: t0)
+        store.apply(event(.stop), now: t0)
+        store.apply(event(.subagentStart, agent: "late"), now: t0)
+        store.markRead("s1")
+        let snapshot = store.snapshot(now: t0)
+        #expect(snapshot.aggregate == .idle)
+        #expect(snapshot.sessions.first?.activeSubagents == 0)
+    }
+
     @Test("UserPromptSubmit and StopFailure reset the subagent counter")
     func subagentCounterResets() {
         var store = SessionStore()
