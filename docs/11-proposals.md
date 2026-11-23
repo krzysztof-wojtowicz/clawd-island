@@ -9,7 +9,7 @@ Every proposal must keep the CLAUDE.md invariants and the `08` budget. Each sect
 | P1 | Pet customization: original species, colour, accessory, name | REQ-19, REQ-20 | ADR-0010 | WP-43, WP-44 |
 | P2 | Settings window redesign (tabs, live preview) | REQ-21 | — | WP-42 |
 | P3 | Other agents: Codex CLI, Gemini / Antigravity CLI, Junie CLI | REQ-22 | ADR-0009 | WP-37 … WP-41 |
-| P4 | Smaller ideas: Do Not Disturb, poke, hotkey, context %, sound choice | REQ-23 … REQ-25 | — | WP-45 … WP-47 |
+| P4 | Smaller ideas: Do Not Disturb, poke, hotkey, context %, sound choice | REQ-23 … REQ-25 | — | WP-45 … WP-49 |
 
 ---
 
