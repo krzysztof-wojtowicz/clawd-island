@@ -1,5 +1,5 @@
 // EditorWindows.swift
-// Window-level lookup and raise for the VS Code family and JetBrains IDEs through the Accessibility API (REQ-V2-02).
+// Window-level lookup and raise for the VS Code family and JetBrains IDEs through the Accessibility API (REQ-17).
 
 import AppKit
 import ApplicationServices

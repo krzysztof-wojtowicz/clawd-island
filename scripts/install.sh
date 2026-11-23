@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds a release ClawdIsland.app, replaces the installed copy and launches it (REQ-15 AC4).
+# Builds a release ClawdIsland.app, replaces the installed copy and launches it (REQ-15 AC3).
 # Usage: scripts/install.sh [--dest DIR]   (default ~/Applications; pass /Applications for all users)
 set -euo pipefail
 cd "$(dirname "$0")/.."

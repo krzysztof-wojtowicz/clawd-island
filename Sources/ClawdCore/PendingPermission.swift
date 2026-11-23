@@ -1,5 +1,5 @@
 // PendingPermission.swift
-// A PermissionRequest hook held open so the notch can answer it (REQ-V2-01, ADR-0006).
+// A PermissionRequest hook held open so the notch can answer it (REQ-16, ADR-0006).
 
 import Foundation
 
@@ -18,7 +18,7 @@ public struct PendingPermission: Equatable, Sendable, Identifiable {
 }
 
 /// The first `permission_suggestions` entry of a `PermissionRequest`, kept verbatim so it can be echoed back
-/// in `updatedPermissions` (REQ-V2-01 AC7, AC9). The app never builds or edits a rule.
+/// in `updatedPermissions` (REQ-16 AC7, AC9). The app never builds or edits a rule.
 public struct PermissionSuggestion: Equatable, Sendable {
     /// Largest accepted entry, in bytes; a bigger one is dropped.
     public static let maxBytes = 2048

@@ -10,7 +10,7 @@ import os
 /// An `NWListener` on `127.0.0.1:<port>` that accepts `POST /hook`, `/session-meta` and `/statusline`.
 /// Every connection is handled on its own and closed after one reply, which is empty except for a
 /// `PermissionRequest` answered from the notch: with `notchPermissions` on, that connection is held and its
-/// `PermissionResponder` is handed to `onPermission` (REQ-V2-01, ADR-0006).
+/// `PermissionResponder` is handed to `onPermission` (REQ-16, ADR-0006).
 /// Decoding runs on the server's serial queue; `onMessage` receives Sendable values there.
 final class EventServer: Sendable {
     private static let readTimeout: DispatchTimeInterval = .seconds(2)

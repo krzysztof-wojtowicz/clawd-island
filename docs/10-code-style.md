@@ -9,7 +9,7 @@ Clean, small, and readable code. Apply the `ponytail` skill (level `full`) on ev
 - Each type and function has one responsibility. Functions are ideally under 30 lines, and files under 300 lines. Split files by responsibility, not by mechanical size.
 - No force unwraps (`!`) or `try!` outside tests, except for compile-time-safe constants. Any such constant gets a `// safe:` comment.
 - Use `let` by default. Keep access control minimal: everything is `internal` unless another target needs it.
-- No dead code, commented-out code, or TODOs without a WP reference (`// TODO(WP-6): …`).
+- No dead code, commented-out code, or TODOs without a WP reference (`// TODO(WP-36): …`).
 - Errors at trust boundaries (HTTP bodies, the settings file, stdin) are handled explicitly and never crash the app.
 - Use `os.Logger` with subsystem `dev.clawdisland` and one category per module. Never use `print` in the app target. The bridge may print only its statusline output.
 
@@ -35,5 +35,5 @@ Clean, small, and readable code. Apply the `ponytail` skill (level `full`) on ev
 - Any new non-trivial logic (a branch, a parser, a loop) ships with at least one test. AppKit glue that cannot run headless is verified manually through `build-and-run` and screenshots.
 
 ## Commits
-- Use Conventional-ish messages: `feat(core): session state machine (WP-1, REQ-03)`. The body explains the why. End with the attribution trailer that the harness requires.
+- Use Conventional-ish messages: `feat(core): session state machine (REQ-03)` (add the WP ID when there is one). The body explains the why. End with the attribution trailer that the harness requires.
 - Commit only after `swift build && scripts/test.sh` pass. Never push.

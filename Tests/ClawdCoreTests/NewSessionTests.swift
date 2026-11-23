@@ -1,5 +1,5 @@
 // NewSessionTests.swift
-// Quoting of the launcher command and the recent-projects list (REQ-V2-03).
+// Quoting of the launcher command and the recent-projects list (REQ-18).
 
 import Foundation
 import Testing

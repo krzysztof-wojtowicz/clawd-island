@@ -1,5 +1,5 @@
 // PermissionTests.swift
-// PermissionRequest summaries and the pending-permission lifecycle in SessionStore (WP-9, REQ-V2-01).
+// PermissionRequest summaries and the pending-permission lifecycle in SessionStore (REQ-16).
 
 import Foundation
 import Testing

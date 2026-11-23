@@ -134,7 +134,7 @@ final class SessionPanelView: NSView {
         needsLayout = true
     }
 
-    /// Opens the "+ New" menu: recent projects, then "Choose Folder…" (REQ-V2-03). It pops up below the button.
+    /// Opens the "+ New" menu: recent projects, then "Choose Folder…" (REQ-18). It pops up below the button.
     private func showNewMenu() {
         let menu = NSMenu()
         let recents = recentProjects()
@@ -218,7 +218,7 @@ private class ClickableStack: NSStackView {
 }
 
 /// A pill button whose label is centred in whatever frame it is given. A stack view lays a lone label out from
-/// its leading edge, which is what made the old Allow/Deny text sit off-centre.
+/// its leading edge, which would put the text off-centre.
 private final class PillView: ClickableStack {
     private let label: NSTextField
 
@@ -253,7 +253,7 @@ private final class PillView: ClickableStack {
 }
 
 /// One permission card: `project · tool` over the summary on the left, and one row of equal pills
-/// Deny / Allow / Always on the right (REQ-V2-01 AC1, AC6, AC8).
+/// Deny / Allow / Always on the right (REQ-16 AC1, AC6, AC8).
 /// Built with plain frames; a card is a fixed 40 pt, so constraints would only add cost.
 private final class PermissionCardView: NSView {
     private static let pillSize = CGSize(width: 48, height: 22)

@@ -1,5 +1,5 @@
 // NewSessionCommand.swift
-// Safe quoting for the "New session" launcher (REQ-V2-03): shell first, then AppleScript.
+// Safe quoting for the "New session" launcher (REQ-18): shell first, then AppleScript.
 
 import Foundation
 

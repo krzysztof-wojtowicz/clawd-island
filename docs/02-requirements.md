@@ -1,6 +1,6 @@
 # 02 — Requirements
 
-Each requirement has acceptance criteria (AC). WPs in `09-roadmap.md` reference these IDs.
+Each requirement has acceptance criteria (AC); work packages in `09-roadmap.md` and code comments cite these IDs. Everything below is implemented in 1.0.0.
 
 ## REQ-01 Lives in the notch
 The pet always lives on the **main display** (the one with the menu bar, as set in System Settings → Displays). If that display has a notch, the pet anchors to it. Otherwise it uses the top centre of the display as a virtual notch. This is the user's decision: with an external monitor set as main, the pet goes there even when the MacBook lid is open.
@@ -34,7 +34,7 @@ The pet shows no single session: it shows the **aggregate**, the most important 
 - AC4: `compacting` starts on `PreCompact` and ends on the next state-setting event or on `SessionStart(source: compact)` (`04`).
 - AC5: The panel text reads "compacting" and "N subagents"; both states count as working in the status buckets.
 - AC6: `juggling` is derived per session from `activeSubagents > 0` unless the session is `needsInput` or `done`. The counter resets on `Stop`, `StopFailure` and `UserPromptSubmit`, so a missed `SubagentStop` cannot leave the pet juggling.
-- AC7 (v5): In `done` and `needsInput` the paw raises, then waves in a loop: three ±20° swings (about 0.9 s), a rest of about 1.5 s, repeating while the state holds. No wave under Reduce Motion (the paw stays raised).
+- AC7: In `done` and `needsInput` the paw raises, then waves in a loop: three ±20° swings (about 0.9 s), a rest of about 1.5 s, repeating while the state holds. No wave under Reduce Motion (the paw stays raised).
 
 ## REQ-04 Session counter and HP bar
 The collapsed island is laid out as `counter | notch | HP bar · pet` (see the sketch in `06`). Everything is vertically centred in the top row:
@@ -57,31 +57,31 @@ The collapsed island is laid out as `counter | notch | HP bar · pet` (see the s
 
 ## REQ-05 Mini mode
 A toggle (right-click menu "Mini Mode", or Settings) hides the wings and tucks the pet into the notch's **bottom-right corner, upside down**: it is turned 180° and then a further 30° (about 150° clockwise in total), so its legs and lower body stay hidden behind the notch while its head, eyes and arms stick out down and to the right. Its state animations (blinking, hammer, bubbles, the "!" badge) stay visible.
-- AC1: In mini mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done` or `needsInput`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `juggling`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s (v3.1). From v6 (WP-34) `juggling` (running subagents) no longer pops out.
+- AC1: In mini mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done` or `needsInput`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `juggling`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s.
 - AC2: `needsInput` stays popped out until it is resolved (it does not retract after 3 s).
 - AC3: Hovering over the peeking pet expands the island temporarily.
 - AC4: Every transition (hidden ↔ popped ↔ expanded, and switching mini mode on or off in any of them) moves the pet continuously: its position and tilt animate together with the island resize, with no jumps.
-- AC5 (v5): Launching with mini mode already on shows the pet tilted from the first frame (the pet is embedded before the persisted mode is applied).
-- AC6 (v5): Launch at login is a Settings checkbox only; it is not in the right-click menu.
+- AC5: Launching with mini mode already on shows the pet tilted from the first frame (the pet is embedded before the persisted mode is applied).
+- AC6: Launch at login is a Settings checkbox only; it is not in the right-click menu.
 
 ## REQ-06 Clawd-inspired design
-Orange (`#D97757` family), a rounded-rectangle body, two tall dark eyes, little side arms and four stubby legs in two pairs with a gap between them (v5), with smooth corners and richer animation than the pixel original.
+Orange (`#D97757` family), a rounded-rectangle body, two tall dark eyes, little side arms and four stubby legs in two pairs with a gap between them, with smooth corners and richer animation than the pixel original.
 - AC1: Vector-only, so it is sharp on every Retina scale. There are no bitmap assets.
 
 ## REQ-07 macOS only
-macOS 14+ on Apple silicon only (v6: no universal binary, no Intel build).
+macOS 14+ on Apple silicon only (no universal binary, no Intel build).
 
 ## REQ-08 Minimal resource usage
 See `08-performance.md`.
-- AC1: Idle CPU < 0.3 %. Animating < 1 %. Memory: `footprint` (phys_footprint, what the app really owns) < 20 MB, and RSS < 45 MB steady (RSS includes shared AppKit/system pages: an empty accessory AppKit app already sits near 30 MB; v4 decision). 0 wakeups/s while sleeping, apart from the 30 s liveness timer.
+- AC1: Sleeping CPU < 0.1 %, idle or animating < 1 % (averaged after settling). Memory: `footprint` (phys_footprint, what the app really owns) < 20 MB, and RSS < 45 MB steady (RSS includes shared AppKit/system pages: an empty accessory AppKit app already sits near 30 MB). 0 wakeups/s while sleeping, apart from the 30 s liveness timer.
 - AC2: It adds no measurable latency to Claude Code (hooks are fire-and-forget).
 
 ## REQ-09 Claude Code subscription integration
 - AC1: A one-click install adds hooks and the statusline to `~/.claude/settings.json` (with a backup, idempotently). Uninstall restores the previous state, including any original statusline.
 - AC2: Multiple concurrent sessions (several terminals, subagents) are tracked independently.
 - AC3: Usage data comes from the statusline `rate_limits` field only (ADR-0004).
-- AC4 (v5): Install Hooks / Uninstall Hooks live in Settings only (a status row "Claude Code hooks: Installed / Not installed" plus one button), not in the right-click menu.
-- AC5 (v6, WP-31): On the first launch (no `onboarded` flag in config) while the hooks are not installed, Settings opens once with a one-line welcome ("Install the Claude Code hooks to connect Clawd") and Install as the default button; the flag is then set, so later launches do not open it.
+- AC4: Install Hooks / Uninstall Hooks live in Settings only (a status row "Claude Code hooks: Installed / Not installed" plus one button), not in the right-click menu.
+- AC5: On the first launch (no `onboarded` flag in config) while the hooks are not installed, Settings opens once with a one-line welcome ("Install the Claude Code hooks to connect Clawd") and Install as the default button; the flag is then set, so later launches do not open it.
 
 ## REQ-10 Attention / read tracking
 A `done` session becomes *read* when any of the following happens:
@@ -95,48 +95,54 @@ A `done` session becomes *read* when any of the following happens:
 - AC3: The panel lists sessions by importance (`04`, "Panel order"), so sessions that need you are never hidden behind "+n more".
 
 ## REQ-11 Hover glow
-While the session panel is expanded (on hover), a soft orange (`clawd.body`) glow sits under and around it. It fades in and out with the expand and collapse. It is a nice-to-have: it ships only if it costs nothing measurable.
-- AC1: No extra CPU at rest. The glow is a static layer, and only its opacity is animated (see `06` and `08`).
-- AC2: The REQ-08 budgets still hold, measured with `perf.sh` with the panel collapsed and expanded. If they do not, the glow is removed and this REQ is marked *dropped*, with the measured numbers recorded in `08`.
+While the session panel is expanded (on hover), a soft orange (`clawd.body`) glow sits under and around it, fading in and out with the expand and collapse.
+- AC1: No extra CPU at rest. The glow is a static layer shadow; only its opacity animates (`06`, `08`).
+- AC2: The REQ-08 budgets hold with the panel expanded (`08`, "expanded hover").
 
-## v2 (done in WP-9, WP-10, WP-11; extended in v3)
-- **REQ-V2-01**: Allow / Deny / Always allow permission prompts from the notch (ADR-0006). The `PermissionRequest` HTTP hook is held open while the notch shows the request; the terminal dialog appears at the same time, and whichever is answered first wins.
-  - AC1: When Claude Code asks for a tool permission, the expanded panel shows a **permission card** at the top (project, tool name, a one-line truncated summary of the input such as the Bash command or file path) with action buttons. The pet is `needsInput` and pops out as before.
-  - AC2: Allow or Deny from the notch resolves the request in Claude Code within 1 s, and the terminal dialog closes.
-  - AC3: The terminal dialog still appears immediately and answering it works as before. The card disappears when the session moves on, when Claude Code closes the hook connection, or after 110 s (the app then replies with no decision).
-  - AC4: When the app is not running, or "Approve permissions from the notch" is off, behaviour is exactly as without the app: no decision and no delay.
-  - AC5: The app never decides on its own; only an explicit click sends a decision. Deny sends the message "Denied from ClawdIsland".
-  - AC6 (v3): The card has three **equal-width pills with centred labels**: Allow, Deny, Always allow (layout in `06`).
-  - AC7 (v3): Always allow replies `allow` with the request's first `permission_suggestions` entry, as received, in `decision.updatedPermissions` (`05`). The suggestion carries its own destination.
-  - AC8 (v3): Always allow is hidden when the request has no suggestion. Its tooltip shows the rule that would be saved.
-  - AC9 (v3): Core keeps the suggestion as raw JSON of at most 2 KiB in `PendingPermission`; a larger one hides the button.
-- **REQ-V2-02**: Better focus for the VS Code family, JetBrains IDEs, Ghostty and Warp. **Tab precision is not possible**: none offers a scripting API to select a tab (VS Code's and the IDEs' terminal panels are internal). Best effort:
-  - AC1: For the VS Code family (VS Code, Insiders, VSCodium, Cursor, Windsurf), a panel click raises the **window** whose title has a segment equal to the session's project name (else contains it), through the Accessibility API, then activates the app. On activation, a focused window matching a session's project name marks that session read at once (window precision); otherwise the 2 s app-level rule applies.
-  - AC2: The Accessibility permission is requested once, on first use. Without it, everything falls back to app level silently.
-  - AC3: Ghostty and Warp stay at app level (click activates the app; reading uses the 2 s dwell).
-  - AC4 (v3): JetBrains IDEs (`com.jetbrains.` bundle-ID family, `05`) get the same window-level click and read behaviour as AC1.
-  - AC5 (v3): The project name is matched per family: JetBrains titles are `project – file`, so the **first** segment is the project; VS Code drops the last segment (the app name). Segments split on ` — `, ` – ` and ` - `.
-  - AC6 (v3): State tracking already works in any IDE terminal (hooks do not depend on the terminal); only focus precision is limited to the window.
-- **REQ-V2-03**: Start a new Claude Code session from the expanded panel. A "+ New" footer button opens a menu of up to 5 recent project directories (`cwd`s seen, most recent first, `recentProjects` in config.json) plus "Choose Folder…". The directory opens in a new window of the preferred terminal (Terminal.app or iTerm2, from the most recent session, else Terminal.app) running `claude`. It quotes the path safely for shell and AppleScript and never edits Claude Code settings.
-  - AC1: The new session appears in the panel within a few seconds (through its hooks), in the chosen directory.
-  - AC2: A path with spaces, quotes or `$` opens correctly and runs nothing but `cd <dir> && claude`.
+## REQ-12 Sound cues
+A short system sound on the edge into attention.
+- AC1: Entering `needsInput` plays "Funk"; a session becoming `done` and unread plays "Glass".
+- AC2: Once per edge, using the `popToken` edge logic; no repeat while the state persists.
+- AC3: No sound for changes the user causes (mark read, focus-read, session removal).
+- AC4: Settings toggle "Sound cues" (`soundCues` in config), default on. Sounds play through a short-lived `afplay` process (an in-process `NSSound` costs +7 MB RSS); no timer, no polling.
 
-## v3
-- **REQ-12 Sound cues**: a short system sound on the edge into attention.
-  - AC1: Entering `needsInput` plays one system sound (default "Funk"); a session becoming `done` and unread plays another ("Glass").
-  - AC2: Once per edge, using the `popToken` edge logic; no repeat while the state persists.
-  - AC3: No sound for changes the user causes (mark read, focus-read, session removal).
-  - AC4: Settings toggle "Sound cues" (`soundCues` in config), default **on**. Sounds play through a short-lived `afplay` process (an in-process `NSSound` costs +7 MB RSS); no timer, no polling.
-- **REQ-13 Music headphones**: removed in v5 (WP-25, ADR-0007 superseded). The pet no longer reacts to music; the number stays reserved.
-- **REQ-14 Typography**: all HUD and panel text (counters, footer, session rows, cards, Settings) uses **JetBrains Mono**.
-  - AC1: Looked up with `NSFont(name:size:)`; fallback `NSFont.monospacedSystemFont` when it is not installed. No crash, no layout break.
-  - AC2: The font is bundled in `Contents/Resources/Fonts/` and registered for the process at launch when JetBrains Mono is not already installed (a process-registered face costs ~3 MB RSS per face used, so an installed copy is preferred; OFL 1.1 text in `THIRD_PARTY_NOTICES.md`, REQ-15).
-  - AC3: Text still fits: footer, cards and panel rows truncate rather than overflow.
-- **REQ-15 Distribution (v4)**: the app is ready to install and share from source. From v5 (WP-28, ADR-0009) it is named **ClawdIsland**: bundle id `dev.clawdisland.app`, `dist/ClawdIsland.app`, signing certificate "ClawdIsland" (renamed from "ClawdIsland Dev" in v6, WP-30).
-  - AC1: Signed with a stable identity: the local "ClawdIsland" certificate when present (ADR-0008), otherwise ad-hoc; `bundle.sh` says which. Releases are always signed with it (WP-30). Automation, Accessibility and login-item grants survive rebuilds when signed.
-  - AC2: Info.plist carries `CFBundleShortVersionString` (1.0.0 for the first public release, WP-35), `CFBundleVersion` (git commit count), `LSMinimumSystemVersion` 14.0, `NSHumanReadableCopyright`, and an `AppIcon.icns` drawn from the pet.
-  - AC3: JetBrains Mono is bundled (REQ-14 AC2).
-  - AC4: `scripts/install.sh` installs a release build to `~/Applications` or `/Applications`; `scripts/uninstall.sh` uninstalls the hooks through the app's reversible uninstaller, then removes the app and its config; `scripts/package.sh` makes a zip and its sha256. None of them touches `~/.claude/settings.json` except through `HookInstaller`.
-  - AC5: `LICENSE` is MIT; `THIRD_PARTY_NOTICES.md` lists JetBrains Mono (OFL 1.1); README.md documents install, first-run permissions, updating and uninstall; `CHANGELOG.md` starts at 1.0.0.
-  - AC6 (v6, WP-32): GitHub Actions builds and tests every push and pull request (`swift build`, `scripts/test.sh`, `swift build -c release`; no secrets, no signing).
-  - AC7 (v6, WP-35): Releases are GitHub releases of a signed zip with a `.sha256`, Apple silicon only; README leads with "Install from a release" (sha256 check, macOS 15+ Open Anyway) and has no ClawdNotch mentions; there is no update-check button.
+## REQ-14 Typography
+All HUD and panel text (counters, footer, session rows, cards, Settings) uses **JetBrains Mono**.
+- AC1: Looked up with `NSFont(name:size:)`; fallback `NSFont.monospacedSystemFont`. No crash, no layout break.
+- AC2: The font is bundled in `Contents/Resources/Fonts/` and registered for the process at launch only when JetBrains Mono is not installed (a process-registered face costs ~3 MB RSS per face used). OFL 1.1 text in `THIRD_PARTY_NOTICES.md`.
+- AC3: Text fits: footer, cards and panel rows truncate rather than overflow.
+
+## REQ-15 Distribution
+The app is **ClawdIsland**, bundle id `dev.clawdisland.app`, released on GitHub.
+- AC1: Signed with the stable self-signed "ClawdIsland" identity (ADR-0008) when present, otherwise ad-hoc; `bundle.sh` says which. Releases are always signed with it (`package.sh` refuses an ad-hoc build unless `--adhoc`), so Automation, Accessibility and login-item grants survive updates.
+- AC2: Info.plist carries `CFBundleShortVersionString` (semantic version, kept in `bundle.sh` and `CHANGELOG.md`), `CFBundleVersion` (git commit count), `LSMinimumSystemVersion` 14.0, `NSHumanReadableCopyright`, and an `AppIcon.icns` drawn from the pet.
+- AC3: `scripts/install.sh` installs a release build to `~/Applications` or `/Applications`; `scripts/uninstall.sh` uninstalls the hooks through the app's reversible uninstaller (`--uninstall-hooks`), then removes the app and its config; `scripts/package.sh` makes the zip and its `.sha256`. None of them touches `~/.claude/settings.json` except through `HookInstaller`.
+- AC4: `LICENSE` is MIT; `THIRD_PARTY_NOTICES.md` lists JetBrains Mono; README leads with "Install from a release" (sha256 check, Gatekeeper Open Anyway) and covers Settings → Install, permissions, uninstall and privacy; `CHANGELOG.md` has one entry per release.
+- AC5: GitHub Actions builds and tests every push and pull request (`swift build`, `scripts/test.sh`, `swift build -c release`; no secrets, no signing).
+- AC6: Releases are Apple silicon zips with a `.sha256`; there is no update-check button and the app makes no network calls beyond `127.0.0.1`.
+
+## REQ-16 Permissions from the notch
+Allow / Deny / Always allow permission prompts from the notch (ADR-0006). The `PermissionRequest` HTTP hook is held open while the notch shows the request; the terminal dialog appears at the same time, and whichever is answered first wins.
+- AC1: When Claude Code asks for a tool permission, the expanded panel shows a **permission card** at the top (project, tool name, a one-line truncated summary of the input such as the Bash command or file path) with action buttons. The pet is `needsInput` and pops out as before.
+- AC2: Allow or Deny from the notch resolves the request in Claude Code within 1 s, and the terminal dialog closes.
+- AC3: The terminal dialog still appears immediately and answering it works as before. The card disappears when the session moves on, when Claude Code closes the hook connection, or after 110 s (the app then replies with no decision).
+- AC4: When the app is not running, or "Approve permissions from the notch" is off, behaviour is exactly as without the app: no decision and no delay.
+- AC5: The app never decides on its own; only an explicit click sends a decision. Deny sends the message "Denied from ClawdIsland".
+- AC6: The card has three **equal-width pills with centred labels**: Deny, Allow, Always allow (layout in `06`).
+- AC7: Always allow replies `allow` with the request's first `permission_suggestions` entry, as received, in `decision.updatedPermissions` (`05`). The suggestion carries its own destination.
+- AC8: Always allow is hidden when the request has no suggestion. Its tooltip shows the rule that would be saved.
+- AC9: Core keeps the suggestion as raw JSON of at most 2 KiB in `PendingPermission`; a larger one hides the button.
+
+## REQ-17 Editor window focus
+Better focus for the VS Code family, JetBrains IDEs, Ghostty and Warp. **Tab precision is not possible**: none offers a scripting API to select a tab (VS Code's and the IDEs' terminal panels are internal). Best effort:
+- AC1: For the VS Code family (VS Code, Insiders, VSCodium, Cursor, Windsurf), a panel click raises the **window** whose title has a segment equal to the session's project name (else contains it), through the Accessibility API, then activates the app. On activation, a focused window matching a session's project name marks that session read at once (window precision); otherwise the 2 s app-level rule applies.
+- AC2: The Accessibility permission is requested once, on first use. Without it, everything falls back to app level silently.
+- AC3: Ghostty and Warp stay at app level (click activates the app; reading uses the 2 s dwell).
+- AC4: JetBrains IDEs (`com.jetbrains.` bundle-ID family, `05`) get the same window-level click and read behaviour as AC1.
+- AC5: The project name is matched per family: JetBrains titles are `project – file`, so the **first** segment is the project; VS Code drops the last segment (the app name). Segments split on ` — `, ` – ` and ` - `.
+- AC6: State tracking already works in any IDE terminal (hooks do not depend on the terminal); only focus precision is limited to the window.
+
+## REQ-18 New session
+Start a new Claude Code session from the expanded panel. A "+ New" footer button opens a menu of up to 5 recent project directories (`cwd`s seen, most recent first, `recentProjects` in config.json) plus "Choose Folder…". The directory opens in a new window of the preferred terminal (Terminal.app or iTerm2, from the most recent session, else Terminal.app) running `claude`. It quotes the path safely for shell and AppleScript and never edits Claude Code settings.
+- AC1: The new session appears in the panel within a few seconds (through its hooks), in the chosen directory.
+- AC2: A path with spaces, quotes or `$` opens correctly and runs nothing but `cd <dir> && claude`.

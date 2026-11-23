@@ -49,7 +49,7 @@ esac
 # Quiet, deterministic config for the recording: no sound, chosen mini mode.
 plutil -replace miniMode -bool "$mini" "$config"
 plutil -replace soundCues -bool false "$config"
-plutil -replace onboarded -bool true "$config"  # no first-run Settings window in the GIF (WP-31)
+plutil -replace onboarded -bool true "$config"  # no first-run Settings window in the GIF
 # Isolate from the user's real Claude Code: real HTTP hooks aim at the default port with the old token, and the
 # bridge (statusline) reads port and token from this config at runtime, so a scratch port plus a random token cut
 # both off while simulate.sh (same config) still reaches the app. cleanup restores the backup.

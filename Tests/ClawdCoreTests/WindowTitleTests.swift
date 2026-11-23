@@ -1,5 +1,5 @@
 // WindowTitleTests.swift
-// Project-name matching against editor window titles (REQ-V2-02).
+// Project-name matching against editor window titles (REQ-17).
 
 import Testing
 @testable import ClawdCore

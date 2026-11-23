@@ -1,5 +1,5 @@
 // WindowTitle.swift
-// Matching editor window titles to project names (REQ-V2-02).
+// Matching editor window titles to project names (REQ-17).
 
 import Foundation
 

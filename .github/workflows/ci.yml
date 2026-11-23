@@ -1,4 +1,4 @@
-# Builds and tests every push and pull request (REQ-15 AC6, WP-32). No secrets, no signing.
+# Builds and tests every push and pull request (REQ-15 AC5). No secrets, no signing.
 name: CI
 
 on:

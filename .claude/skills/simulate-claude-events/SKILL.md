@@ -7,7 +7,7 @@ description: Send fake Claude Code hook / statusline events to the running Clawd
 
 `scripts/simulate.sh <scenario> [session_id]` reads the port and token from `~/Library/Application Support/ClawdIsland/config.json` and POSTs JSON with `curl` to `/hook`, `/session-meta`, and `/statusline`.
 
-Scenarios. Implement all of these in WP-0/WP-4 and keep this list in sync with the script:
+Scenarios (keep this list in sync with the script):
 | Scenario | Sends | Expected pet state |
 |---|---|---|
 | `start` | `/session-meta` (how SessionStart arrives in production) | idle |

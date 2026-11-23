@@ -1,5 +1,5 @@
 // HitPointsTests.swift
-// HP bar value, colour bands and the unknown/stale rules (WP-5, REQ-04 AC2–3).
+// HP bar value, colour bands and the unknown/stale rules (REQ-04 AC2–3).
 
 import Foundation
 import Testing

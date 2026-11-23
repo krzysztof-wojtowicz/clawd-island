@@ -1,5 +1,5 @@
 // EventRequestTests.swift
-// Event server request checks: head parsing, token, route, size limits and body decoding (WP-4, docs/05).
+// Event server request checks: head parsing, token, route, size limits and body decoding (docs/05).
 
 import Foundation
 import Testing

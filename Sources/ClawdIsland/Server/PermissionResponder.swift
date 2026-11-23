@@ -1,5 +1,5 @@
 // PermissionResponder.swift
-// The one-shot handle for a held PermissionRequest connection (REQ-V2-01, ADR-0006).
+// The one-shot handle for a held PermissionRequest connection (REQ-16, ADR-0006).
 
 import Foundation
 import os

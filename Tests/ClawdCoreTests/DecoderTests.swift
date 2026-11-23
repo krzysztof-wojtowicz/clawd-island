@@ -1,5 +1,5 @@
 // DecoderTests.swift
-// Lenient decoding of hook, session-meta and statusline payloads (WP-1, docs/04 sample payloads, docs/05).
+// Lenient decoding of hook, session-meta and statusline payloads (docs/04 sample payloads, docs/05).
 
 import Foundation
 import Testing

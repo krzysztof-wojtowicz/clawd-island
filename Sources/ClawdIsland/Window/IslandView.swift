@@ -42,15 +42,15 @@ final class IslandView: NSView {
     /// Small enough that the blur fades out well inside `glowMargin`; a clipped blur shows a hard edge.
     private static let glowRadius: CGFloat = 9
 
-    /// Container for `PetView` (WP-3). Add the pet as a subview with `autoresizingMask = [.width, .height]`.
+    /// Container for `PetView`. Add the pet as a subview with `autoresizingMask = [.width, .height]`.
     let petSlot = NSView()
-    /// Container for the counters and the HP bar (WP-5): it spans the whole row; `CountersView` places everything
+    /// Container for the counters and the HP bar: it spans the whole row; `CountersView` places everything
     /// relative to the notch, and the pet shows through the gap right of the bar.
     let countersSlot = NSView()
     /// Where Clawd is, in screen coordinates (centre) and degrees of tilt. Set through `setPetPlacement`.
     private(set) var petPlacement: (center: CGPoint, tilt: CGFloat) = (.zero, 0)
 
-    /// Container for the expanded session panel (WP-5). Hidden while the island is collapsed.
+    /// Container for the expanded session panel. Hidden while the island is collapsed.
     let panelSlot = NSView()
 
     /// The top row (notch x and width, row height) in screen coordinates. Set by the window controller.

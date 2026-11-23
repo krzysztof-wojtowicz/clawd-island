@@ -1,6 +1,6 @@
 # ADR-0005 — Pin the island to its own SkyLight Space
 
-**Status:** accepted (implementation: WP-2.1)
+**Status:** accepted
 
 **Context:** The panel uses `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]`. A window that joins all Spaces still belongs to each Space, so a Space transition carries it along. This happens on a three-finger swipe, on Ctrl+←/→, and when entering or leaving a full-screen app: the island slides off with the old Space and slides back in with the new one. The menu bar does not move, and the island should behave the same way (REQ-02 AC4). No public window level or collection behaviour prevents the slide.
 
@@ -12,7 +12,7 @@
 **Consequences:**
 - The island stays fixed during Space switches and full-screen transitions, like the menu bar.
 - It uses private API: a macOS update may change or remove these symbols. The dlsym fallback turns that into a cosmetic regression, not a crash. Re-check after every major macOS update.
-- The app is not App Store-safe. That is acceptable, because this is a private project with no store distribution (`01`).
+- The app is not App Store-safe. That is acceptable: it ships as GitHub release zips only (`01`).
 - It has no runtime cost: these are one-time calls with no timers and no extra windows.
 - Rejected:
   - Higher window levels (for example `CGShieldingWindowLevel`). The window still belongs to a Space and slides.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Removes ClawdIsland: its hooks (through the app's reversible uninstaller), the app and its config (REQ-15 AC4).
+# Removes ClawdIsland: its hooks (through the app's reversible uninstaller), the app and its config (REQ-15 AC3).
 # Usage: scripts/uninstall.sh [--dest DIR] [--yes]   (default ~/Applications)
 set -euo pipefail
 

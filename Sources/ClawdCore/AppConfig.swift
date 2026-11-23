@@ -28,11 +28,11 @@ public struct AppConfig: Codable, Equatable, Sendable {
         case off
     }
 
-    /// Hold `PermissionRequest` hooks so the notch can allow or deny them (REQ-V2-01). Off means every hook gets an empty reply.
+    /// Hold `PermissionRequest` hooks so the notch can allow or deny them (REQ-16). Off means every hook gets an empty reply.
     public var notchPermissions: Bool
     /// Play a short system sound on the edge into needs-input or an unread done (REQ-12).
     public var soundCues: Bool
-    /// Directories of recently seen sessions for the "New session" menu: newest first, at most `maxRecentProjects` (REQ-V2-03).
+    /// Directories of recently seen sessions for the "New session" menu: newest first, at most `maxRecentProjects` (REQ-18).
     public var recentProjects: [String]
     public static let maxRecentProjects = 5
     /// Set once the first-run Settings welcome has been shown (REQ-09 AC5).
@@ -60,21 +60,13 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.onboarded = onboarded
     }
 
-    /// Keys of earlier versions, read only as a fallback.
-    private enum LegacyKeys: String, CodingKey {
-        /// Renamed to `miniMode` in v5.
-        case hideMode
-    }
-
     /// Files written before a key existed lack it, so they decode to the defaults.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         port = try container.decode(Int.self, forKey: .port)
         token = try container.decode(String.self, forKey: .token)
         originalStatusLine = try container.decodeIfPresent(String.self, forKey: .originalStatusLine)
-        let legacy = try decoder.container(keyedBy: LegacyKeys.self)
-        miniMode = try container.decodeIfPresent(Bool.self, forKey: .miniMode)
-            ?? legacy.decodeIfPresent(Bool.self, forKey: .hideMode) ?? false
+        miniMode = try container.decodeIfPresent(Bool.self, forKey: .miniMode) ?? false
         focusReadMode = try container.decodeIfPresent(FocusReadMode.self, forKey: .focusReadMode) ?? .tab
         notchPermissions = try container.decodeIfPresent(Bool.self, forKey: .notchPermissions) ?? true
         soundCues = try container.decodeIfPresent(Bool.self, forKey: .soundCues) ?? true

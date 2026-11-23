@@ -15,7 +15,7 @@ final class Preferences {
     private(set) var focusReadMode: AppConfig.FocusReadMode
     /// Whether the first-run Settings welcome was already shown (REQ-09 AC5).
     private(set) var onboarded: Bool
-    /// "Approve permissions from the notch" (REQ-V2-01). Read per request on the server queue, hence a lock.
+    /// "Approve permissions from the notch" (REQ-16). Read per request on the server queue, hence a lock.
     nonisolated let notchPermissions: OSAllocatedUnfairLock<Bool>
     /// Called when "approve from the notch" is switched off, so held requests can be released.
     var onNotchPermissionsOff: (() -> Void)?
@@ -64,7 +64,7 @@ final class Preferences {
         persist { $0.focusReadMode = value }
     }
 
-    /// Records a directory as the most recent project (REQ-V2-03) and returns the updated list.
+    /// Records a directory as the most recent project (REQ-18) and returns the updated list.
     /// The list comes from the file, so it is right even after another writer changed it.
     func noteRecentProject(_ directory: String) -> [String] {
         var recents: [String] = []

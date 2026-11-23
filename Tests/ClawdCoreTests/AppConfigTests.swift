@@ -54,18 +54,9 @@ struct AppConfigTests {
         #expect(config == AppConfig(port: 1234, token: "t", originalStatusLine: "echo", miniMode: false, focusReadMode: .tab))
     }
 
-    @Test("The legacy hideMode key is read when miniMode is absent, and miniMode wins when both exist")
-    func legacyHideModeKey() throws {
-        let old = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port": 1, "token": "t", "hideMode": true}"#.utf8))
-        #expect(old.miniMode)
-        let both = try JSONDecoder().decode(
-            AppConfig.self, from: Data(#"{"port": 1, "token": "t", "hideMode": true, "miniMode": false}"#.utf8))
-        #expect(!both.miniMode)
-    }
-
-    @Test("A config file that still holds the removed headphones key decodes")
-    func legacyHeadphonesKey() throws {
-        let json = #"{"port": 1, "token": "t", "headphones": true}"#
+    @Test("Unknown keys in config.json are ignored")
+    func unknownKeys() throws {
+        let json = #"{"port": 1, "token": "t", "someFutureKey": true}"#
         let config = try JSONDecoder().decode(AppConfig.self, from: Data(json.utf8))
         #expect(config.token == "t")
     }

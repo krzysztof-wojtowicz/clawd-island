@@ -20,7 +20,7 @@ final class AppModel {
     var serverError: String?
     /// Called after `snapshot` changes, with the previous and the new value.
     var onSnapshotChange: ((_ old: Snapshot, _ new: Snapshot) -> Void)?
-    /// Recently used project directories, newest first, at most 5 (REQ-V2-03). Feeds the "+ New" menu.
+    /// Recently used project directories, newest first, at most 5 (REQ-18). Feeds the "+ New" menu.
     private(set) var recentProjects: [String] = AppConfig.load()?.recentProjects ?? []
     /// Persists one directory as the newest recent project and returns the stored list (empty on failure).
     var recordProject: ((String) -> [String])?
@@ -62,7 +62,7 @@ final class AppModel {
     /// A notch answer to a permission card.
     enum PermissionChoice { case allow, deny, alwaysAllow }
 
-    /// Answers a card from the notch (REQ-V2-01): once. Unknown or already closed ids are ignored, and
+    /// Answers a card from the notch (REQ-16): once. Unknown or already closed ids are ignored, and
     /// `alwaysAllow` on a card without a suggestion is a plain allow.
     func decide(permissionID: UUID, _ choice: PermissionChoice) {
         guard let responder = responders.removeValue(forKey: permissionID) else { return }
@@ -97,7 +97,7 @@ final class AppModel {
         publish()
     }
 
-    /// Starts a new Claude Code session in `directory` (REQ-V2-03), in the terminal of the most recently
+    /// Starts a new Claude Code session in `directory` (REQ-18), in the terminal of the most recently
     /// active session when that is Terminal.app or iTerm2, else Terminal.app.
     func newSession(at directory: URL) {
         let latest = snapshot.sessions.max { $0.lastEventAt < $1.lastEventAt }

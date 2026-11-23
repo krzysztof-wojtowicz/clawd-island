@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs every docs/08 v4 scenario on a release bundle and prints one table (WP-22, REQ-08).
+# Runs every docs/08 scenario on a release bundle and prints one table (REQ-08).
 # Usage: scripts/perf-suite.sh [settle=30] [sample=20]
 # CPU is `ps %cpu`, a decaying average, so each scenario settles before it is sampled. Needs the sandbox off
 # (localhost + launching). Restores config.json on exit and leaves no instance running.
@@ -24,7 +24,7 @@ isolate() {
     [[ -f "$config" ]] || echo '{}' >"$config"
     plutil -replace port -integer 47499 "$config"
     plutil -replace token -string "$(uuidgen)" "$config"
-    plutil -replace onboarded -bool true "$config"  # no first-run Settings window in the measurements (WP-31)
+    plutil -replace onboarded -bool true "$config"  # no first-run Settings window in the measurements
 }
 
 cleanup() {

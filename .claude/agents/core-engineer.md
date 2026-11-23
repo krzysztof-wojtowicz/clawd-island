@@ -1,6 +1,6 @@
 ---
 name: core-engineer
-description: Implements and tests ClawdCore (event decoding, session state machine, aggregate snapshot, usage model, notch geometry, settings JSON merge) and the app's EventServer. Use for WP-1 and the server half of WP-4, or any change to state/transition logic.
+description: Implements and tests ClawdCore (event decoding, session state machine, aggregate snapshot, usage model, notch geometry, settings JSON merge) and the app's EventServer. Use for any change to state/transition logic, Core models, config, or the event server.
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 

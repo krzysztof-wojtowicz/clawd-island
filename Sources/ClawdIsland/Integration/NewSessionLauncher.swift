@@ -1,5 +1,5 @@
 // NewSessionLauncher.swift
-// Opens a terminal window running `claude` in a chosen directory (REQ-V2-03).
+// Opens a terminal window running `claude` in a chosen directory (REQ-18).
 
 import AppKit
 import ClawdCore

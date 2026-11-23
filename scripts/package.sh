@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds a release bundle and zips it as dist/ClawdIsland-<version>.zip with a .sha256 next to it (REQ-15 AC4).
+# Builds a release bundle and zips it as dist/ClawdIsland-<version>.zip with a .sha256 next to it (REQ-15 AC3).
 # Usage: scripts/package.sh [--adhoc]
 # Refuses an ad-hoc signed build unless --adhoc is given: only the stable identity keeps TCC grants across updates (ADR-0008).
 set -euo pipefail

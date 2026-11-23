@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs the swift-testing suite. Command Line Tools keep Testing.framework outside SwiftPM's search
 # paths and ship a broken _Testing_Foundation overlay, so both are handled here (see ADR-0001).
-# With full Xcode (the CI runner, WP-32) plain `swift test` works, so the workaround applies only to CLT.
+# With full Xcode (the CI runner) plain `swift test` works, so the workaround applies only to CLT.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

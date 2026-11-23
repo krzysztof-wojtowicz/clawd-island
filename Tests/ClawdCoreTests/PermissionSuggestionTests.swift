@@ -1,5 +1,5 @@
 // PermissionSuggestionTests.swift
-// The first `permission_suggestions` entry kept for "Always allow" (WP-12, REQ-V2-01 AC7-AC9).
+// The first `permission_suggestions` entry kept for "Always allow" (REQ-16 AC7-AC9).
 
 import Foundation
 import Testing

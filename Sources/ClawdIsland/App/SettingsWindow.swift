@@ -4,7 +4,7 @@
 import AppKit
 import ClawdCore
 
-/// Plain AppKit on purpose: linking SwiftUI for three controls would blow the 40 MB RSS budget (docs/08).
+/// Plain AppKit on purpose: linking SwiftUI for a few controls would blow the RSS budget (docs/08).
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let preferences: Preferences

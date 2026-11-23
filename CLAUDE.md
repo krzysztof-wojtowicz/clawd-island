@@ -1,14 +1,14 @@
 # ClawdIsland — agent guide
 
-Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
+Native macOS app (Apple silicon, macOS 14+): a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** v1–v6 are done. v6 (WP-30…WP-35, `docs/09-roadmap.md`) is the public 1.0.0: signing identity "ClawdIsland", first-run onboarding, CI, mini-mode triggers, release README. Publishing (release checklist in `09`) is the user's step.
+**Status:** 1.0.0 is released on GitHub; every requirement in `docs/02` is implemented. New work goes into `docs/09-roadmap.md` as WP-36 onward.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
 2. **Follow `docs/10-code-style.md`.** Clean Swift 6, English `///` doc comments on types and non-trivial members, inline comments only for the *why*.
 3. **Docs are the spec.** Requirements are `REQ-xx` (`docs/02`), work packages `WP-x` (`docs/09`), decisions `ADR-xxxx` (`docs/adr/`). Cite IDs in commits and reports. If code must diverge from a doc, update the doc in the same commit.
-4. **Commit locally, never push.** No `git push`, no remotes. One logical change per commit.
+4. **Commit locally, never push.** Pushing and publishing releases are the user's steps. One logical change per commit.
 5. **Never copy code from `rullerzhou-afk/clawd-on-desk`** (AGPL-3.0). Reading it for ideas is fine.
 
 ## Invariants (reviewer blocks on these)
@@ -16,7 +16,7 @@ Native macOS app: a Clawd-inspired pet living in the MacBook notch (or a virtual
 - Hooks **never block or slow Claude Code**: HTTP hooks have a short timeout, the bridge never waits on the app, failures are silent. Sole exception: a `PermissionRequest` held while the notch shows Allow/Deny (ADR-0006); the terminal dialog runs in parallel, so the user is never blocked.
 - No reading Keychain, OAuth tokens or `~/.claude/.credentials*`. Usage comes only from the statusline `rate_limits` payload (ADR-0004).
 - Event server binds to `127.0.0.1` only and checks the `X-Clawd-Token` header.
-- Performance budget in `docs/08-performance.md` (idle CPU < 0.3 %, footprint < 20 MB and RSS < 45 MB steady, no polling except 30 s liveness, pet animated with Core Animation only).
+- Performance budget in `docs/08-performance.md` (CPU < 0.1 % sleeping and < 1 % animating, footprint < 20 MB and RSS < 45 MB steady, no polling except 30 s liveness, pet animated with Core Animation only).
 - Editing `~/.claude/settings.json` is done only by the installer: backup first, idempotent, fully reversible.
 
 ## Toolchain
@@ -32,9 +32,9 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 | `scripts/run.sh` | Kill running instance, bundle debug, launch |
 | `scripts/simulate.sh <scenario>` | POST fake Claude Code hook events to the running app |
 | `scripts/perf.sh [seconds]` | Sample CPU/RSS of the running app against the budget |
-| `scripts/perf-suite.sh` | Every `08` scenario on a release bundle on a scratch port and token, one table (WP-22, WP-29) |
+| `scripts/perf-suite.sh` | Every `08` scenario on a release bundle on a scratch port and token, one table |
 | `scripts/record-gif.sh <island\|mini-mode>` | Record the README GIF into `docs/media/` (release bundle, scratch port; needs Screen Recording, sandbox off) |
-| `scripts/install.sh` / `uninstall.sh` / `package.sh` | Install, remove, zip a release build (from WP-24; agents test only against temp destinations) |
+| `scripts/install.sh` / `uninstall.sh` / `package.sh` | Install, remove, zip + sha256 a release build (agents test only against temp destinations; `package.sh` needs the signing identity or `--adhoc`) |
 | `scripts/make-signing-cert.sh` | One-time local "ClawdIsland" signing identity; **the user runs it** (asks for the login password) |
 | `swift scripts/window-info.swift` | Print screens and the app's window level and bounds (no Screen Recording permission needed) |
 
@@ -43,7 +43,7 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 - `screencapture` fails unless the terminal has the Screen Recording permission. Use `window-info.swift` for geometry, and ask the user to look when visuals matter.
 - Never test hooks against the real `~/.claude/settings.json`. Use `claude -p … --settings <scratch file>` instead.
 - To try Install, onboarding or `--uninstall-hooks` on the app, set both `CLAWD_SETTINGS_PATH` and `CLAWD_CONFIG_PATH` to scratch files (the bridge ignores them and reads the real config).
-- Pose GIFs: `.build/debug/ClawdIsland --render-poses docs/media` (debug builds only).
+- Launch flags: `--open-settings [--close-settings-after <s>]` (perf-suite), `--uninstall-hooks` (uninstall.sh). Debug builds only: `--pet-demo`, `--render-poses <dir>` (README pose GIFs: `.build/debug/ClawdIsland --render-poses docs/media`), `--render-icon <dir>`, `--debug-auto-allow|deny|always` (answer permission cards automatically for e2e tests).
 
 ## Repo map
 ```
@@ -51,13 +51,15 @@ Package.swift
 Sources/ClawdCore/      pure logic: events, SessionStore, state machine, aggregator, usage   (owner: core-engineer)
 Sources/ClawdIsland/    app: App/, Server/ (EventServer), Window/, Pet/, HUD/, Integration/
   Server/               NWListener HTTP endpoint                                            (owner: core-engineer)
-  Window/, HUD/         NSPanel, notch geometry, SwiftUI HUD/panel/settings                 (owner: macos-ui-engineer)
+  App/, Window/, HUD/   app delegate, Settings, NSPanel, notch geometry, AppKit HUD/panel   (owner: macos-ui-engineer)
   Pet/                  Core Animation Clawd, poses                                         (owner: pet-animator)
-  Integration/          hook installer, terminal focus watcher, new-session launcher,
-                        editor window focus (VS Code, JetBrains)                         (owner: integration-engineer)
+  Integration/          terminal focus watcher, new-session launcher,
+                        editor window focus (VS Code, JetBrains)                            (owner: integration-engineer)
 Sources/clawd-bridge/   CLI: `hook session-start`, `statusline`                              (owner: integration-engineer)
 Tests/ClawdCoreTests/   swift-testing
-scripts/                bundle/run/simulate/perf/install/record-gif
+scripts/                bundle, install, uninstall, package, make-signing-cert              (owner: integration-engineer)
+                        run, test, simulate, perf, perf-suite, record-gif, window-info      (owner: orchestrator)
+.github/workflows/      CI: build, test, release build on macos-26                         (owner: integration-engineer)
 docs/                   spec (01–10) + adr/
 .claude/agents|skills   multi-agent setup
 ```

@@ -1,5 +1,5 @@
 // PetDemo.swift
-// Debug-only state cycler for screenshots and perf checks: launch with `--pet-demo` (WP-3).
+// Debug-only state cycler for screenshots and perf checks: launch with `--pet-demo`.
 
 import ClawdCore
 

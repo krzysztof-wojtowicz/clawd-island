@@ -55,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         onboardIfNeeded()
     }
 
-    /// First launch without hooks: open Settings once with a welcome line (REQ-09 AC5, WP-31).
+    /// First launch without hooks: open Settings once with a welcome line (REQ-09 AC5).
     private func onboardIfNeeded() {
         // `--open-settings` (perf-suite) already built the window without the welcome; `isInstalled` ignores the bridge path.
         guard !CommandLine.arguments.contains("--open-settings"), !preferences.onboarded,

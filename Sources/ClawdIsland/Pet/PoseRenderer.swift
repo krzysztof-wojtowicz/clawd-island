@@ -1,6 +1,6 @@
 // PoseRenderer.swift
-// Debug-only offscreen renderer behind `--render-poses <dir>` (one GIF per pose for the README, WP-19) and
-// `--render-icon <dir>` (the app icon's iconset PNGs, WP-24).
+// Debug-only offscreen renderer behind `--render-poses <dir>` (one GIF per pose for the README) and
+// `--render-icon <dir>` (the app icon's iconset PNGs).
 
 #if DEBUG
 import AppKit

@@ -1,5 +1,5 @@
 // TransitionTests.swift
-// One case per row of the transition table in docs/04-state-machine.md (WP-1, REQ-03).
+// One case per row of the transition table in docs/04-state-machine.md (REQ-03).
 
 import Foundation
 import Testing

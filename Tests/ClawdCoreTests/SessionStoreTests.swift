@@ -1,5 +1,5 @@
 // SessionStoreTests.swift
-// Aggregate priority, counters, talking decay, liveness and pop-out edges (WP-1, REQ-03 AC3, REQ-04 AC1).
+// Aggregate priority, counters, talking decay, liveness and pop-out edges (REQ-03 AC3, REQ-04 AC1).
 
 import Foundation
 import Testing

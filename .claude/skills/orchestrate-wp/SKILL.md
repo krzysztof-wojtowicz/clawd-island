@@ -17,7 +17,7 @@ description: How the main (orchestrator) agent executes ClawdIsland work package
 5. **Review:** launch `reviewer` on the diff. Fix the `blocker` and `should-fix` findings through the owning agent, and re-review until the verdict is `approve`. Nits are optional.
 6. **Verify for real** when there is UI: use the `build-and-run`, `simulate-claude-events`, and `perf-check` skills.
 7. **Commit locally:**
-   - Set the WP status to `done` in `09`, and record spike results or measurements in the docs.
+   - Set the WP status to `done` in `09`, and record spike results or measurements in the docs (update the `08` "Measured" table rather than adding history).
    - Make one commit per WP: `feat(<area>): <summary> (WP-x, REQ-yy)`, followed by the attribution trailer.
    - **Never `git push`.**
 8. **Report to the user** in Polish and briefly: what was done, what was verified and how, what was skipped, any risks, and the next ready WPs.
