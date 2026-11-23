@@ -2,7 +2,7 @@
 
 Native macOS app (Apple silicon, macOS 14+): a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** 1.0.0 is released on GitHub; every requirement in `docs/02` is implemented. New work goes into `docs/09-roadmap.md` as WP-36 onward.
+**Status:** 1.0.0 is released on GitHub; every requirement in `docs/02` is implemented. New work goes into `docs/09-roadmap.md` as WP-37 onward (WP-36 is pending on `pet-variants`); post-1.0 proposals, with draft REQ-19+ and ADR-0009/0010, live in `docs/11-proposals.md`.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
@@ -60,7 +60,7 @@ Tests/ClawdCoreTests/   swift-testing
 scripts/                bundle, install, uninstall, package, make-signing-cert              (owner: integration-engineer)
                         run, test, simulate, perf, perf-suite, record-gif, window-info      (owner: orchestrator)
 .github/workflows/      CI: build, test, release build on macos-26                         (owner: integration-engineer)
-docs/                   spec (01–10) + adr/
+docs/                   spec (01–10), proposals (11) + adr/
 .claude/agents|skills   multi-agent setup
 ```
 
