@@ -9,7 +9,8 @@ public enum SessionState: Equatable, Sendable {
     case thinking
     /// Between `PreToolUse` and its result. Never decays: a long tool run sends no events.
     case usingTools
-    /// Streaming text; decays to `thinking` after `SessionStore.talkingDecay`.
+    /// Streaming text, set by a `MessageDisplay` that finds the talking streak at least `SessionStore.talkingStreak` old; decays to `thinking`
+    /// after `SessionStore.talkingDecay`.
     case talking
     /// Context compaction from `PreCompact`. Never decays; the next state-setting event or `SessionStart(compact)` ends it.
     case compacting
@@ -25,7 +26,10 @@ public struct Session: Equatable, Sendable, Identifiable {
     public let id: String
     /// The last path component of the session's `cwd`.
     public internal(set) var projectName: String
-    public internal(set) var state: SessionState
+    /// Assigning it ends the talking streak, so every state-setting event resets the streak (REQ-03 AC8).
+    public internal(set) var state: SessionState {
+        didSet { talkingStreakStart = nil }
+    }
     public internal(set) var unread = false
     /// The last turn ended with `StopFailure` (API error).
     public internal(set) var failed = false
@@ -34,8 +38,10 @@ public struct Session: Equatable, Sendable, Identifiable {
     public internal(set) var toolName: String?
     public internal(set) var lastEventAt: Date
     public internal(set) var activeSubagents = 0
-    /// When the session last entered or refreshed `talking`; drives talking decay.
+    /// When the last `MessageDisplay` arrived; extends the talking streak and drives talking decay.
     var lastTalkingAt: Date?
+    /// When the current run of `MessageDisplay` events began; nil after any state-setting event.
+    var talkingStreakStart: Date?
 
     /// Waiting for the user, or finished and not yet seen; drives the pop-out, the orange counter and "Mark all read".
     public var needsAttention: Bool {
@@ -72,6 +78,14 @@ public struct Session: Equatable, Sendable, Identifiable {
         }
     }
 
+    /// `state` with talking decay applied at `now`: `talking` becomes `thinking` once `talkingDecay` has passed
+    /// since the last `MessageDisplay`.
+    func talkingState(at now: Date) -> SessionState {
+        guard state == .talking, let last = lastTalkingAt,
+              now.timeIntervalSince(last) >= SessionStore.talkingDecay else { return state }
+        return .thinking
+    }
+
     static func projectName(for cwd: String) -> String {
         (cwd as NSString).lastPathComponent
     }
@@ -94,7 +108,13 @@ public struct Session: Equatable, Sendable, Identifiable {
             state = .usingTools
             toolName = event.toolName
         case .messageDisplay:
-            state = .talking
+            var start = now
+            if let current = talkingStreakStart, let last = lastTalkingAt,
+               now.timeIntervalSince(last) < SessionStore.talkingDecay { start = current }
+            // Only a MessageDisplay promotes, so one sentence then silence never shows talking (REQ-03 AC8).
+            // Stores the decayed state first so a new streak never inherits a stale `talking`; `didSet` clears the streak.
+            state = now.timeIntervalSince(start) >= SessionStore.talkingStreak ? .talking : talkingState(at: now)
+            talkingStreakStart = start
             lastTalkingAt = now
         case .postToolUse, .postToolBatch, .postToolUseFailure:
             state = .thinking

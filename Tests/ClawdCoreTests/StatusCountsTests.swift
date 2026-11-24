@@ -26,7 +26,8 @@ struct StatusCountsTests {
         (.stop, false, StatusCounts(idle: 0, working: 0, done: 1, needsInput: 0)),
         (.userPromptSubmit, false, StatusCounts(idle: 0, working: 1, done: 0, needsInput: 0)),
         (.preToolUse, false, StatusCounts(idle: 0, working: 1, done: 0, needsInput: 0)),
-        (.messageDisplay, false, StatusCounts(idle: 0, working: 1, done: 0, needsInput: 0)),
+        // A single MessageDisplay is too short a talking streak, so a new session stays idle.
+        (.messageDisplay, false, StatusCounts(idle: 1, working: 0, done: 0, needsInput: 0)),
         (.permissionRequest, false, StatusCounts(idle: 0, working: 0, done: 0, needsInput: 1)),
     ])
     func bucket(kind: ClawdEvent.Kind, read: Bool, expected: StatusCounts) {
@@ -41,7 +42,7 @@ struct StatusCountsTests {
             (.unknown, read: false), (.stop, read: true), (.stop, read: false), (.userPromptSubmit, read: false),
             (.preToolUse, read: false), (.messageDisplay, read: false), (.permissionRequest, read: false),
         ])
-        #expect(snap.statusCounts == StatusCounts(idle: 2, working: 3, done: 1, needsInput: 1))
+        #expect(snap.statusCounts == StatusCounts(idle: 3, working: 2, done: 1, needsInput: 1))
         let counts = snap.statusCounts
         #expect(counts.idle + counts.working + counts.done + counts.needsInput == snap.activeCount)
     }

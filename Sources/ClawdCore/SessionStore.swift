@@ -8,6 +8,8 @@ import Foundation
 public struct SessionStore: Sendable {
     /// How long `talking` survives without a new talking event before it decays to `thinking`.
     public static let talkingDecay: TimeInterval = 2
+    /// How long a run of `MessageDisplay` events must last before the session shows `talking` (REQ-03 AC8).
+    static let talkingStreak: TimeInterval = 1.5
     /// Sessions without a pid are dropped after this long with no events.
     public static let silentExpiry: TimeInterval = 6 * 60 * 60
 
@@ -158,10 +160,7 @@ public struct SessionStore: Sendable {
     /// The session as the UI sees it: talking decay applied, then `juggling` derived from running subagents.
     private func decayed(_ session: Session, now: Date) -> Session {
         var copy = session
-        if copy.state == .talking, let talkedAt = copy.lastTalkingAt,
-           now.timeIntervalSince(talkedAt) >= Self.talkingDecay {
-            copy.state = .thinking
-        }
+        copy.state = session.talkingState(at: now)
         if copy.activeSubagents > 0, copy.state != .needsInput, copy.state != .done { copy.state = .juggling }
         return copy
     }

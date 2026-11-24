@@ -18,8 +18,8 @@ struct PanelOrderTests {
         store.apply(event(.preToolUse, session: "tools"), now: base.addingTimeInterval(3))
         store.apply(event(.subagentStart, session: "juggle", agent: "a"), now: base.addingTimeInterval(0.2))
         store.apply(event(.preCompact, session: "compact"), now: base.addingTimeInterval(0.5))
-        store.apply(event(.messageDisplay, session: "talkDecayed"), now: base.addingTimeInterval(4))
-        store.apply(event(.messageDisplay, session: "talkFresh"), now: base.addingTimeInterval(9))
+        for time in [2.5, 4.0] { store.apply(event(.messageDisplay, session: "talkDecayed"), now: base.addingTimeInterval(time)) }
+        for time in [8.0, 9.5] { store.apply(event(.messageDisplay, session: "talkFresh"), now: base.addingTimeInterval(time)) }
         store.apply(event(.stop, session: "doneRead"), now: base.addingTimeInterval(7))
         store.markRead("doneRead")
 
