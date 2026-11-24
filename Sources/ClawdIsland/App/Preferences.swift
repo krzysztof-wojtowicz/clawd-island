@@ -13,12 +13,15 @@ final class Preferences {
     private(set) var miniMode: Bool
     private(set) var soundCues: Bool
     private(set) var focusReadMode: AppConfig.FocusReadMode
+    private(set) var petStyle: AppConfig.PetStyle
     /// Whether the first-run Settings welcome was already shown (REQ-09 AC5).
     private(set) var onboarded: Bool
     /// "Approve permissions from the notch" (REQ-16). Read per request on the server queue, hence a lock.
     nonisolated let notchPermissions: OSAllocatedUnfairLock<Bool>
     /// Called when "approve from the notch" is switched off, so held requests can be released.
     var onNotchPermissionsOff: (() -> Void)?
+    /// Called after `petStyle` changes.
+    var onPetStyleChange: ((AppConfig.PetStyle) -> Void)?
     /// Called after `miniMode` changes.
     var onMiniModeChange: ((Bool) -> Void)?
 
@@ -28,6 +31,7 @@ final class Preferences {
         focusReadMode = config?.focusReadMode ?? .tab
         soundCues = config?.soundCues ?? true
         onboarded = config?.onboarded ?? false
+        petStyle = config?.petStyle ?? .roundy
         notchPermissions = OSAllocatedUnfairLock(initialState: config?.notchPermissions ?? true)
     }
 
@@ -62,6 +66,14 @@ final class Preferences {
     func setFocusReadMode(_ value: AppConfig.FocusReadMode) {
         focusReadMode = value
         persist { $0.focusReadMode = value }
+    }
+
+    /// Sets and persists the pet style (REQ-06 AC2).
+    func setPetStyle(_ value: AppConfig.PetStyle) {
+        guard value != petStyle else { return }
+        petStyle = value
+        persist { $0.petStyle = value }
+        onPetStyleChange?(value)
     }
 
     /// Records a directory as the most recent project (REQ-18) and returns the updated list.

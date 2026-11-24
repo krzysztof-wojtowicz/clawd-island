@@ -1,5 +1,5 @@
 // PoseRenderer.swift
-// Debug-only offscreen renderer behind `--render-poses <dir>` (one GIF per pose for the README) and
+// Debug-only offscreen renderer behind `--render-poses <dir> [--pet-style <style>]` (one GIF per pose for the README) and
 // `--render-icon <dir>` (the app icon's iconset PNGs).
 
 #if DEBUG
@@ -22,6 +22,12 @@ enum PoseRenderer {
     ]
     /// Pet size in pixels: the unit box (32 × 24) at 5 px per unit.
     private static let petSize = CGSize(width: 160, height: 120)
+    /// `--pet-style <roundy|sharpy>` renders the poses in that style (REQ-06 AC2); roundy when absent or unknown.
+    private static let style: AppConfig.PetStyle = {
+        let arguments = CommandLine.arguments
+        guard let flag = arguments.firstIndex(of: "--pet-style"), flag + 1 < arguments.count else { return .roundy }
+        return AppConfig.PetStyle(rawValue: arguments[flag + 1]) ?? .roundy
+    }()
 
     /// Runs when launched with `--render-poses <dir>`; renders everything, then exits the process.
     static func runIfRequested() {
@@ -123,6 +129,7 @@ enum PoseRenderer {
             CATransaction.setDisableActions(true)
             views = tiles.enumerated().map { index, tile in
                 let view = PetView(frame: .zero)
+                view.setStyle(PoseRenderer.style)
                 let column = index % columns
                 let row = index / columns
                 // A 10 % margin keeps props that stick out of the unit box (hammer, balls) inside the frame.

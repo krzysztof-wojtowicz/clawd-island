@@ -29,7 +29,7 @@ Everything in `02` is implemented, reviewed, measured (`08`) and checked by hand
 ## 1.1.0
 Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-50..52). The requirements are the ACs marked "(1.1.0)" in `02`. Claude Code stays the only agent. Run in this order; WPs with disjoint owners may run in parallel (WP-36 and WP-52 both touch Core: use a worktree or run them back to back). Each WP also marks itself `done` here and adds a `CHANGELOG.md` line under "Unreleased (1.1.0)".
 
-### WP-36 — Pet styles Roundy / Sharpy · owner: pet-animator (`AppConfig` through core-engineer) · deps: none · status: `todo`
+### WP-36 — Pet styles Roundy / Sharpy · owner: pet-animator (`AppConfig` through core-engineer) · deps: none · status: `done`
 - Reuse commit `6ff6829` from `pet-variants` (not the plush commits `6a85832`, `0864b24`, nor the README commit `f203f40`). Drop Cute; rename Classic → `roundy` and Sharp → `sharpy`. `petStyle` in config (default `roundy`, an unknown value decodes to `roundy`); `PetRig` per style; `PetView` rebuilds the rig live; `--render-poses <dir> --pet-style <style>` (REQ-06 AC2, `07` "Styles"). The Settings popup is temporary and moves to the Pet tab in WP-42.
 - AC: REQ-06 AC1–AC2; `AppConfigTests` covers the default, an unknown value (including the old `classic` / `sharp` / `cute`) and the round-trip; every pose rendered in both styles and checked at notch size; `perf-suite.sh` within `08`.
 

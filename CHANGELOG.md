@@ -4,6 +4,8 @@
 
 In progress (`docs/09-roadmap.md` "1.1.0").
 
+- Pet styles **Roundy** (default) and **Sharpy** (`petStyle`), switched live (REQ-06 AC2, WP-36).
+
 ## 1.0.0
 
 First public release. Apple silicon, macOS 14+, signed with a self-signed "ClawdIsland" identity (not notarized).

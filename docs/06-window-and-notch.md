@@ -70,7 +70,7 @@
 ## Settings window (AppKit)
 A plain AppKit window, built when opened and released on close (SwiftUI would cost too much RSS, `08`). It activates the app while open.
 
-**1.0.0:** one column: mini mode, focus-read mode (`tab` / `app` / `off`), "Approve permissions from the notch" (`notchPermissions`, default on), **"Sound cues"** (`soundCues`, default on, REQ-12), a **hooks row** ("Claude Code hooks: Installed / Not installed" plus an Install / Uninstall button that runs `HookInstaller` and shows errors, REQ-09 AC4) and **Launch at login**. The port is not shown.
+**1.0.0:** one column: mini mode, focus-read mode (`tab` / `app` / `off`), "Approve permissions from the notch" (`notchPermissions`, default on), **"Sound cues"** (`soundCues`, default on, REQ-12), a **hooks row** ("Claude Code hooks: Installed / Not installed" plus an Install / Uninstall button that runs `HookInstaller` and shows errors, REQ-09 AC4) and **Launch at login**. The port is not shown. From WP-36 until WP-42 lands, a temporary "Pet style" popup (Roundy / Sharpy) sits in this column.
 
 **1.1.0 (REQ-21):** an `NSTabViewController` with the `.toolbar` tab style (the native preferences look) and SF Symbols tab icons (system assets, not bundled bitmaps). Three tabs:
 

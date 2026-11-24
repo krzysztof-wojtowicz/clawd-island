@@ -8,6 +8,8 @@ import ClawdCore
 /// `PetView` scales `root` to its bounds. Pose setters animate implicitly inside the caller's `CATransaction`.
 @MainActor
 struct PetRig {
+    /// The visual variant this rig was built in (REQ-06 AC2); `PetView` builds a new rig to change it.
+    let style: AppConfig.PetStyle
     /// Container of the whole pet: scaled to the view, sprung by pop-out, and paused as a whole.
     let root = CALayer()
     /// Body, eyes and arms; moves as one for breathing, sway, bob and bounce. Anchored at the body's bottom edge.
@@ -42,19 +44,22 @@ struct PetRig {
     private let jugglingArmAngle: CGFloat = 35 * .pi / 180
     private let cockedArmAngle: CGFloat = 65 * .pi / 180
 
-    init() {
-        let body = Self.roundedRect(CGRect(x: 4, y: 6, width: 24, height: 14), radius: 3.5, color: PetTokens.body)
-        eyes = [10.5, 19].map { Self.roundedRect(CGRect(x: $0, y: 12.5, width: 2.4, height: 4.2), radius: 1.2, color: PetTokens.eye) }
+    init(style: AppConfig.PetStyle) {
+        self.style = style
+        // Sharpy squares every pet part; accessories keep their shapes (docs/07 "Styles").
+        let radius = { (roundy: CGFloat) in style == .sharpy ? 0 : roundy }
+        let body = Self.roundedRect(CGRect(x: 4, y: 6, width: 24, height: 14), radius: radius(3.5), color: PetTokens.body)
+        eyes = [10.5, 19].map { Self.roundedRect(CGRect(x: $0, y: 12.5, width: 2.4, height: 4.2), radius: radius(1.2), color: PetTokens.eye) }
         // Arms pivot on their inner edge so they can rotate up into a raised paw.
-        leftArm = Self.roundedRect(CGRect(x: 0.5, y: 11, width: 3.5, height: 4), radius: 1, color: PetTokens.body)
+        leftArm = Self.roundedRect(CGRect(x: 0.5, y: 11, width: 3.5, height: 4), radius: radius(1), color: PetTokens.body)
         leftArm.anchorPoint = CGPoint(x: 1, y: 0.5)
         leftArm.position = CGPoint(x: 4, y: 13)
-        rightArm = Self.roundedRect(CGRect(x: 28, y: 11, width: 3.5, height: 4), radius: 1, color: PetTokens.body)
+        rightArm = Self.roundedRect(CGRect(x: 28, y: 11, width: 3.5, height: 4), radius: radius(1), color: PetTokens.body)
         rightArm.anchorPoint = CGPoint(x: 0, y: 0.5)
         rightArm.position = armPivot
         // Two pairs with a middle gap, as in the original Clawd.
         let legs = [7.5, 11, 21, 24.5].map { centerX in
-            Self.roundedRect(CGRect(x: centerX - 1.1, y: 2, width: 2.2, height: 4), radius: 1, color: PetTokens.body)
+            Self.roundedRect(CGRect(x: centerX - 1.1, y: 2, width: 2.2, height: 4), radius: radius(1), color: PetTokens.body)
         }
         cloud = [(26, 21, 0.8), (28.2, 22, 1.1), (30.5, 22.5, 1.5)].map { Self.circle(x: $0.0, y: $0.1, radius: $0.2, color: PetTokens.bubbleFill) }
         dots = [3.2, 5.75, 8.3].map { Self.circle(x: $0, y: 3, radius: 0.8, color: PetTokens.eye) }
@@ -81,7 +86,7 @@ struct PetRig {
         configureText()
         legs.forEach(root.addSublayer)
         configureHammer()
-        configureBroom()
+        configureBroom(pawRadius: radius(0.9))
         [torso, zzz, bubble, badge].forEach(root.addSublayer)
         balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
@@ -157,13 +162,13 @@ struct PetRig {
 
     /// Broom-local coordinates (4 × 12): the 1 × 9 handle stands on a 4 × 3 bristle head. The pivot is the handle's top,
     /// at (24.5, 15) in the torso, right of the eyes so the face stays clear. Two paws sit on the handle, so both arms hold it.
-    private func configureBroom() {
+    private func configureBroom(pawRadius: CGFloat) {
         broom.bounds = CGRect(x: 0, y: 0, width: 4, height: 12)
         broom.anchorPoint = CGPoint(x: 0.5, y: 1)
         broom.position = CGPoint(x: 24.5, y: 15)
         let handle = Self.roundedRect(CGRect(x: 1.5, y: 3, width: 1, height: 9), radius: 0.4, color: PetTokens.broomHandle)
         let bristles = Self.roundedRect(CGRect(x: 0, y: 0, width: 4, height: 3), radius: 0.8, color: PetTokens.broomBristle)
-        let paws = [9.5, 6.5].map { Self.roundedRect(CGRect(x: 0.8, y: $0, width: 2.4, height: 2), radius: 0.9, color: PetTokens.body) }
+        let paws = [9.5, 6.5].map { Self.roundedRect(CGRect(x: 0.8, y: $0, width: 2.4, height: 2), radius: pawRadius, color: PetTokens.body) }
         [handle, bristles].forEach(broom.addSublayer)
         paws.forEach(broom.addSublayer)
     }

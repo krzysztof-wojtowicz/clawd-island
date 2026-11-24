@@ -8,7 +8,7 @@ import ClawdCore
 /// runs in the render server, so the app does no per-frame work. The pet is scaled to fit the view's bounds.
 @MainActor
 final class PetView: NSView {
-    private let rig = PetRig()
+    private var rig = PetRig(style: .roundy)
     /// Plain layer between the view's backing layer and the rig: AppKit does not manage it, so its anchor, tilt and
     /// placement offset stay as set here.
     private let tiltLayer = CALayer()
@@ -19,14 +19,8 @@ final class PetView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        tiltLayer.addSublayer(rig.root)
         layer?.addSublayer(tiltLayer)
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        rig.applyPose(state)
-        rig.showAccessories(for: state)
-        CATransaction.commit()
-        startLoops()
+        mountRig()
         NSWorkspace.shared.notificationCenter.addObserver(
             self,
             selector: #selector(reduceMotionDidChange),
@@ -59,6 +53,18 @@ final class PetView: NSView {
         CATransaction.commit()
         startLoops()
         updateAccessibilityLabel()
+    }
+
+    /// Redraws the pet in `style` (REQ-06 AC2), keeping its state, tilt and pause. The current style does nothing.
+    func setStyle(_ style: AppConfig.PetStyle) {
+        guard style != rig.style else { return }
+        let wasPaused = isPaused
+        rig.root.removeFromSuperlayer()
+        rig = PetRig(style: style)
+        isPaused = false
+        mountRig()
+        fitPet()
+        setPaused(wasPaused)
     }
 
     /// Plays the pop-out spring (used on `done` / `needsInput` and when un-hiding). No-op under Reduce Motion.
@@ -150,6 +156,17 @@ final class PetView: NSView {
         let pixelScale = (window?.backingScaleFactor ?? 2) * scale
         for layer in rig.allLayers { layer.contentsScale = pixelScale }
         CATransaction.commit()
+    }
+
+    /// Puts the rig into the tilt layer in the current state's pose, without transition animations.
+    private func mountRig() {
+        tiltLayer.addSublayer(rig.root)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        rig.applyPose(state)
+        rig.showAccessories(for: state)
+        CATransaction.commit()
+        startLoops()
     }
 
     private func startLoops() {

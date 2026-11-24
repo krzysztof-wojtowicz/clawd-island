@@ -34,6 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.serverError = { [model] in model.serverError }
         // The pet must be in its slot first, or the tilt of a persisted mini mode is lost.
         Self.embed(pet, in: controller.island.petSlot)
+        pet.setStyle(preferences.petStyle)
+        preferences.onPetStyleChange = { [pet] in pet.setStyle($0) }
         controller.miniMode = preferences.miniMode
         preferences.onMiniModeChange = { [controller, settings] mini in
             controller.miniMode = mini

@@ -16,6 +16,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var permissionCheck: NSButton?
     private var soundCheck: NSButton?
     private var focusPopUp: NSPopUpButton?
+    private var stylePopUp: NSPopUpButton?
     /// Set while the window shows the first-run welcome; Install is then the default button (REQ-09 AC5).
     private var welcomeLabel: NSTextField?
 
@@ -49,6 +50,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         if let index = AppConfig.FocusReadMode.allCases.firstIndex(of: preferences.focusReadMode) {
             focusPopUp?.selectItem(at: index)
         }
+        if let index = AppConfig.PetStyle.allCases.firstIndex(of: preferences.petStyle) {
+            stylePopUp?.selectItem(at: index)
+        }
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -61,6 +65,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         permissionCheck = nil
         soundCheck = nil
         focusPopUp = nil
+        stylePopUp = nil
         welcomeLabel = nil
     }
 
@@ -75,7 +80,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let sound = NSButton(checkboxWithTitle: "Sound cues", target: self, action: #selector(soundChanged(_:)))
         let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
         let focusLabel = NSTextField(labelWithString: "Mark as read on terminal focus:")
-        for control in [mini, login, permissions, sound, popUp, focusLabel, hooksText, hooksAction] as [NSControl] {
+        let style = NSPopUpButton(frame: .zero, pullsDown: false)
+        let styleLabel = NSTextField(labelWithString: "Pet style:")
+        for control in [mini, login, permissions, sound, popUp, focusLabel, style, styleLabel, hooksText, hooksAction] as [NSControl] {
             control.font = HUDStyle.font(size: 13)
         }
         // Titles follow `FocusReadMode.allCases` order; `focusChanged` and `refresh` index by it.
@@ -88,9 +95,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         })
         popUp.target = self
         popUp.action = #selector(focusChanged(_:))
+        // Titles follow `PetStyle.allCases` order; `styleChanged` and `refresh` index by it.
+        style.addItems(withTitles: AppConfig.PetStyle.allCases.map { $0.rawValue.capitalized })
+        style.target = self
+        style.action = #selector(styleChanged(_:))
         let focusRow = NSStackView(views: [focusLabel, popUp])
         let hooksRow = NSStackView(views: [hooksText, hooksAction])
-        var rows: [NSView] = [mini, focusRow, permissions, sound, login, hooksRow]
+        let styleRow = NSStackView(views: [styleLabel, style])
+        var rows: [NSView] = [mini, styleRow, focusRow, permissions, sound, login, hooksRow]
         if welcome {
             let label = NSTextField(labelWithString: "Install the Claude Code hooks to connect Clawd")
             label.font = HUDStyle.font(size: 13, weight: .bold)
@@ -116,6 +128,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         permissionCheck = permissions
         soundCheck = sound
         focusPopUp = popUp
+        stylePopUp = style
         return window
     }
 
@@ -150,6 +163,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             NSAlert(error: error).runModal()
         }
         refresh()
+    }
+
+    @objc private func styleChanged(_ sender: NSPopUpButton) {
+        preferences.setPetStyle(AppConfig.PetStyle.allCases[sender.indexOfSelectedItem])
     }
 
     @objc private func focusChanged(_ sender: NSPopUpButton) {
