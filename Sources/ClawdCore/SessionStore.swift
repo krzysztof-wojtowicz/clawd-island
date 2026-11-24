@@ -98,6 +98,14 @@ public struct SessionStore: Sendable {
         self.usage = usage
     }
 
+    /// Stores the statusline's context use and cost on their session without touching its state (REQ-26).
+    /// Like statusline meta, an unknown session is created as `idle`.
+    public mutating func apply(stats: SessionStats, now: Date) {
+        let index = indexCreatingIfNeeded(stats.sessionID, cwd: stats.cwd, now: now)
+        sessions[index].contextUsedPercent = stats.contextUsedPercent
+        sessions[index].costUSD = stats.costUSD
+    }
+
     /// Marks one session read (a panel click or terminal focus).
     public mutating func markRead(_ id: String) {
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }

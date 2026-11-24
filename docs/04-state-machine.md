@@ -9,6 +9,7 @@ Claude Code hooks give no explicit "thinking" signal, so the phases are **inferr
 | Hook event (`hook_event_name`) | Condition | New state | Side effects |
 |---|---|---|---|
 | `/session-meta` with `source: "statusline"` | — | unchanged | Attach or refresh `meta` (and the project name). Create the session as `idle` if unknown. |
+| `/statusline` with `session_id` (1.1.0) | — | unchanged | Replace `contextUsedPercent` and `costUSD` with the payload's values (nil when absent or null; REQ-26). Create the session as `idle` if unknown, named after `workspace.current_dir` (or `cwd`). |
 | `SessionStart` (via bridge `/session-meta`) | `source != compact` | `idle` | Create the session if unknown. The `source` may be startup, resume, clear, compact, or fork. Arrives through the bridge, because `SessionStart` has no http hooks. |
 | `SessionStart` (via bridge) | `source == compact` | `idle` | Ends `compacting`. |
 | `UserPromptSubmit` | — | `thinking` | `unread = false`, `failed = false`, `activeSubagents = 0` |

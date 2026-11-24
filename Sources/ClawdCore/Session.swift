@@ -38,6 +38,10 @@ public struct Session: Equatable, Sendable, Identifiable {
     public internal(set) var toolName: String?
     public internal(set) var lastEventAt: Date
     public internal(set) var activeSubagents = 0
+    /// Context window use, 0–100, from the latest statusline payload (REQ-26).
+    public internal(set) var contextUsedPercent: Double?
+    /// Claude Code's cost estimate in US dollars from the latest statusline payload (REQ-26).
+    public internal(set) var costUSD: Double?
     /// When the last `MessageDisplay` arrived; extends the talking streak and drives talking decay.
     var lastTalkingAt: Date?
     /// When the current run of `MessageDisplay` events began; nil after any state-setting event.
@@ -61,6 +65,17 @@ public struct Session: Equatable, Sendable, Identifiable {
         lhs.id == rhs.id && lhs.projectName == rhs.projectName && lhs.state == rhs.state
             && lhs.unread == rhs.unread && lhs.failed == rhs.failed && lhs.meta == rhs.meta
             && lhs.toolName == rhs.toolName && lhs.activeSubagents == rhs.activeSubagents
+            && lhs.contextUsedPercent == rhs.contextUsedPercent && lhs.costUSD == rhs.costUSD
+    }
+
+    /// The session row tooltip, for example `ctx 64% · $1.20`: percent rounded to an integer, cost to cents,
+    /// a missing part omitted, and nil when both are missing (REQ-26 AC2).
+    public var usageTooltip: String? {
+        let parts = [
+            contextUsedPercent.map { "ctx \(Int($0.rounded()))%" },
+            costUSD.map { String(format: "$%.2f", $0) },
+        ].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     /// Sort key for the panel, lower first: `needsInput`, unread `done`, `juggling`, `compacting`, `usingTools`, `talking`, `thinking`, then everything else.

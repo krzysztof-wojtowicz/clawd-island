@@ -61,13 +61,20 @@ public enum EventEndpoint: String, Sendable {
     case statusline = "/statusline"
 
     /// Decodes a body for this endpoint. Nil when there is nothing to apply (malformed JSON,
-    /// or a statusline without `rate_limits`); the server still replies 200 so hooks never fail.
+    /// or a statusline with neither `rate_limits` nor `session_id`); the server still replies 200 so hooks never fail.
     public func decode(_ body: Data, receivedAt: Date) -> Inbound? {
         switch self {
         case .hook: ClawdEvent(json: body, receivedAt: receivedAt).map(Inbound.event)
         case .sessionMeta: SessionMeta(json: body).map(Inbound.meta)
-        case .statusline: UsageSnapshot(statusline: body).map(Inbound.usage)
+        case .statusline: Self.statusline(body)
         }
+    }
+
+    private static func statusline(_ body: Data) -> Inbound? {
+        let usage = UsageSnapshot(statusline: body)
+        let stats = SessionStats(statusline: body)
+        guard usage != nil || stats != nil else { return nil }
+        return .statusline(usage: usage, stats: stats)
     }
 }
 
@@ -75,7 +82,8 @@ public enum EventEndpoint: String, Sendable {
 public enum Inbound: Equatable, Sendable {
     case event(ClawdEvent)
     case meta(SessionMeta)
-    case usage(UsageSnapshot)
+    /// One statusline payload: the global usage windows and this session's context and cost, either may be absent.
+    case statusline(usage: UsageSnapshot?, stats: SessionStats?)
 }
 
 extension SessionStore {
@@ -84,7 +92,10 @@ extension SessionStore {
         switch inbound {
         case .event(let event): apply(event, now: now)
         case .meta(let meta): apply(meta: meta, now: now)
-        case .usage(let usage): apply(usage: usage)
+        case .statusline(let usage, let stats):
+            // A payload without `rate_limits` keeps the last usage (ADR-0004).
+            if let usage { apply(usage: usage) }
+            if let stats { apply(stats: stats, now: now) }
         }
     }
 }
