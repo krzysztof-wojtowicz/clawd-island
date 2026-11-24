@@ -54,7 +54,7 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - Investigation item: a screen-sharing or Focus-mode signal only if an event-driven public API exists; otherwise document it as dropped (`08` rule 1, REQ-23 AC3).
 - AC: REQ-23 AC1–AC3; `AppConfigTests` for `dnd`; checked with `simulate.sh`; no new repeating timer.
 
-### WP-48 — Context and cost tooltip · owner: core-engineer → macos-ui-engineer · deps: WP-42 · status: `todo`
+### WP-48 — Context and cost tooltip · owner: core-engineer → macos-ui-engineer · deps: WP-42 · status: `done`
 - Decode `context_window.used_percentage` and `cost.total_cost_usd` from `/statusline` into `Session` fields for the payload's `session_id` (included in `==`); the `SessionPanelView` row tooltip reads `ctx 64% · $1.20`, omitting a missing part (REQ-26, `05` "Context and cost"). The dependency on WP-42 is file order only.
 - AC: REQ-26 AC1–AC3; decoder tests with both fields, one, none, and a null context; `rate_limits` handling unchanged (existing tests pass); checked with a `simulate.sh` statusline POST.
 

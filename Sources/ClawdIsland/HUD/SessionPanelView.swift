@@ -190,6 +190,7 @@ final class SessionPanelView: NSView {
         let unread = session.needsAttention ? ", needs attention" : ""
         row.setAccessibilityLabel("\(session.projectName), \(state.stringValue)\(unread)")
         row.setAccessibilityRole(.button)
+        row.toolTip = session.usageTooltip  // REQ-26: "ctx 64% · $1.20", none when the statusline sent neither
         return row
     }
 }
