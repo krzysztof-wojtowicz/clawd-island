@@ -116,6 +116,6 @@ struct SessionStatsTests {
         var session = Session(id: "a", cwd: nil, now: t0)
         session.contextUsedPercent = context
         session.costUSD = cost
-        #expect(session.usageTooltip == expected)
+        #expect(session.statsText == expected)
     }
 }

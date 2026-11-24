@@ -123,7 +123,9 @@ final class SessionPanelView: NSView {
             view.removeFromSuperview()
         }
         for session in snapshot.sessions.prefix(maxRows) {
-            rows.addArrangedSubview(row(for: session))
+            let row = row(for: session)
+            rows.addArrangedSubview(row)
+            row.widthAnchor.constraint(equalTo: rows.widthAnchor).isActive = true  // full width, so the stats sit at the right edge
         }
         let hidden = snapshot.sessions.count - maxRows
         if snapshot.sessions.isEmpty || hidden > 0 {
@@ -181,16 +183,21 @@ final class SessionPanelView: NSView {
         name.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         let state = HUDStyle.label(size: 12, color: .secondaryLabelColor)
         state.stringValue = HUDStyle.stateText(session)
+        // REQ-26: context and cost at the row's right edge, dimmer than the state; absent until the statusline sends them.
+        let stats = HUDStyle.label(size: 10, color: .tertiaryLabelColor)
+        stats.stringValue = session.statsText ?? ""
+        stats.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         // The row speaks for its labels as one button.
-        for label in [marker, name, state] {
+        for label in [marker, name, state, stats] {
             label.setAccessibilityElement(false)
         }
         let row = ClickableStack(views: [marker, name, state])
+        row.addView(stats, in: .trailing)
         row.onClick = { [weak self] in self?.onSelect?(session.id) }
         let unread = session.needsAttention ? ", needs attention" : ""
-        row.setAccessibilityLabel("\(session.projectName), \(state.stringValue)\(unread)")
+        let usage = session.statsText.map { ", \($0)" } ?? ""
+        row.setAccessibilityLabel("\(session.projectName), \(state.stringValue)\(unread)\(usage)")
         row.setAccessibilityRole(.button)
-        row.toolTip = session.usageTooltip  // REQ-26: "ctx 64% · $1.20", none when the statusline sent neither
         return row
     }
 }

@@ -72,7 +72,7 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - Source: the same statusline payload. Verified fields: `context_window.used_percentage` (a number; it may be null early in a session) and `cost.total_cost_usd` (a number, Claude Code's estimate at list price; it resets on `/clear`). The payload's top-level `session_id` names the session.
 - The `/statusline` path decodes both leniently (a missing, null or mistyped field gives nil) and stores them on that `Session` (`contextUsedPercent?`, `costUSD?`, included in `==`). Like the `source: "statusline"` meta (`statusline` step 2a above), which arrives concurrently, an unknown `session_id` creates the session as `idle`; the state never changes.
 - The global `rate_limits` handling above is unchanged.
-- The session row tooltip reads `ctx 64% · $1.20`. A part is omitted when its value is nil; with both nil, the row has no tooltip. Never estimated.
+- The session row shows `ctx 64% · $1.20` at its right edge, in a smaller, dimmer font. A part is omitted when its value is nil; with both nil, nothing is shown. Never estimated.
 
 ## Installer (`HookInstaller`, ClawdCore)
 - **Install:**

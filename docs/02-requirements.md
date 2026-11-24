@@ -156,7 +156,7 @@ Settings becomes a window with three toolbar tabs: **General**, **Pet** and **Ad
 - AC2: First run opens **General** with the welcome, and Install is the default button (REQ-09 AC5).
 - AC3: **Pet** holds a live preview (`PetView` at 3× notch size, with a pose picker that cycles the nine poses) and the Style popup, Roundy / Sharpy (REQ-06 AC2). The preview pauses (`setPaused`) while the window is not key, and it is released with the window.
 - AC4: **Advanced** holds only the port (read-only), the app version (`CFBundleShortVersionString`) and a link to the GitHub repository (https://github.com/krzysztof-wojtowicz/clawd-island).
-- AC5: The window remembers the last tab during a run, not across launches (no new config key). It is built when opened and released on close, and RSS with the window open stays within the existing Settings exception (`08` "Known limits"), measured with `perf-suite.sh --open-settings`.
+- AC5: The window always opens on **General** and has one fixed size for every tab (the largest tab's), so switching tabs never resizes it. It is built when opened and released on close, and RSS with the window open stays within the existing Settings exception (`08` "Known limits"), measured with `perf-suite.sh --open-settings`.
 - AC6: Control text is JetBrains Mono (REQ-14); the window title and toolbar tab labels are AppKit system text.
 
 ## REQ-23 Do Not Disturb (1.1.0)
@@ -172,7 +172,7 @@ A click on the pet (not on the HUD) plays a one-shot "poke": a 0.6 s squash and 
 - AC3: Under Reduce Motion a poke is a blink only.
 
 ## REQ-26 Context and cost per session (1.1.0)
-The session row tooltip shows the session's context use and cost, for example `ctx 64% · $1.20`, from the Claude Code statusline payload (`05` "Context and cost").
+Each session row shows the session's context use and cost at its right edge, for example `ctx 64% · $1.20`, from the Claude Code statusline payload (`05` "Context and cost").
 - AC1: The values come from the statusline fields `context_window.used_percentage` and `cost.total_cost_usd`, attached to the session named by the payload's `session_id`. The global `rate_limits` usage handling (REQ-04, ADR-0004) is unchanged.
-- AC2: A part is omitted when its field is absent or null (context is null early in a session); with both absent, there is no tooltip.
+- AC2: A part is omitted when its field is absent or null (context is null early in a session); with both absent, nothing is shown. The project name truncates before the stats do (REQ-14 AC3).
 - AC3: Claude Code only, and never estimated or fabricated. The cost is Claude Code's own estimate at list price and resets on `/clear`.

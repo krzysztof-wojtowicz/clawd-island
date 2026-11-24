@@ -68,9 +68,9 @@ public struct Session: Equatable, Sendable, Identifiable {
             && lhs.contextUsedPercent == rhs.contextUsedPercent && lhs.costUSD == rhs.costUSD
     }
 
-    /// The session row tooltip, for example `ctx 64% · $1.20`: percent rounded to an integer, cost to cents,
+    /// The session row stats, for example `ctx 64% · $1.20`: percent rounded to an integer, cost to cents,
     /// a missing part omitted, and nil when both are missing (REQ-26 AC2).
-    public var usageTooltip: String? {
+    public var statsText: String? {
         let parts = [
             contextUsedPercent.map { "ctx \(Int($0.rounded()))%" },
             costUSD.map { String(format: "$%.2f", $0) },

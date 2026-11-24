@@ -46,7 +46,7 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - AC: REQ-05 AC1, AC2, AC4; checked with `simulate.sh`: done stays out until mark-read or terminal focus, needsInput until resolved, talking retracts after 3 s; `perf-suite.sh` mini-mode scenarios within `08`.
 
 ### WP-42 — Settings tabs General / Pet / Advanced · owner: macos-ui-engineer · deps: WP-36 · status: `done`
-- Rewrite `SettingsWindow.swift` as an `NSTabViewController` (`.toolbar` style, SF Symbols): General (welcome, hooks row, notch permissions, mini mode, focus-read, sound cues, launch at login; DND joins with WP-45), Pet (3× `PetView` preview with a pose picker, Style popup), Advanced (read-only port, version, GitHub link). Built on open, released on close; last tab remembered for the run (REQ-21, `06` "Settings window"). No Agents tab: it is deferred to WP-38+ and would be added to this window then.
+- Rewrite `SettingsWindow.swift` as an `NSTabViewController` (`.toolbar` style, SF Symbols): General (welcome, hooks row, notch permissions, mini mode, focus-read, sound cues, launch at login; DND joins with WP-45), Pet (3× `PetView` preview with a pose picker, Style popup), Advanced (read-only port, version, GitHub link). Built on open, released on close; always opens on General at one fixed size for every tab (REQ-21, `06` "Settings window"). No Agents tab: it is deferred to WP-38+ and would be added to this window then.
 - AC: REQ-21 AC1–AC6, REQ-09 AC5 (first run opens General with Install as default); scratch `CLAWD_SETTINGS_PATH` / `CLAWD_CONFIG_PATH` for the hooks row and first run; `perf-suite.sh --open-settings` within the `08` Settings exception.
 
 ### WP-45 — Do Not Disturb · owner: core-engineer (`dnd` key) → macos-ui-engineer · deps: WP-42, WP-51 · status: `done`
@@ -54,8 +54,8 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - Investigation item: a screen-sharing or Focus-mode signal only if an event-driven public API exists; otherwise document it as dropped (`08` rule 1, REQ-23 AC3). Result: dropped, as screen sharing has no change notification and Focus status needs an entitlement and user permission.
 - AC: REQ-23 AC1–AC3; `AppConfigTests` for `dnd`; checked with `simulate.sh`; no new repeating timer.
 
-### WP-48 — Context and cost tooltip · owner: core-engineer → macos-ui-engineer · deps: WP-42 · status: `done`
-- Decode `context_window.used_percentage` and `cost.total_cost_usd` from `/statusline` into `Session` fields for the payload's `session_id` (included in `==`); the `SessionPanelView` row tooltip reads `ctx 64% · $1.20`, omitting a missing part (REQ-26, `05` "Context and cost"). The dependency on WP-42 is file order only.
+### WP-48 — Context and cost per session row · owner: core-engineer → macos-ui-engineer · deps: WP-42 · status: `done`
+- Decode `context_window.used_percentage` and `cost.total_cost_usd` from `/statusline` into `Session` fields for the payload's `session_id` (included in `==`); the `SessionPanelView` row shows `ctx 64% · $1.20` at its right edge, omitting a missing part (REQ-26, `05` "Context and cost"). The dependency on WP-42 is file order only.
 - AC: REQ-26 AC1–AC3; decoder tests with both fields, one, none, and a null context; `rate_limits` handling unchanged (existing tests pass); checked with a `simulate.sh` statusline POST.
 
 ### WP-46 — Poke · owner: pet-animator + macos-ui-engineer (hit-test pass-through) · deps: WP-50 · status: `done`

@@ -44,7 +44,7 @@
   - **"+ New"** (REQ-18) opens the recent-projects menu (`05`).
   - **Permission cards** (REQ-16): while requests are pending, up to 2 cards sit above the session list, newest first. Each card is about 40 pt (44 pt overflowed the 164 pt panel): on the left, `proj-a · Bash` and below it the input summary (secondary text, one line, truncated in the middle); on the right, **three equal-width pills in one row — Deny / Allow / Always**, each label centred in its pill. "Always" is omitted (the other two keep their size) when the request has no suggestion; its tooltip shows the rule. With 2 cards the list shows 1 session row plus "+n more" (the panel height does not change). The buttons work without activating the app (non-activating panel).
   - **Clicking a session row** focuses its terminal and tab (REQ-10 AC2, `05`); it does not mark the session read by itself.
-  - **Row tooltip (1.1.0, REQ-26):** `ctx 64% · $1.20` from the session's statusline values (`05` "Context and cost"); a missing part is omitted, and there is no tooltip when both are missing.
+  - **Row stats (1.1.0, REQ-26):** `ctx 64% · $1.20` at the row's right edge (10 pt, tertiary colour), from the session's statusline values (`05` "Context and cost"); a missing part is omitted, and nothing is shown when both are missing. The project name truncates first.
 - **Font (REQ-14):** all HUD and panel text uses JetBrains Mono via `NSFont(name:size:)`, falling back to `NSFont.monospacedSystemFont`; one helper owns the lookup. Text truncates rather than overflowing. Colours stay system label colours.
 - The island is black (`#000`), so it merges with the physical notch. Corners use a continuous (squircle) curve.
 - **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext`.
@@ -80,7 +80,7 @@ A plain AppKit window, built when opened and released on close (SwiftUI would co
 | **Pet** (`pawprint`) | a live **preview** (`PetView` at 3× the collapsed pet height, 78 pt, on an island-black rounded stage) with a **Pose** popup listing the nine poses; the **Style** popup, Roundy / Sharpy (`petStyle`, REQ-06 AC2), which rebuilds the preview and the island's pet live |
 | **Advanced** (`slider.horizontal.3`) | the port (read-only, from config), the app version (`CFBundleShortVersionString`, "dev" in a bare debug run) and a link to https://github.com/krzysztof-wojtowicz/clawd-island that opens in the browser. Nothing else. |
 
-- The window remembers the last tab during a run only (no config key). Each tab sizes the window to its content. Control text is JetBrains Mono; the window title and toolbar tab labels are drawn by AppKit in the system font.
+- The window always opens on General. Every tab has the same size (the largest tab's), so switching tabs never resizes the window. Control text is JetBrains Mono; the window title and toolbar tab labels are drawn by AppKit in the system font.
 - The preview pet pauses (`setPaused`) while the window is not key and is released with the window. RSS stays within the `08` Settings exception.
 - Claude Code is the only agent, so there is no Agents tab (it may come with WP-38+, `11` P3).
 

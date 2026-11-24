@@ -7,8 +7,6 @@ import ClawdCore
 /// Plain AppKit on purpose: linking SwiftUI for a few controls would blow the RSS budget (docs/08).
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate {
-    /// The tab shown when the window is next built; kept for the run only, not in config (REQ-21 AC5).
-    private static var lastTab = 0
     // safe: a constant, valid URL literal.
     private static let repositoryURL = URL(string: "https://github.com/krzysztof-wojtowicz/clawd-island")!
 
@@ -35,7 +33,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     }
 
     /// Shows the window, building it first if needed, and activates the app (it is an accessory app).
-    /// - Parameter welcome: adds the first-run welcome line and opens on General when the window is built now.
+    /// - Parameter welcome: adds the first-run welcome line when the window is built now. It always opens on General.
     func show(welcome: Bool = false) {
         if window == nil { window = makeWindow(welcome: welcome) }
         refresh()
@@ -71,7 +69,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func windowDidResignKey(_ notification: Notification) { preview?.setPaused(true) }
 
     func windowWillClose(_ notification: Notification) {
-        if let tabs { Self.lastTab = tabs.selectedTabViewItemIndex }
         window?.delegate = nil
         window = nil
         tabs = nil
@@ -96,12 +93,13 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             ("Pet", "pawprint", makePet()),
             ("Advanced", "slider.horizontal.3", makeAdvanced()),
         ]
-        // One width for every tab, so switching tabs only changes the height.
-        let width = max(420, contents.map(\.2.fittingSize.width).max() ?? 0)
+        // One size for every tab (the largest), so the window never resizes and every tab fits.
+        let size = NSSize(width: max(420, contents.map(\.2.fittingSize.width).max() ?? 0),
+                          height: contents.map(\.2.fittingSize.height).max() ?? 0)
         for (title, symbol, content) in contents {
-            tabs.addTabViewItem(Self.tab(title, symbol: symbol, content: content, width: width))
+            tabs.addTabViewItem(Self.tab(title, symbol: symbol, content: content, size: size))
         }
-        tabs.selectedTabViewItemIndex = welcome ? 0 : Self.lastTab
+        tabs.selectedTabViewItemIndex = 0
         let window = NSWindow(contentViewController: tabs)
         window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
@@ -111,11 +109,11 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         return window
     }
 
-    /// A toolbar tab around `content`, `width` wide and as tall as the content; the tab controller resizes the window on switch.
-    private static func tab(_ title: String, symbol: String, content: NSView, width: CGFloat) -> NSTabViewItem {
+    /// A toolbar tab around `content` at the shared window `size`.
+    private static func tab(_ title: String, symbol: String, content: NSView, size: NSSize) -> NSTabViewItem {
         let controller = NSViewController()
         controller.view = content
-        controller.preferredContentSize = NSSize(width: width, height: content.fittingSize.height)
+        controller.preferredContentSize = size
         controller.title = title
         let item = NSTabViewItem(viewController: controller)
         item.label = title
