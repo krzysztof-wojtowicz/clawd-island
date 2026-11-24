@@ -108,6 +108,7 @@ These WPs stay `proposed` (`11-proposals.md`). Accepting one means moving its dr
 - AC: REQ-12 AC1–AC4 still hold with the defaults (Funk / Glass); config round-trip.
 
 ## Deferred
+- Trim the 1.1.0 Settings window memory back toward the 1.0.0 exception (60 / 55 MB RSS): find what stays alive after close (`08` "Known limits").
 - Developer ID, hardened runtime and notarization (ADR-0008 upgrade path): only if Gatekeeper friction becomes a problem for users.
 - Ghostty and Warp stay app-level focus (no scripting API).
 - Universal binary / Intel: not planned (REQ-07).

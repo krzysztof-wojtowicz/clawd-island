@@ -156,7 +156,7 @@ Settings becomes a window with three toolbar tabs: **General**, **Pet** and **Ad
 - AC2: First run opens **General** with the welcome, and Install is the default button (REQ-09 AC5).
 - AC3: **Pet** holds a live preview (`PetView` at 3× notch size, with a pose picker that cycles the nine poses) and the Style popup, Roundy / Sharpy (REQ-06 AC2). The preview pauses (`setPaused`) while the window is not key, and it is released with the window.
 - AC4: **Advanced** holds only the port (read-only), the app version (`CFBundleShortVersionString`) and a link to the GitHub repository (https://github.com/krzysztof-wojtowicz/clawd-island).
-- AC5: The window always opens on **General** and has one fixed size for every tab (the largest tab's), so switching tabs never resizes it. It is built when opened and released on close, and RSS with the window open stays within the existing Settings exception (`08` "Known limits"), measured with `perf-suite.sh --open-settings`.
+- AC5: The window always opens on **General** and has one fixed size for every tab (the largest tab's), so switching tabs never resizes it. It is built when opened and released on close, and its memory is measured with `perf-suite.sh` against the Settings exception (`08` "Known limits"; 1.1.0 accepts 66 MB open and 61 MB after close).
 - AC6: Control text is JetBrains Mono (REQ-14); the window title and toolbar tab labels are AppKit system text.
 
 ## REQ-23 Do Not Disturb (1.1.0)
