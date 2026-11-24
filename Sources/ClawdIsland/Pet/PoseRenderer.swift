@@ -18,10 +18,11 @@ enum PoseRenderer {
     /// Loop length per state in seconds: a whole number of the state's animation periods (docs/07).
     private static let loopLength: [PetState: Double] = [
         .sleeping: 3.2, .idle: 4.5, .thinking: 1.6, .usingTools: 1.4, .compacting: 1, .juggling: 1.2, .talking: 0.9,
-        .done: 1.6, .needsInput: 1.6,
+        .done: 2.4, .needsInput: 2.4,
     ]
-    /// Pet size in pixels: the unit box (32 × 24) at 5 px per unit.
-    private static let petSize = CGSize(width: 160, height: 120)
+    /// Tile size in pixels: the unit box (32 × 24) at 4 px per unit inside a 12 px margin, plus 8 u each side for the
+    /// hammer's swing.
+    private static let petSize = CGSize(width: 192, height: 120)
     /// `--pet-style <roundy|sharpy>` renders the poses in that style (REQ-06 AC2); roundy when absent or unknown.
     private static let style: AppConfig.PetStyle = {
         let arguments = CommandLine.arguments
@@ -47,7 +48,7 @@ enum PoseRenderer {
             let hero = Scene(
                 tiles: PetState.allCases.map { Tile(state: $0) },
                 columns: 3,
-                tileSize: CGSize(width: 96, height: 72)
+                tileSize: CGSize(width: 116, height: 72)
             )
             try hero.write(to: directory.appendingPathComponent("hero.gif"), duration: 3.2, fps: 10, device: device)
             exit(0)
@@ -132,13 +133,14 @@ enum PoseRenderer {
                 view.setStyle(PoseRenderer.style)
                 let column = index % columns
                 let row = index / columns
-                // A 10 % margin keeps props that stick out of the unit box (hammer, balls) inside the frame.
+                // A margin of 10 % of the height keeps props that stick out of the unit box (balls, bubble) inside the
+                // frame; the wider tile leaves room for the hammer, which reaches about 7 u past the box.
                 view.frame = CGRect(
                     x: CGFloat(column) * tileSize.width,
                     y: size.height - CGFloat(row + 1) * tileSize.height,
                     width: tileSize.width,
                     height: tileSize.height
-                ).insetBy(dx: tileSize.width * 0.1, dy: tileSize.height * 0.1)
+                ).insetBy(dx: tileSize.height * 0.1, dy: tileSize.height * 0.1)
                 view.layout()
                 if let layer = view.layer {
                     layer.frame = view.frame

@@ -10,6 +10,7 @@ In progress (`docs/09-roadmap.md` "1.1.0").
 - Session rows show the session's context use and cost on hover, e.g. `ctx 64% · $1.20`, from the Claude Code statusline (REQ-26, WP-48).
 - Settings has three tabs: General, Pet (live preview, pose picker, style) and Advanced (port, version, GitHub link) (REQ-21, WP-42).
 - Do Not Disturb (right-click menu or Settings → General) mutes pop-outs and sounds; state and counters still update (REQ-23, WP-45).
+- Reworked poses: no "Zzz" while sleeping, a speech bubble in the pet's own look, a bigger hammer and broom, paws that toss and catch while juggling, and an entry burst plus hops for done and needs input (REQ-03 AC7/AC9, WP-50).
 
 ## 1.0.0
 

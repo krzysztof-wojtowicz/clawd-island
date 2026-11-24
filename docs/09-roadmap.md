@@ -37,7 +37,7 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - `Session.talkingStreakStart`, set on `.messageDisplay`; the session keeps its previous state until a `MessageDisplay` finds the streak ≥ 1.5 s old (no timed promotion); any other state-setting event resets it; the 2 s decay and its one-shot `nextDecayDeadline` are unchanged (`04` "Talking streak", REQ-03 AC8). No new timer (`08` rule 1).
 - AC: REQ-03 AC8; `TransitionTests` / `SessionStoreTests` for 1.49 s vs 1.5 s, a single `MessageDisplay` plus silence never promoting, a new streak after a 2 s gap, a decayed streak not revived by one message, a reset by `PreToolUse`, and the 2 s decay unchanged; `simulate.sh text` (talking) and `blip` (no change).
 
-### WP-50 — Pose rework · owner: pet-animator · deps: WP-36 · status: `todo`
+### WP-50 — Pose rework · owner: pet-animator · deps: WP-36 · status: `done`
 - In `PetRig` / `PetAnimations`: drop the Zzz layer and its rise; restyle the speech bubble to the pet's look (rounded, pet tokens); scale the hammer and broom about 1.3× and re-check clipping in the right wing and in mini mode; juggling paws toss and catch in turn, in sync with the ball orbit; `done` and `needsInput` get an entry burst plus a stronger loop, keeping the wave (`07` "Poses and animations", REQ-03 AC7, AC9).
 - AC: REQ-03 AC1, AC7, AC9 and REQ-04 AC4; every pose rendered in both styles (`--render-poses docs/media --pet-style roundy|sharpy`) and the README GIFs re-rendered; Reduce Motion checked; `perf-suite.sh` within `08`.
 

@@ -51,7 +51,7 @@ final class PetView: NSView {
         CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
         rig.applyPose(state)
         CATransaction.commit()
-        startLoops()
+        startLoops(entering: true)
         updateAccessibilityLabel()
     }
 
@@ -166,17 +166,18 @@ final class PetView: NSView {
         rig.applyPose(state)
         rig.showAccessories(for: state)
         CATransaction.commit()
-        startLoops()
+        startLoops(entering: false)
     }
 
-    private func startLoops() {
+    /// `entering` is true only for a real state change, so a rig rebuild or Reduce Motion toggle never replays the burst.
+    private func startLoops(entering: Bool) {
         guard !Self.reduceMotion else { return }
-        rig.startLoops(for: state)
+        rig.startLoops(for: state, entering: entering)
     }
 
     @objc private func reduceMotionDidChange() {
         rig.stopLoops()
-        startLoops()
+        startLoops(entering: false)
     }
 
     private func updateAccessibilityLabel() {

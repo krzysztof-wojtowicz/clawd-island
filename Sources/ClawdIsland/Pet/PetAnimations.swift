@@ -7,12 +7,12 @@ import ClawdCore
 extension PetRig {
     private static let loopPrefix = "loop."
 
-    /// Adds `state`'s loop and entry animations (docs/07 table). Offsets are additive, so they ride on the pose.
-    func startLoops(for state: PetState) {
+    /// Adds `state`'s loop animations (docs/07 table), plus its one-shot entry effects (burst, shake) when `entering`
+    /// is true, i.e. on a real state change rather than a rig rebuild or Reduce Motion toggle. Offsets are additive.
+    func startLoops(for state: PetState, entering: Bool) {
         switch state {
         case .sleeping:
             torso.add(Self.keyframes("transform.scale.y", [1, 0.96, 1], period: 3.2), forKey: "loop.breath")
-            zzz.add(Self.zzzRise(period: 3.2), forKey: "loop.zzz")
         case .idle:
             // 120 ms blink at the end of a long hold.
             let blink = Self.keyframes("transform.scale.y", [1, 1, 0.1, 1], period: 4.5, keyTimes: [0, 0.9733, 0.9867, 1])
@@ -49,21 +49,28 @@ extension PetRig {
                 puff.add(burst, forKey: "loop.puff")
             }
         case .juggling:
-            // A cascade: every ball rides the same orbit, a third of the period apart.
-            let orbit = CGPath(ellipseIn: Self.ballOrbit, transform: nil)
+            // Every ball rides `ballLoop` a third of the 1.2 s period apart, so a ball reaches the right paw at
+            // 0, 0.4, 0.8 s and the left paw 0.2 s later: each paw flicks up (toss) as a ball passes, every 0.4 s.
             for (index, ball) in balls.enumerated() {
                 let arc = CAKeyframeAnimation(keyPath: "position")
-                arc.path = orbit
+                arc.path = Self.ballLoop
+                arc.keyTimes = [0, 0.5, 1]
                 arc.duration = 1.2
                 arc.repeatCount = .infinity
-                arc.calculationMode = .paced
                 arc.timeOffset = Double(index) * 0.4
                 ball.add(arc, forKey: "loop.arc")
             }
-            let bob = Self.keyframes("transform.rotation.z", [0, 6, 0, -6, 0].map(Self.radians), period: 1.2, additive: true)
-            rightArm.add(bob, forKey: "loop.bob")
-            bob.timeOffset = 0.6
-            leftArm.add(bob, forKey: "loop.bob")
+            // Flick up and lift as the ball passes (t = 0), settle, then dip to catch the next one.
+            let beats: [NSNumber] = [0, 0.35, 0.8, 1]
+            for (arm, side) in [(rightArm, 1.0), (leftArm, -1.0)] {
+                let toss = Self.keyframes("transform.rotation.z", [28, 0, -18, 28].map { Self.radians($0 * side) }, period: 0.4, keyTimes: beats, additive: true)
+                let lift = Self.keyframes("position.y", [0.9, 0, -0.5, 0.9], period: 0.4, keyTimes: beats, additive: true)
+                // The left paw catches 0.2 s after the right.
+                toss.timeOffset = side < 0 ? 0.2 : 0
+                lift.timeOffset = toss.timeOffset
+                arm.add(toss, forKey: "loop.toss")
+                arm.add(lift, forKey: "loop.lift")
+            }
         case .talking:
             for (index, dot) in dots.enumerated() {
                 let light = Self.keyframes("opacity", [0.3, 1, 0.3, 0.3], period: 0.9, keyTimes: [0, 0.17, 0.33, 1])
@@ -76,11 +83,16 @@ extension PetRig {
             wiggle.timeOffset = 0.45
             rightArm.add(wiggle, forKey: "loop.wiggle")
         case .done:
+            if entering { playBurst(color: PetTokens.body) }
             rightArm.add(Self.waveLoop(), forKey: "loop.wave")
+            root.add(Self.waveHops(), forKey: "loop.hop")
         case .needsInput:
             rightArm.add(Self.waveLoop(), forKey: "loop.wave")
-            let pulse = Self.keyframes("transform.scale", [1, 1.15, 1], period: 1.2)
+            root.add(Self.waveHops(), forKey: "loop.hop")
+            let pulse = Self.keyframes("transform.scale", [1, 1.3, 1], period: 1.2)
             badge.add(pulse, forKey: "loop.badge")
+            guard entering else { return }
+            playBurst(color: PetTokens.badgeAlert)
             let shake = Self.keyframes("position.x", [0, -0.6, 0.6, -0.6, 0.6, 0], period: 0.35, additive: true)
             shake.repeatCount = 1
             torso.add(shake, forKey: "loop.shake")
@@ -145,16 +157,31 @@ extension PetRig {
         )
     }
 
-    /// "Zzz" fades in, rises 2 u and fades out once per breath.
-    private static func zzzRise(period: CFTimeInterval) -> CAAnimationGroup {
-        let group = CAAnimationGroup()
-        group.animations = [
-            keyframes("opacity", [0, 1, 1, 0], period: period, keyTimes: [0, 0.2, 0.7, 1]),
-            keyframes("position.y", [-1, 1], period: period, additive: true),
+    /// Two 1.2 u hops of the whole pet during the wave's swings, still during its rest; shares the wave's 2.4 s period.
+    /// Animates the root's sublayer transform, so legs and accessories hop with the body and the units stay unit-box.
+    private static func waveHops() -> CAKeyframeAnimation {
+        let period = 2.4
+        return keyframes(
+            "sublayerTransform.translation.y",
+            [0, 1.2, 0, 1.2, 0, 0],
+            period: period,
+            keyTimes: [0, 0.15, 0.3, 0.45, 0.6, period].map { NSNumber(value: $0 / period) }
+        )
+    }
+
+    /// One-shot entry flash (REQ-03 AC7): the body outline in `color` grows from the body's edge and fades out.
+    private func playBurst(color: CGColor) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        burst.strokeColor = color
+        CATransaction.commit()
+        let flash = CAAnimationGroup()
+        flash.animations = [
+            Self.keyframes("opacity", [0, 1, 0], period: 0.7, keyTimes: [0, 0.12, 1]),
+            Self.keyframes("transform.scale", [1, 1.5], period: 0.7),
         ]
-        group.duration = period
-        group.repeatCount = .infinity
-        return group
+        flash.duration = 0.7
+        burst.add(flash, forKey: "loop.burst")
     }
 
     private static func spring(_ keyPath: String) -> CASpringAnimation {
