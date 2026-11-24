@@ -2,7 +2,7 @@
 
 Native macOS app (Apple silicon, macOS 14+): a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** 1.0.0 is released on GitHub; every requirement in `docs/02` is implemented. New work goes into `docs/09-roadmap.md` as WP-37 onward (WP-36 is pending on `pet-variants`); post-1.0 proposals, with draft REQ-19+ and ADR-0009/0010, live in `docs/11-proposals.md`.
+**Status:** 1.0.0 is released on GitHub. **1.1.0 is in progress:** its work packages are in `docs/09-roadmap.md` "1.1.0" (WP-36, 42, 45, 46, 48, 50–52), and its requirements are the items marked "(1.1.0)" in `docs/02`. New work packages continue from WP-53. The remaining post-1.0 proposals, with draft REQs and ADR-0009/0010, live in `docs/11-proposals.md`.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
@@ -43,7 +43,7 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 - `screencapture` fails unless the terminal has the Screen Recording permission. Use `window-info.swift` for geometry, and ask the user to look when visuals matter.
 - Never test hooks against the real `~/.claude/settings.json`. Use `claude -p … --settings <scratch file>` instead.
 - To try Install, onboarding or `--uninstall-hooks` on the app, set both `CLAWD_SETTINGS_PATH` and `CLAWD_CONFIG_PATH` to scratch files (the bridge ignores them and reads the real config).
-- Launch flags: `--open-settings [--close-settings-after <s>]` (perf-suite), `--uninstall-hooks` (uninstall.sh). Debug builds only: `--pet-demo`, `--render-poses <dir>` (README pose GIFs: `.build/debug/ClawdIsland --render-poses docs/media`), `--render-icon <dir>`, `--debug-auto-allow|deny|always` (answer permission cards automatically for e2e tests).
+- Launch flags: `--open-settings [--close-settings-after <s>]` (perf-suite), `--uninstall-hooks` (uninstall.sh). Debug builds only: `--pet-demo`, `--render-poses <dir> [--pet-style roundy|sharpy]` (README pose GIFs: `.build/debug/ClawdIsland --render-poses docs/media --pet-style roundy`; `--pet-style` from WP-36), `--render-icon <dir>`, `--debug-auto-allow|deny|always` (answer permission cards automatically for e2e tests).
 
 ## Repo map
 ```

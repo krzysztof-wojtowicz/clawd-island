@@ -38,7 +38,7 @@ The installer recognises its own entries by their URL (`http://127.0.0.1:<any po
 |---|---|---|
 | `POST /hook` | raw hook JSON | `SessionStore.apply(event)` |
 | `POST /session-meta` | `SessionMeta` JSON from the bridge with snake_case keys: `session_id`, `cwd` (both required), `source`, `pid`, `tty`, `terminal_bundle_id`, `term_program` | creates the session if unknown (`idle`), then `SessionStore.apply(meta:now:)` |
-| `POST /statusline` | raw statusline JSON | `SessionStore.apply(usage:)` when `UsageSnapshot(statusline:)` finds `rate_limits.five_hour.*`; otherwise the last usage is kept |
+| `POST /statusline` | raw statusline JSON | `SessionStore.apply(usage:)` when `UsageSnapshot(statusline:)` finds `rate_limits.five_hour.*`; otherwise the last usage is kept. **(1.1.0)** Also attaches `context_window.used_percentage` and `cost.total_cost_usd` to the session named by `session_id` (REQ-26, "Context and cost" below) |
 | anything else | — | 404 |
 Every endpoint requires `X-Clawd-Token`. Bodies are limited to 64 KiB, with a 2 s read timeout and `Connection: close`.
 Every reply has an empty body and `Content-Length: 0`. The checks run in this order: 401 for a missing or wrong token (checked first, so unauthenticated clients learn nothing about routes), 404 for an unknown path or a non-`POST` method, and 413 when `Content-Length` exceeds 64 KiB (the body is not read). A malformed request line or `Content-Length` gets 400, and a head over 8 KiB gets 431. A valid request always gets 200, even if its body decodes to nothing.
@@ -67,6 +67,12 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - These are present only for Pro and Max subscribers, after the first API response. Each window can be absent. If they are missing, `UsageSnapshot` stays nil and the HP bar is hidden. If only `seven_day` is missing, the `WK` part is omitted.
 - The statusline refreshes on assistant messages, so the data is as fresh as the last active session.
 - **Forbidden:** the undocumented OAuth usage endpoint, and any Keychain or credentials access.
+
+## Context and cost (REQ-26, 1.1.0)
+- Source: the same statusline payload. Verified fields: `context_window.used_percentage` (a number; it may be null early in a session) and `cost.total_cost_usd` (a number, Claude Code's estimate at list price; it resets on `/clear`). The payload's top-level `session_id` names the session.
+- The `/statusline` path decodes both leniently (a missing, null or mistyped field gives nil) and stores them on that `Session` (`contextUsedPercent?`, `costUSD?`, included in `==`). Like the `source: "statusline"` meta (`statusline` step 2a above), which arrives concurrently, an unknown `session_id` creates the session as `idle`; the state never changes.
+- The global `rate_limits` handling above is unchanged.
+- The session row tooltip reads `ctx 64% · $1.20`. A part is omitted when its value is nil; with both nil, the row has no tooltip. Never estimated.
 
 ## Installer (`HookInstaller`, ClawdCore)
 - **Install:**
@@ -110,7 +116,7 @@ Startup must stay under 20 ms. It uses only Foundation and Darwin. It reads the 
 - Ghostty and Warp have no API to select or read a tab or window: app level only. Tab precision inside any IDE terminal is not possible.
 
 ## Sound cues (REQ-12)
-`SoundCues` (App) watches `Snapshot.popToken` edges and plays a system sound through a short-lived `/usr/bin/afplay` process (an in-process `NSSound` costs +7 MB RSS): "Funk" for needsInput, "Glass" for unread done. It does not play for user-caused changes and is skipped when `soundCues` is off. Event-driven; no timer.
+`SoundCues` (App) watches `Snapshot.popToken` edges and plays a system sound through a short-lived `/usr/bin/afplay` process (an in-process `NSSound` costs +7 MB RSS): "Funk" for needsInput, "Glass" for unread done. It does not play for user-caused changes and is skipped when `soundCues` is off or Do Not Disturb is on (REQ-23, 1.1.0). Event-driven; no timer.
 
 ## New session (REQ-18)
 - Terminal.app: `tell application "Terminal"` → `do script "cd <dir> && claude"` and `activate`.

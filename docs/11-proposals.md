@@ -1,21 +1,27 @@
 # 11 — Proposals after 1.0.0
 
-**Status:** proposed. Nothing here is implemented or accepted. When a proposal is accepted, its draft REQ moves into `02`, its ADR status becomes `accepted`, and the work packages in `09` go from `proposed` to `todo`. Draft requirements are numbered from **REQ-19**. Work packages start at **WP-37**, because WP-36 (pet styles Classic / Sharp / Cute) is pending on the `pet-variants` branch.
+**Status:** partly accepted for **1.1.0**: P2 (without the Agents tab), P4a, P4b and P4d, plus the Roundy / Sharpy styles of P1 (WP-36). Their requirements now live in `02` (REQ-06 AC2, REQ-21, REQ-23, REQ-24, REQ-26) and their work packages in `09` "1.1.0"; where `02` differs from the text below, `02` wins. Everything else (P1 species, colour, accessory and name; P3; P4c; P4e) stays proposed. When a proposal is accepted, its draft REQ moves into `02`, its ADR status becomes `accepted`, and the work packages in `09` go from `proposed` to `todo`. Draft requirements are numbered from **REQ-19**. Proposal work packages are WP-37…WP-49.
 
 Every proposal must keep the CLAUDE.md invariants and the `08` budget. Each section says how it does.
 
-| # | Proposal | Draft REQ | ADR | WPs |
-|---|---|---|---|---|
-| P1 | Pet customization: original species, colour, accessory, name | REQ-19, REQ-20 | ADR-0010 | WP-43, WP-44 |
-| P2 | Settings window redesign (tabs, live preview) | REQ-21 | — | WP-42 |
-| P3 | Other agents: Codex CLI, Gemini / Antigravity CLI, Junie CLI | REQ-22 | ADR-0009 | WP-37 … WP-41 |
-| P4 | Smaller ideas: Do Not Disturb, poke, hotkey, context %, sound choice | REQ-23 … REQ-25 | — | WP-45 … WP-49 |
+| # | Proposal | Draft REQ | ADR | WPs | Status |
+|---|---|---|---|---|---|
+| P1 | Pet customization: original species, colour, accessory, name | REQ-19, REQ-20 | ADR-0010 | WP-43, WP-44 | proposed; only the Roundy / Sharpy styles are accepted for 1.1.0 (REQ-06 AC2, WP-36) |
+| P2 | Settings window redesign (tabs, live preview) | REQ-21 | — | WP-42 | **accepted for 1.1.0** without the Agents tab |
+| P3 | Other agents: Codex CLI, Gemini / Antigravity CLI, Junie CLI | REQ-22 | ADR-0009 | WP-37 … WP-41 | proposed |
+| P4a | Do Not Disturb | REQ-23 | — | WP-45 | **accepted for 1.1.0** |
+| P4b | Poke reaction | REQ-24 | — | WP-46 | **accepted for 1.1.0** |
+| P4c | Global hotkey | REQ-25 | — | WP-47 | proposed |
+| P4d | Context and cost per session | REQ-26 | — | WP-48 | **accepted for 1.1.0** |
+| P4e | Sound choice | — | — | WP-49 | proposed |
 
 ---
 
 ## P1 Pet customization
 
-**Problem.** There is one pet. WP-36 adds styles, but they change only corner radii and the face. Users want to make the island feel their own. The vision rules out "themes" and "multiple pets". This proposal keeps **one pet on screen** and lets the user choose its species and dress.
+> **1.1.0:** only the styles are accepted: Roundy (default) and Sharpy, REQ-06 AC2, WP-36. The Classic / Sharp / Cute names of `pet-variants` are replaced; Cute and Plush are dropped. Species, colour, accessory and name below stay proposed.
+
+**Problem.** There is one pet. WP-36 adds styles, but they change only corner radii. Users want to make the island feel their own. The vision rules out "themes" and "multiple pets". This proposal keeps **one pet on screen** and lets the user choose its species and dress.
 
 ### P1a Original species (draft REQ-19)
 Every species is an **original design** made for this project (ADR-0010). No third-party mascots: Kodee, Ferris, the Go Gopher, Duke and Tux are all out.
@@ -37,7 +43,7 @@ Every species is an **original design** made for this project (ADR-0010). No thi
 
 **Perf.** The rig is a few more `CAShapeLayer`s at most, built once per change. There is no runtime cost (`08` rules 1–2).
 
-**Open questions.** Does Sharp / Cute apply to every species, or only to Clawd? Proposed: only to Clawd, and the style picker is hidden for other species. Should each species get its own idle tic (Byte's antenna twitch, Nib's LED blink)? Proposed: yes, as one extra repeating animation on the idle layer.
+**Open questions.** Does Roundy / Sharpy apply to every species, or only to Clawd? Proposed: only to Clawd, and the style picker is hidden for other species. Should each species get its own idle tic (Byte's antenna twitch, Nib's LED blink)? Proposed: yes, as one extra repeating animation on the idle layer.
 
 ### P1b Colour, accessory, name (draft REQ-20)
 - **Body colour.** Presets (Clawd orange `#D97757`, Ink, Mint, Lilac, Sky, Sand) plus "Custom…" through an `NSColorWell`. The shade (`clawd.bodyShade`) is derived by darkening the colour by about 12 %. Badge colours (`badge.*`, `hp.*`) never change, so the urgency colours of REQ-04 still mean the same. The orange "done" counter and the hover glow keep `clawd.body` as their token, so they follow the pet colour.
@@ -50,6 +56,8 @@ Every species is an **original design** made for this project (ADR-0010). No thi
 ---
 
 ## P2 Settings window redesign (draft REQ-21)
+
+> **Accepted for 1.1.0** as REQ-21 / WP-42. Differences: there is no Agents tab (Claude Code only); the hooks row, the welcome and "Approve permissions from the notch" go in General, and the first run opens General; Pet has only the preview and the Style popup; Advanced has only the read-only port, the version and the GitHub link (no token status, config folder, reset or test events). SF Symbols are used for the tabs.
 
 **Problem.** Settings is a single column of controls (`06` "Settings window"). P1 and P3 add a dozen more controls and need a pet preview. A flat list would turn into a wall.
 
@@ -107,17 +115,23 @@ Every species is an **original design** made for this project (ADR-0010). No thi
 ## P4 Smaller ideas
 
 ### P4a Do Not Disturb (draft REQ-23)
+> **Accepted for 1.1.0** as REQ-23 / WP-45. Differences: the user's toggle (menu and General checkbox, `dnd`) is the feature; screen-sharing and Focus detection are an investigation item, kept only if an event-driven public API exists.
+
 Mute pop-outs and sounds while a macOS Focus mode is on, or while the screen is being shared or recorded. The state still changes, and the counter still turns red.
 - Detection is event-driven only: the `com.apple.donotdisturb` / Focus state is not public. Use `NSWorkspace` screen-sharing notifications and the user's own toggle (right-click menu "Do Not Disturb", `dnd` in config). Plain Focus detection is an open question; if it needs polling, it is dropped (`08` rule 1).
 - AC: no pop-out and no sound while DND is on; `needsInput` still pops once when DND turns off.
 
 ### P4b Poke reaction (draft REQ-24)
+> **Accepted for 1.1.0** as REQ-24 / WP-46. Differences: a squash and blink, with a small red heart about 1 in 4 times (no spark); no sound; it never opens the panel or takes focus.
+
 A click on the pet (not on the HUD) plays a one-shot "boop": a squash, a blink and a small heart or spark, 0.6 s, as a Core Animation group. It never changes state, and it does not count as reading a session. Reduce Motion gives a blink only. clawd-on-desk has a similar interaction; ours is written from scratch.
 
 ### P4c Global hotkey (draft REQ-25)
 An optional shortcut (default none; set in Settings → General) toggles the expanded panel. A second optional shortcut presses **Allow** on the top permission card. It is registered with Carbon `RegisterEventHotKey` (no event tap, no polling, no Accessibility permission). The app still never takes keyboard focus except for Settings (REQ-02 AC2).
 
-### P4d Context and cost per session
+### P4d Context and cost per session (REQ-26)
+> **Accepted for 1.1.0** as REQ-26 / WP-48. The fields are verified: `context_window.used_percentage` (may be null early) and `cost.total_cost_usd` (list-price estimate, resets on `/clear`), attached by the payload's `session_id` (`05` "Context and cost").
+
 The Claude Code statusline JSON carries per-session cost (`cost.total_cost_usd`) and context-window data. Show `ctx 64% · $1.20` on the session row tooltip. The field names must be verified against the current statusline docs first (`05`). Claude Code only; nothing is fabricated for other agents.
 
 ### P4e Sound choice

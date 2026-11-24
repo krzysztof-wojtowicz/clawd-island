@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased (1.1.0)
+
+In progress (`docs/09-roadmap.md` "1.1.0").
+
 ## 1.0.0
 
 First public release. Apple silicon, macOS 14+, signed with a self-signed "ClawdIsland" identity (not notarized).

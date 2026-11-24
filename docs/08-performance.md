@@ -14,7 +14,7 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 Accepted exception: the Settings window (rarely open), 60 MB RSS open and 55 MB after close, footprint 18–19 MB (see "Known limits").
 
 ## Rules
-1. **Event-driven only.** The only repeating timer is the 30 s liveness check, suspended while there are no sessions. The talking decay is a rescheduled one-shot, never a repeating timer. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3).
+1. **Event-driven only.** The only repeating timer is the 30 s liveness check, suspended while there are no sessions. The talking decay is a rescheduled one-shot, never a repeating timer. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3). **(1.1.0)** Do Not Disturb, the poke and the talking streak add no repeating timer: DND is a flag checked on each pop-out and sound edge, the poke is a one-shot Core Animation group, and the streak promotion reuses the talking-decay one-shot (`nextDecayDeadline`). Screen-share or Focus detection for DND is added only if it is event-driven (REQ-23 AC3).
 2. **Animation runs in the render server.** The pet uses Core Animation layer animations only. No `TimelineView`, `CADisplayLink`, `Timer`, or SwiftUI `repeatForever`.
 3. **Render only on change.** `AppModel` publishes a new `Snapshot` only when it is `!=` to the previous one. `MessageDisplay` floods are coalesced to at most one snapshot per 100 ms.
 4. **Pause when nobody can see it.** On `screensDidSleepNotification` and `sessionDidResignActiveNotification`, pause the layers (`speed = 0`) and the liveness timer; resume on the matching wake notifications.
@@ -24,7 +24,7 @@ Accepted exception: the Settings window (rarely open), 60 MB RSS open and 55 MB 
 8. **No App Nap fights.** The app is naturally idle.
 9. **Sound out of process.** `SoundCues` runs `/usr/bin/afplay` on `popToken` edges.
 10. **Cheap effects only.** The hover glow is a layer shadow with an explicit `shadowPath`; only its opacity animates. No blur filter, `NSVisualEffectView` or per-frame redraw. Unused overlays (bubbles, broom, balls) are hidden, not animating.
-11. **Lazy creation.** The session panel, Settings window and permission cards are built on first use; Settings is released on close.
+11. **Lazy creation.** The session panel, Settings window and permission cards are built on first use; Settings is released on close. **(1.1.0)** The Settings preview pet is paused (`setPaused`) while the window is not key and is released with the window (REQ-21 AC3).
 
 ## Measured (1.0.0)
 `scripts/perf-suite.sh` run of 2026-11-23 at `cc25cb1` (same runtime behaviour as 1.0.0), release bundle, scratch port, settle 30 s, sample 20 s. CPU avg / max, RSS max, `footprint`.
