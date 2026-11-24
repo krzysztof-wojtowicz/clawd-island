@@ -41,7 +41,7 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - In `PetRig` / `PetAnimations`: drop the Zzz layer and its rise; restyle the speech bubble to the pet's look (rounded, pet tokens); scale the hammer and broom about 1.3× and re-check clipping in the right wing and in mini mode; juggling paws toss and catch in turn, in sync with the ball orbit; `done` and `needsInput` get an entry burst plus a stronger loop, keeping the wave (`07` "Poses and animations", REQ-03 AC7, AC9).
 - AC: REQ-03 AC1, AC7, AC9 and REQ-04 AC4; every pose rendered in both styles (`--render-poses docs/media --pet-style roundy|sharpy`) and the README GIFs re-rendered; Reduce Motion checked; `perf-suite.sh` within `08`.
 
-### WP-51 — Mini-mode hold until read · owner: macos-ui-engineer · deps: WP-52 · status: `todo`
+### WP-51 — Mini-mode hold until read · owner: macos-ui-engineer · deps: WP-52 · status: `done`
 - In `AppDelegate` / `NotchWindowController`: the pop-out holds while the aggregate is `done` or `needsInput`; the 3 s countdown starts when it leaves both; `talking` keeps the plain 3 s; turning mini mode on while `done` also holds (REQ-05 AC1–AC2, `06` "Mini mode").
 - AC: REQ-05 AC1, AC2, AC4; checked with `simulate.sh`: done stays out until mark-read or terminal focus, needsInput until resolved, talking retracts after 3 s; `perf-suite.sh` mini-mode scenarios within `08`.
 

@@ -26,7 +26,7 @@ final class NotchWindowController {
     private var isExpanded = false
     private var hoverTask: Task<Void, Never>?
     private var retractTask: Task<Void, Never>?
-    /// Whether mini mode has the island out (a state change, or a pending `needsInput`).
+    /// Whether mini mode has the island out (a state change, or a held unread `done` / pending `needsInput`).
     private var isPopped = false
 
     /// Mini mode (REQ-05): Clawd tucks under the notch unless popped out or hovered.
@@ -35,12 +35,12 @@ final class NotchWindowController {
             guard miniMode != oldValue else { return }
             retractTask?.cancel()
             isPopped = false
-            // AC2: a pending needsInput stays out even when mini mode is switched on.
-            if miniMode, needsInput() { popOut(hold: true) } else { layout(animated: true) }
+            // AC2: an unread done or a pending needsInput stays out even when mini mode is switched on.
+            if miniMode, holdsPopOut() { popOut(hold: true) } else { layout(animated: true) }
         }
     }
-    /// Whether the aggregate state is `needsInput`.
-    var needsInput: () -> Bool = { false }
+    /// Whether the aggregate state holds a pop-out (`done` or `needsInput`, REQ-05 AC2).
+    var holdsPopOut: () -> Bool = { false }
     /// Why the event server is not listening, shown as a disabled top menu item.
     var serverError: () -> String? = { nil }
     /// Called by the "Mini Mode" menu item.
@@ -85,7 +85,7 @@ final class NotchWindowController {
         }
     }
 
-    /// Pops a hidden island out for 3 s (REQ-05 AC1; a new call restarts it), or until the next call when `hold` is set (AC2: `needsInput`).
+    /// Pops a hidden island out for 3 s (REQ-05 AC1; a new call restarts it), or until the next call when `hold` is set (AC2: `done`, `needsInput`).
     func popOut(hold: Bool) {
         guard miniMode else { return }
         retractTask?.cancel()
