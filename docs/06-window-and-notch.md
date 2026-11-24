@@ -70,17 +70,17 @@
 ## Settings window (AppKit)
 A plain AppKit window, built when opened and released on close (SwiftUI would cost too much RSS, `08`). It activates the app while open.
 
-**1.0.0:** one column: mini mode, focus-read mode (`tab` / `app` / `off`), "Approve permissions from the notch" (`notchPermissions`, default on), **"Sound cues"** (`soundCues`, default on, REQ-12), a **hooks row** ("Claude Code hooks: Installed / Not installed" plus an Install / Uninstall button that runs `HookInstaller` and shows errors, REQ-09 AC4) and **Launch at login**. The port is not shown. From WP-36 until WP-42 lands, a temporary "Pet style" popup (Roundy / Sharpy) sits in this column.
+**1.0.0:** one column: mini mode, focus-read mode (`tab` / `app` / `off`), "Approve permissions from the notch" (`notchPermissions`, default on), **"Sound cues"** (`soundCues`, default on, REQ-12), a **hooks row** ("Claude Code hooks: Installed / Not installed" plus an Install / Uninstall button that runs `HookInstaller` and shows errors, REQ-09 AC4) and **Launch at login**. The port is not shown.
 
 **1.1.0 (REQ-21):** an `NSTabViewController` with the `.toolbar` tab style (the native preferences look) and SF Symbols tab icons (system assets, not bundled bitmaps). Three tabs:
 
 | Tab | Contents |
 |---|---|
-| **General** | first-run welcome line; the Claude Code hooks row (Install / Uninstall); "Approve permissions from the notch"; Mini mode; focus-read mode; Sound cues; **Do Not Disturb** (`dnd`, REQ-23); Launch at login |
-| **Pet** | a live **preview** (`PetView` at 3× notch size) with a pose picker that cycles the nine poses; the **Style** popup, Roundy / Sharpy (`petStyle`, REQ-06 AC2), which also rebuilds the island's pet live |
-| **Advanced** | the port (read-only), the app version (`CFBundleShortVersionString`) and a link to https://github.com/krzysztof-wojtowicz/clawd-island. Nothing else. |
+| **General** (`gearshape`) | first-run welcome line; the Claude Code hooks row (Install / Uninstall); "Approve permissions from the notch"; Mini mode; focus-read mode; Sound cues; **Do Not Disturb** (`dnd`, REQ-23, added by WP-45); Launch at login |
+| **Pet** (`pawprint`) | a live **preview** (`PetView` at 3× the collapsed pet height, 78 pt, on an island-black rounded stage) with a **Pose** popup listing the nine poses; the **Style** popup, Roundy / Sharpy (`petStyle`, REQ-06 AC2), which rebuilds the preview and the island's pet live |
+| **Advanced** (`slider.horizontal.3`) | the port (read-only, from config), the app version (`CFBundleShortVersionString`, "dev" in a bare debug run) and a link to https://github.com/krzysztof-wojtowicz/clawd-island that opens in the browser. Nothing else. |
 
-- The window remembers the last tab during a run only (no config key).
+- The window remembers the last tab during a run only (no config key). Each tab sizes the window to its content. Control text is JetBrains Mono; the window title and toolbar tab labels are drawn by AppKit in the system font.
 - The preview pet pauses (`setPaused`) while the window is not key and is released with the window. RSS stays within the `08` Settings exception.
 - Claude Code is the only agent, so there is no Agents tab (it may come with WP-38+, `11` P3).
 

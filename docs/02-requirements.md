@@ -157,7 +157,7 @@ Settings becomes a window with three toolbar tabs: **General**, **Pet** and **Ad
 - AC3: **Pet** holds a live preview (`PetView` at 3× notch size, with a pose picker that cycles the nine poses) and the Style popup, Roundy / Sharpy (REQ-06 AC2). The preview pauses (`setPaused`) while the window is not key, and it is released with the window.
 - AC4: **Advanced** holds only the port (read-only), the app version (`CFBundleShortVersionString`) and a link to the GitHub repository (https://github.com/krzysztof-wojtowicz/clawd-island).
 - AC5: The window remembers the last tab during a run, not across launches (no new config key). It is built when opened and released on close, and RSS with the window open stays within the existing Settings exception (`08` "Known limits"), measured with `perf-suite.sh --open-settings`.
-- AC6: Every text is JetBrains Mono (REQ-14).
+- AC6: Control text is JetBrains Mono (REQ-14); the window title and toolbar tab labels are AppKit system text.
 
 ## REQ-23 Do Not Disturb (1.1.0)
 A user toggle that mutes the pet's interruptions: right-click menu "Do Not Disturb" and a General checkbox, `dnd` in config, default off.

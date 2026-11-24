@@ -45,7 +45,7 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - In `AppDelegate` / `NotchWindowController`: the pop-out holds while the aggregate is `done` or `needsInput`; the 3 s countdown starts when it leaves both; `talking` keeps the plain 3 s; turning mini mode on while `done` also holds (REQ-05 AC1–AC2, `06` "Mini mode").
 - AC: REQ-05 AC1, AC2, AC4; checked with `simulate.sh`: done stays out until mark-read or terminal focus, needsInput until resolved, talking retracts after 3 s; `perf-suite.sh` mini-mode scenarios within `08`.
 
-### WP-42 — Settings tabs General / Pet / Advanced · owner: macos-ui-engineer · deps: WP-36 · status: `todo`
+### WP-42 — Settings tabs General / Pet / Advanced · owner: macos-ui-engineer · deps: WP-36 · status: `done`
 - Rewrite `SettingsWindow.swift` as an `NSTabViewController` (`.toolbar` style, SF Symbols): General (welcome, hooks row, notch permissions, mini mode, focus-read, sound cues, launch at login; DND joins with WP-45), Pet (3× `PetView` preview with a pose picker, Style popup), Advanced (read-only port, version, GitHub link). Built on open, released on close; last tab remembered for the run (REQ-21, `06` "Settings window"). No Agents tab: it is deferred to WP-38+ and would be added to this window then.
 - AC: REQ-21 AC1–AC6, REQ-09 AC5 (first run opens General with Install as default); scratch `CLAWD_SETTINGS_PATH` / `CLAWD_CONFIG_PATH` for the hooks row and first run; `perf-suite.sh --open-settings` within the `08` Settings exception.
 
