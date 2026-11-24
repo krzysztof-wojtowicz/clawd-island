@@ -42,6 +42,15 @@ struct AppConfigTests {
         #expect(AppConfig.load(from: url)?.onboarded == true)
     }
 
+    @Test("dnd defaults to off for old files and round-trips when on")
+    func dnd() throws {
+        let old = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port":1,"token":"t"}"#.utf8))
+        #expect(!old.dnd)
+        let url = FileManager.default.temporaryDirectory.appending(path: "clawd-\(UUID().uuidString)/config.json")
+        try AppConfig(token: "t", dnd: true).write(to: url)
+        #expect(AppConfig.load(from: url)?.dnd == true)
+    }
+
     @Test("petStyle defaults to roundy")
     func petStyleDefault() throws {
         let old = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port":1,"token":"t"}"#.utf8))

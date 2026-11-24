@@ -21,6 +21,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var hooksButton: NSButton?
     private var permissionCheck: NSButton?
     private var soundCheck: NSButton?
+    private var dndCheck: NSButton?
     private var focusPopUp: NSPopUpButton?
     private var stylePopUp: NSPopUpButton?
     /// The Pet tab's live preview; paused while the window is not key (docs/08 rule 11).
@@ -54,6 +55,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         hooksButton?.title = installed ? "Uninstall" : "Install"
         hooksButton?.keyEquivalent = welcomeLabel != nil && !installed ? "\r" : ""
         soundCheck?.state = preferences.soundCues ? .on : .off
+        dndCheck?.state = preferences.dnd ? .on : .off
         permissionCheck?.state = preferences.notchPermissions.withLock { $0 } ? .on : .off
         if let index = AppConfig.FocusReadMode.allCases.firstIndex(of: preferences.focusReadMode) {
             focusPopUp?.selectItem(at: index)
@@ -79,6 +81,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         hooksButton = nil
         permissionCheck = nil
         soundCheck = nil
+        dndCheck = nil
         focusPopUp = nil
         stylePopUp = nil
         preview = nil
@@ -145,9 +148,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let hooksText = NSTextField(labelWithString: "")
         let hooksAction = NSButton(title: "", target: self, action: #selector(hooksClicked(_:)))
         let sound = NSButton(checkboxWithTitle: "Sound cues", target: self, action: #selector(soundChanged(_:)))
+        let dnd = NSButton(checkboxWithTitle: "Do Not Disturb: no pop-out and no sound", target: self, action: #selector(dndChanged(_:)))
         let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
         let focusLabel = NSTextField(labelWithString: "Mark as read on terminal focus:")
-        Self.setFont([mini, login, permissions, sound, popUp, focusLabel, hooksText, hooksAction])
+        Self.setFont([mini, login, permissions, sound, dnd, popUp, focusLabel, hooksText, hooksAction])
         // Titles follow `FocusReadMode.allCases` order; `focusChanged` and `refresh` index by it.
         popUp.addItems(withTitles: AppConfig.FocusReadMode.allCases.map { mode in
             switch mode {
@@ -166,13 +170,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             welcomeLabel = label
         }
         rows += [NSStackView(views: [hooksText, hooksAction]), permissions, mini,
-                 NSStackView(views: [focusLabel, popUp]), sound, login]
+                 NSStackView(views: [focusLabel, popUp]), sound, dnd, login]
         miniCheck = mini
         loginCheck = login
         hooksLabel = hooksText
         hooksButton = hooksAction
         permissionCheck = permissions
         soundCheck = sound
+        dndCheck = dnd
         focusPopUp = popUp
         return Self.column(rows)
     }
@@ -253,6 +258,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     @objc private func soundChanged(_ sender: NSButton) {
         preferences.setSoundCues(sender.state == .on)
+    }
+
+    @objc private func dndChanged(_ sender: NSButton) {
+        preferences.setDND(sender.state == .on)
     }
 
     @objc private func loginChanged(_ sender: NSButton) {

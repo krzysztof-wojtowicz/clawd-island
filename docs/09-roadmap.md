@@ -49,9 +49,9 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - Rewrite `SettingsWindow.swift` as an `NSTabViewController` (`.toolbar` style, SF Symbols): General (welcome, hooks row, notch permissions, mini mode, focus-read, sound cues, launch at login; DND joins with WP-45), Pet (3× `PetView` preview with a pose picker, Style popup), Advanced (read-only port, version, GitHub link). Built on open, released on close; last tab remembered for the run (REQ-21, `06` "Settings window"). No Agents tab: it is deferred to WP-38+ and would be added to this window then.
 - AC: REQ-21 AC1–AC6, REQ-09 AC5 (first run opens General with Install as default); scratch `CLAWD_SETTINGS_PATH` / `CLAWD_CONFIG_PATH` for the hooks row and first run; `perf-suite.sh --open-settings` within the `08` Settings exception.
 
-### WP-45 — Do Not Disturb · owner: core-engineer (`dnd` key) → macos-ui-engineer · deps: WP-42, WP-51 · status: `todo`
-- `dnd` in `AppConfig` (default false); a right-click menu item and a General checkbox; while on, no pop-out and no sound cue, but state and counters update; turning it off while `needsInput` is pending pops out once (REQ-23, `06`).
-- Investigation item: a screen-sharing or Focus-mode signal only if an event-driven public API exists; otherwise document it as dropped (`08` rule 1, REQ-23 AC3).
+### WP-45 — Do Not Disturb · owner: core-engineer (`dnd` key) → macos-ui-engineer · deps: WP-42, WP-51 · status: `done`
+- `dnd` in `AppConfig` (default false); a right-click menu item and a General checkbox; while on, no pop-out and no sound cue, but state and counters update; turning it off while `needsInput` or an unread `done` is pending pops out once, held (REQ-05 AC2); turning it on retracts at once; the pet's pop-out spring is muted too (REQ-23, `06`).
+- Investigation item: a screen-sharing or Focus-mode signal only if an event-driven public API exists; otherwise document it as dropped (`08` rule 1, REQ-23 AC3). Result: dropped, as screen sharing has no change notification and Focus status needs an entitlement and user permission.
 - AC: REQ-23 AC1–AC3; `AppConfigTests` for `dnd`; checked with `simulate.sh`; no new repeating timer.
 
 ### WP-48 — Context and cost tooltip · owner: core-engineer → macos-ui-engineer · deps: WP-42 · status: `done`

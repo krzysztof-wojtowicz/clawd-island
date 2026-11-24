@@ -1,5 +1,5 @@
 // Preferences.swift
-// Mini mode and focus-read mode, persisted in the shared config file (docs/03).
+// Mini mode, focus-read mode, Do Not Disturb and the other settings, persisted in the shared config file (docs/03).
 
 import ClawdCore
 import os
@@ -12,6 +12,8 @@ final class Preferences {
 
     private(set) var miniMode: Bool
     private(set) var soundCues: Bool
+    /// Do Not Disturb (REQ-23): no pop-out and no sound.
+    private(set) var dnd: Bool
     private(set) var focusReadMode: AppConfig.FocusReadMode
     private(set) var petStyle: AppConfig.PetStyle
     /// Whether the first-run Settings welcome was already shown (REQ-09 AC5).
@@ -24,12 +26,15 @@ final class Preferences {
     var onPetStyleChange: ((AppConfig.PetStyle) -> Void)?
     /// Called after `miniMode` changes.
     var onMiniModeChange: ((Bool) -> Void)?
+    /// Called after `dnd` changes.
+    var onDNDChange: ((Bool) -> Void)?
 
     init() {
         let config = AppConfig.load()
         miniMode = config?.miniMode ?? false
         focusReadMode = config?.focusReadMode ?? .tab
         soundCues = config?.soundCues ?? true
+        dnd = config?.dnd ?? false
         onboarded = config?.onboarded ?? false
         petStyle = config?.petStyle ?? .roundy
         notchPermissions = OSAllocatedUnfairLock(initialState: config?.notchPermissions ?? true)
@@ -46,6 +51,14 @@ final class Preferences {
     func setSoundCues(_ value: Bool) {
         soundCues = value
         persist { $0.soundCues = value }
+    }
+
+    /// Sets and persists Do Not Disturb (REQ-23).
+    func setDND(_ value: Bool) {
+        guard value != dnd else { return }
+        dnd = value
+        persist { $0.dnd = value }
+        onDNDChange?(value)
     }
 
     /// Sets and persists mini mode.

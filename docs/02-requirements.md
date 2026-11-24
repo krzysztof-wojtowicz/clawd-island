@@ -162,8 +162,8 @@ Settings becomes a window with three toolbar tabs: **General**, **Pet** and **Ad
 ## REQ-23 Do Not Disturb (1.1.0)
 A user toggle that mutes the pet's interruptions: right-click menu "Do Not Disturb" and a General checkbox, `dnd` in config, default off.
 - AC1: While DND is on, there is no pop-out (REQ-05) and no sound (REQ-12). State, counters and the panel still update; the counter still turns red.
-- AC2: When DND is turned off while a `needsInput` is pending, the pet pops out once.
-- AC3: Screen-sharing or Focus-mode detection is added only if an event-driven public API exists. Otherwise it is dropped (`08` rule 1). There is no new repeating timer.
+- AC2: When DND is turned off while a `needsInput` is pending, the pet pops out once. The pop-out is held like any `needsInput` pop-out (REQ-05 AC2), and an unread `done` does the same. Turning DND on retracts a pop-out at once.
+- AC3: Screen-sharing or Focus-mode detection is added only if an event-driven public API exists. Otherwise it is dropped (`08` rule 1). There is no new repeating timer. **Dropped (WP-45):** no public API posts screen-sharing changes (`CGSessionCopyCurrentDictionary` must be polled), and `INFocusStatusCenter` needs the Communication Notifications entitlement, a provisioning profile and user authorization.
 
 ## REQ-24 Poke (1.1.0)
 A click on the pet (not on the HUD) plays a one-shot "poke": a 0.6 s squash and blink as a Core Animation group (`07` "Poke"). About 1 in 4 pokes, chosen at random, also shows a small red heart floating up. Written from scratch.

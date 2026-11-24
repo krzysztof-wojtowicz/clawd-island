@@ -39,6 +39,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
     public var onboarded: Bool
     /// How the pet is drawn (REQ-06 AC2).
     public var petStyle: PetStyle
+    /// Do Not Disturb (REQ-23): no pop-out and no sound; state and counters still update.
+    public var dnd: Bool
 
     /// The pet's visual variant (docs/07 "Styles"); every style keeps the same anatomy, poses and animations.
     public enum PetStyle: String, Codable, CaseIterable, Sendable {
@@ -58,7 +60,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
         soundCues: Bool = true,
         recentProjects: [String] = [],
         onboarded: Bool = false,
-        petStyle: PetStyle = .roundy
+        petStyle: PetStyle = .roundy,
+        dnd: Bool = false
     ) {
         self.port = port
         self.token = token
@@ -70,6 +73,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.recentProjects = recentProjects
         self.onboarded = onboarded
         self.petStyle = petStyle
+        self.dnd = dnd
     }
 
     /// Files written before a key existed lack it, so they decode to the defaults.
@@ -86,6 +90,7 @@ public struct AppConfig: Codable, Equatable, Sendable {
         onboarded = try container.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
         // An unknown or legacy style ("classic", "sharp", "cute", "plush") falls back to roundy instead of making the file unreadable.
         petStyle = (try? container.decodeIfPresent(PetStyle.self, forKey: .petStyle)) ?? .roundy
+        dnd = try container.decodeIfPresent(Bool.self, forKey: .dnd) ?? false
     }
 
     /// Puts `directory` first in `recentProjects`, dropping an earlier copy and anything beyond the cap.

@@ -39,12 +39,24 @@ final class NotchWindowController {
             if miniMode, holdsPopOut() { popOut(hold: true) } else { layout(animated: true) }
         }
     }
+    /// Do Not Disturb (REQ-23): nothing pops out. Turning it on retracts a pop-out at once; turning it off
+    /// pops out once, held, while the aggregate holds a pop-out (unread `done` or `needsInput`, REQ-23 AC2).
+    var dnd = false {
+        didSet {
+            guard dnd != oldValue else { return }
+            retractTask?.cancel()
+            isPopped = false
+            if !dnd, holdsPopOut() { popOut(hold: true) } else { layout(animated: true) }
+        }
+    }
     /// Whether the aggregate state holds a pop-out (`done` or `needsInput`, REQ-05 AC2).
     var holdsPopOut: () -> Bool = { false }
     /// Why the event server is not listening, shown as a disabled top menu item.
     var serverError: () -> String? = { nil }
     /// Called by the "Mini Mode" menu item.
     var onToggleMiniMode: (() -> Void)?
+    /// Called by the "Do Not Disturb" menu item.
+    var onToggleDND: (() -> Void)?
     /// Called by the "Settings…" menu item.
     var onOpenSettings: (() -> Void)?
 
@@ -86,8 +98,9 @@ final class NotchWindowController {
     }
 
     /// Pops a hidden island out for 3 s (REQ-05 AC1; a new call restarts it), or until the next call when `hold` is set (AC2: `done`, `needsInput`).
+    /// Does nothing under Do Not Disturb (REQ-23).
     func popOut(hold: Bool) {
-        guard miniMode else { return }
+        guard miniMode, !dnd else { return }
         retractTask?.cancel()
         isPopped = true
         layout(animated: true)
@@ -172,6 +185,9 @@ final class NotchWindowController {
         let mini = ActionMenuItem(title: "Mini Mode", isEnabled: true) { [weak self] in self?.onToggleMiniMode?() }
         mini.state = miniMode ? .on : .off
         menu.addItem(mini)
+        let dndItem = ActionMenuItem(title: "Do Not Disturb", isEnabled: true) { [weak self] in self?.onToggleDND?() }
+        dndItem.state = dnd ? .on : .off
+        menu.addItem(dndItem)
         menu.addItem(ActionMenuItem(title: "Mark All Read", isEnabled: hasAttention()) { [weak self] in
             self?.onMarkAllRead?()
         })

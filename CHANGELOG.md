@@ -9,6 +9,7 @@ In progress (`docs/09-roadmap.md` "1.1.0").
 - Mini mode keeps an unread `done` popped out until you read it, like `needsInput`; `talking` still pops out for 3 s (REQ-05 AC2, WP-51).
 - Session rows show the session's context use and cost on hover, e.g. `ctx 64% · $1.20`, from the Claude Code statusline (REQ-26, WP-48).
 - Settings has three tabs: General, Pet (live preview, pose picker, style) and Advanced (port, version, GitHub link) (REQ-21, WP-42).
+- Do Not Disturb (right-click menu or Settings → General) mutes pop-outs and sounds; state and counters still update (REQ-23, WP-45).
 
 ## 1.0.0
 

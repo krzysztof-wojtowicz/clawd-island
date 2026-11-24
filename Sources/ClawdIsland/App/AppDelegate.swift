@@ -41,8 +41,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             controller.miniMode = mini
             settings.refresh()
         }
+        controller.dnd = preferences.dnd
+        preferences.onDNDChange = { [controller, settings] dnd in
+            controller.dnd = dnd
+            settings.refresh()
+        }
         preferences.onNotchPermissionsOff = { [model] in model.releaseAllPermissions() }
         controller.onToggleMiniMode = { [preferences] in preferences.setMiniMode(!preferences.miniMode) }
+        controller.onToggleDND = { [preferences] in preferences.setDND(!preferences.dnd) }
         controller.onOpenSettings = { [settings] in settings.show() }
         controller.onMarkAllRead = { [model] in model.markAllRead() }
         controller.hasAttention = { [model] in model.snapshot.attentionCount > 0 }
@@ -90,14 +96,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// States that keep a pop-out held until the aggregate leaves them: unread `done` and `needsInput` (REQ-05 AC2).
     private static let holdsPopOut: Set<PetState> = [.done, .needsInput]
 
-    /// Renders every new snapshot: the pet's state (REQ-03 AC2), a pop-out on each new `popToken`, and the HUD.
+    /// Renders every new snapshot: the pet's state (REQ-03 AC2), a pop-out on each new `popToken` unless Do Not Disturb is on (REQ-23), and the HUD.
     private func bindSnapshot(_ controller: NotchWindowController) {
         pet.setState(model.snapshot.aggregate)
         hud.render(model.snapshot)
         model.onSnapshotChange = { [pet, hud, controller, focusWatcher, model, preferences, sounds] old, new in
             focusWatcher.snapshotChanged(from: old.sessions, to: new.sessions)
             pet.setState(new.aggregate)
-            if new.popToken > old.popToken {
+            // DND (REQ-23) mutes the spring and the sound; the controller itself ignores pop-outs under DND.
+            if new.popToken > old.popToken, !preferences.dnd {
                 pet.popOut()
                 if preferences.soundCues { sounds.playEdge(from: old, to: new) }
             }
