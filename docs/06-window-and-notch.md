@@ -50,7 +50,7 @@
 - **Click-through:** the panel frame equals the island's frame. Resize the panel when the island changes, rather than using a full-width transparent window. Animate the resize with `NSAnimationContext`.
 - Hover uses `NSTrackingArea` and expands after 150 ms of hover. It collapses 300 ms after the mouse leaves.
 - **Right-click** opens an `NSMenu` with: a disabled server-error line (only when the event server failed to start), Mini Mode toggle, Do Not Disturb toggle (1.1.0, REQ-23), Mark All Read, Settings…, Quit. Hooks and Launch at login are in Settings only (REQ-05 AC6, REQ-09 AC4).
-- **Pet click (1.1.0, REQ-24):** a left click on the pet plays the poke (`07` "Poke"). `PetView` handles `mouseUp` and `acceptsFirstMouse`, and `CountersView` and `IslandView` pass the hit-test through to it over the pet. The click changes no state, marks nothing read, never opens the panel and never takes focus (REQ-02 AC2). Clicks on the HUD (counters, HP bar) are not pokes.
+- **Pet click (1.1.0, REQ-24):** a left click on the pet plays the poke (`07` "Poke"). `PetView` handles `mouseUp` and `acceptsFirstMouse`, and `IslandView.hitTest` asks the pet slot first, so a click inside it reaches `PetView` although the counters slot sits above it (a tucked pet's slot includes the notch corner). The click changes no state, marks nothing read, never opens the panel and never takes focus (REQ-02 AC2). Clicks on the HUD (counters, HP bar) are not pokes.
 
 ## Hover glow (REQ-11)
 - The glow is a `CALayer` shadow on the island's background layer: colour `clawd.body`, radius 9 pt, offset 2 pt downward, with an explicit `shadowPath` equal to the island shape. Because the path is given, there is no offscreen pass and no blur filter.

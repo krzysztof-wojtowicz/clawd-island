@@ -31,6 +31,10 @@ struct PetRig {
     let balls: [CAShapeLayer]
     /// Body-shaped outline behind the pet that flashes outwards on entering `done` / `needsInput`.
     let burst: CAShapeLayer
+    /// The poke heart (REQ-24): above the head, transparent except while a poke plays.
+    let heart = CAShapeLayer()
+    /// Holds both eyes; anchored at their centre so the poke blink closes them in place.
+    let eyeGroup = CALayer()
     /// Where the raised paws toss and catch the balls (unit-box coordinates): a ball's radius beyond each paw tip.
     static let rightCatch = CGPoint(x: 31.2, y: 19.2)
     static let leftCatch = CGPoint(x: 0.8, y: 19.2)
@@ -44,9 +48,9 @@ struct PetRig {
         return path
     }()
 
-    private let eyeGroup = CALayer()
     private let fullBox = CGRect(origin: .zero, size: PetTokens.unitBox)
     private let bodyBottom: CGFloat = 6
+    private let eyeCentreY: CGFloat = 14.6
     private let armPivot = CGPoint(x: 28, y: 13)
     // Raised two units above the resting pivot, so the paw points up and out.
     private let raisedArmPivot = CGPoint(x: 28, y: 15)
@@ -93,7 +97,8 @@ struct PetRig {
         torso.bounds = fullBox
         torso.anchorPoint = CGPoint(x: 0.5, y: bodyBottom / fullBox.height)
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom)
-        eyeGroup.frame = fullBox
+        eyeGroup.bounds = fullBox
+        eyeGroup.anchorPoint = CGPoint(x: 0.5, y: eyeCentreY / fullBox.height)
         eyes.forEach(eyeGroup.addSublayer)
         // Arms share the body colour, so above it they still merge.
         [body, leftArm, rightArm, eyeGroup].forEach(torso.addSublayer)
@@ -103,6 +108,7 @@ struct PetRig {
 
         configureBubble(radius: radius(2.2))
         configureBadge()
+        configureHeart()
         // Behind the pet, so the flash grows out from under the body's edge.
         root.addSublayer(burst)
         legs.forEach(root.addSublayer)
@@ -111,6 +117,7 @@ struct PetRig {
         [torso, bubble, badge].forEach(root.addSublayer)
         balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
+        root.addSublayer(heart)
         for accessory in accessories + dust { accessory.opacity = 0 }
     }
 
@@ -121,7 +128,7 @@ struct PetRig {
     func applyPose(_ state: PetState) {
         let eyeScale: CGFloat = state == .sleeping ? 0.15 : 1
         for eye in eyes { eye.transform = CATransform3DMakeScale(1, eyeScale, 1) }
-        eyeGroup.position = CGPoint(x: fullBox.midX, y: fullBox.midY + (state == .thinking ? 1 : 0))
+        eyeGroup.position = CGPoint(x: fullBox.midX, y: eyeCentreY + (state == .thinking ? 1 : 0))
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom - (state == .sleeping ? 1 : 0))
         let raised = state == .done || state == .needsInput || state == .usingTools
         // Juggling: both paws up and out, so the balls read as thrown by them.
@@ -207,6 +214,20 @@ struct PetRig {
         glyph.alignmentMode = .center
         glyph.foregroundColor = PetTokens.badgeGlyph
         badge.addSublayer(glyph)
+    }
+
+    /// A 4 × 3.7 vector heart centred over the head, its tip 0.6 u above the body. Accessory, so not squared by Sharpy.
+    private func configureHeart() {
+        heart.frame = CGRect(x: 14, y: 20.6, width: 4, height: 3.7)
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 2, y: 0))
+        path.addCurve(to: CGPoint(x: 0, y: 2.5), control1: CGPoint(x: 1.2, y: 0.7), control2: CGPoint(x: 0, y: 1.5))
+        path.addCurve(to: CGPoint(x: 2, y: 2.9), control1: CGPoint(x: 0, y: 3.9), control2: CGPoint(x: 1.7, y: 4))
+        path.addCurve(to: CGPoint(x: 4, y: 2.5), control1: CGPoint(x: 2.3, y: 4), control2: CGPoint(x: 4, y: 3.9))
+        path.addCurve(to: CGPoint(x: 2, y: 0), control1: CGPoint(x: 4, y: 1.5), control2: CGPoint(x: 2.8, y: 0.7))
+        heart.path = path
+        heart.fillColor = PetTokens.badgeAlert
+        heart.opacity = 0
     }
 
     private static func roundedRect(_ frame: CGRect, radius: CGFloat, color: CGColor) -> CAShapeLayer {

@@ -8,9 +8,9 @@ import AppKit
 /// The top row is the notch, at least `minRowHeight` tall, so on a short virtual notch it hangs a little below the
 /// menu bar. The left wing holds the session counter and the right wing the HP bar and the pet, each flush with its
 /// notch edge. The counters slot spans the whole row (so the expanded counters can slide out left of the notch); the
-/// pet slot sits right of the HP bar, below the counters in z-order. Anything below the top row is the expanded
-/// panel. While expanded, the view is `glowMargin` larger than the island on the sides and bottom so the glow is
-/// not clipped. Hover is reported through `onHoverChange`; the right-click menu comes from `menuProvider`.
+/// pet slot sits right of the HP bar, below the counters in z-order but first in hit-testing. Anything below the top
+/// row is the expanded panel. While expanded, the view is `glowMargin` larger than the island on the sides and bottom
+/// so the glow is not clipped. Hover is reported through `onHoverChange`; the right-click menu comes from `menuProvider`.
 final class IslandView: NSView {
     /// Width of the wing left of the notch: the counter circle (REQ-04 AC4: wings at most 72 pt).
     static let leftWingWidth: CGFloat = 28
@@ -203,6 +203,12 @@ final class IslandView: NSView {
         let y = row.minY + (row.height - Self.petSize.height) / 2
         countersSlot.frame = CGRect(x: 0, y: y, width: bounds.width, height: Self.petSize.height)
         counters?.notch = row.minX...row.maxX
+    }
+
+    /// The pet takes clicks inside its slot (REQ-24 poke) although the counters slot, which spans the row, sits
+    /// above it; the slot's frame is the unrotated pet box, so a tucked pet is clickable too.
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        petSlot.hitTest(convert(point, from: superview)) ?? super.hitTest(point)
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {

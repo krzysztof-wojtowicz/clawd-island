@@ -13,6 +13,8 @@ final class PetView: NSView {
     /// placement offset stay as set here.
     private let tiltLayer = CALayer()
     private var placementCount = 0
+    /// The current tilt in radians, so the poke heart can stay upright.
+    private var tilt: CGFloat = 0
     private var state: PetState = .sleeping
     private var isPaused = false
 
@@ -79,7 +81,8 @@ final class PetView: NSView {
     /// the move is an additive animation and stays correct while the window resizes. Each call adds its own
     /// animations, so an interrupted move continues and the new one sums with it.
     func setPlacement(tilt: CGFloat, from offset: CGSize, tiltChange: CGFloat, animated: Bool) {
-        tiltLayer.transform = CATransform3DMakeRotation(tilt * CGFloat.pi / 180, 0, 0, 1)
+        self.tilt = tilt * CGFloat.pi / 180
+        tiltLayer.transform = CATransform3DMakeRotation(self.tilt, 0, 0, 1)
         guard animated, offset != .zero || tiltChange != 0 else { return }
         placementCount += 1
         let reduceMotion = Self.reduceMotion
@@ -107,6 +110,24 @@ final class PetView: NSView {
             animation.toValue = keyPath == "position" ? NSValue(point: .zero) : NSNumber(value: 0)
             tiltLayer.add(animation, forKey: "\(keyPath)-\(placementCount)")
         }
+    }
+
+    /// Plays the poke (REQ-24): squash and blink, and a heart about 1 in 4 times; a blink only under Reduce Motion.
+    /// Changes no state.
+    func poke() {
+        guard !isPaused else { return }
+        let reduceMotion = Self.reduceMotion
+        rig.poke(squash: !reduceMotion, heart: !reduceMotion && Int.random(in: 0..<4) == 0, tilt: tilt)
+    }
+
+    // The panel is never key, so the first click must reach the pet.
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    // Claims the click so mouseUp arrives here; does nothing else (no focus, no panel).
+    override func mouseDown(with event: NSEvent) {}
+
+    override func mouseUp(with event: NSEvent) {
+        if bounds.contains(convert(event.locationInWindow, from: nil)) { poke() }
     }
 
     /// Freezes (`true`) or resumes every pet animation in place, e.g. while the screen sleeps or the pet is hidden.

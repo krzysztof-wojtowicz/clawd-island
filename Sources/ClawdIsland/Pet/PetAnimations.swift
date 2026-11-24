@@ -127,6 +127,39 @@ extension PetRig {
         torso.add(hop, forKey: "pop.hop")
     }
 
+    /// The 0.6 s poke (REQ-24, docs/07 "Poke"): a blink, plus a squash of the torso on its feet when `squash`, plus the
+    /// heart floating up from the head when `heart`. `tilt` (radians) is the pet's tilt; the heart is counter-rotated so
+    /// it stays upright on screen. Its "poke." keys leave the state's loops running, and a repeat poke restarts it.
+    func poke(squash: Bool, heart showHeart: Bool, tilt: CGFloat) {
+        let beats: [NSNumber] = [0, 0.25, 0.6, 1]
+        let blink = Self.keyframes("transform.scale.y", [1, 0.1, 0.1, 1], period: 0.6, keyTimes: beats)
+        blink.repeatCount = 1
+        eyeGroup.add(blink, forKey: "poke.blink")
+        if squash {
+            let group = CAAnimationGroup()
+            // Overrides the `sleeping` breath (4 %) for 0.6 s; the breath carries on afterwards.
+            group.animations = [
+                Self.keyframes("transform.scale.x", [1, 1.12, 0.96, 1], period: 0.6, keyTimes: beats),
+                Self.keyframes("transform.scale.y", [1, 0.8, 1.05, 1], period: 0.6, keyTimes: beats),
+            ]
+            group.duration = 0.6
+            torso.add(group, forKey: "poke.squash")
+        }
+        guard showHeart else { return }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        heart.transform = CATransform3DMakeRotation(-tilt, 0, 0, 1)
+        CATransaction.commit()
+        // Floats rig-up, i.e. away from the head: in mini mode that is down and out of the notch, where it stays visible.
+        let float = CAAnimationGroup()
+        float.animations = [
+            Self.keyframes("opacity", [0, 1, 1, 0], period: 0.6, keyTimes: [0, 0.15, 0.55, 1]),
+            Self.keyframes("position.y", [0, 3.5], period: 0.6, additive: true),
+        ]
+        float.duration = 0.6
+        heart.add(float, forKey: "poke.heart")
+    }
+
     private static func keyframes(
         _ keyPath: String,
         _ values: [CGFloat],

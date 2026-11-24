@@ -11,6 +11,7 @@ In progress (`docs/09-roadmap.md` "1.1.0").
 - Settings has three tabs: General, Pet (live preview, pose picker, style) and Advanced (port, version, GitHub link) (REQ-21, WP-42).
 - Do Not Disturb (right-click menu or Settings → General) mutes pop-outs and sounds; state and counters still update (REQ-23, WP-45).
 - Reworked poses: no "Zzz" while sleeping, a speech bubble in the pet's own look, a bigger hammer and broom, paws that toss and catch while juggling, and an entry burst plus hops for done and needs input (REQ-03 AC7/AC9, WP-50).
+- Click the pet to poke it: a squash and a blink, sometimes a small red heart; no sound, no state change (REQ-24, WP-46).
 
 ## 1.0.0
 

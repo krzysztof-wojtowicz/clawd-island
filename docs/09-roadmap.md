@@ -58,8 +58,8 @@ Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-5
 - Decode `context_window.used_percentage` and `cost.total_cost_usd` from `/statusline` into `Session` fields for the payload's `session_id` (included in `==`); the `SessionPanelView` row tooltip reads `ctx 64% · $1.20`, omitting a missing part (REQ-26, `05` "Context and cost"). The dependency on WP-42 is file order only.
 - AC: REQ-26 AC1–AC3; decoder tests with both fields, one, none, and a null context; `rate_limits` handling unchanged (existing tests pass); checked with a `simulate.sh` statusline POST.
 
-### WP-46 — Poke · owner: pet-animator + macos-ui-engineer (hit-test pass-through) · deps: WP-50 · status: `todo`
-- `PetView` gets `mouseUp` and `acceptsFirstMouse`; `CountersView` and `IslandView` pass the hit-test through over the pet; a 0.6 s one-shot group (squash and blink, a `badge.alert` heart about 1 in 4 times) (REQ-24, `07` "Poke", `06` "Pet click").
+### WP-46 — Poke · owner: pet-animator + macos-ui-engineer (hit-test pass-through) · deps: WP-50 · status: `done`
+- `PetView` gets `mouseUp` and `acceptsFirstMouse`; `IslandView.hitTest` asks the pet slot first, so a click inside it reaches `PetView` although the counters slot sits above it (a tucked pet's slot includes the notch corner); a 0.6 s one-shot group (squash and blink, a `badge.alert` heart about 1 in 4 times) (REQ-24, `07` "Poke", `06` "Pet click").
 - AC: REQ-24 AC1–AC3 and REQ-02 AC2 (the frontmost app stays active); no state change, no read, no panel; Reduce Motion gives a blink only; `perf-suite.sh` within `08`.
 
 ## Release checklist (the user runs it)
