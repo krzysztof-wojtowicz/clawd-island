@@ -37,6 +37,18 @@ public struct AppConfig: Codable, Equatable, Sendable {
     public static let maxRecentProjects = 5
     /// Set once the first-run Settings welcome has been shown (REQ-09 AC5).
     public var onboarded: Bool
+    /// How the pet is drawn (REQ-06 AC2).
+    public var petStyle: PetStyle
+    /// Do Not Disturb (REQ-23): no pop-out and no sound; state and counters still update.
+    public var dnd: Bool
+
+    /// The pet's visual variant (docs/07 "Styles"); every style keeps the same anatomy, poses and animations.
+    public enum PetStyle: String, Codable, CaseIterable, Sendable {
+        /// Smooth rounded corners, the 1.0 look.
+        case roundy
+        /// Square corners on every pet part.
+        case sharpy
+    }
 
     public init(
         port: Int = AppConfig.defaultPort,
@@ -47,7 +59,9 @@ public struct AppConfig: Codable, Equatable, Sendable {
         notchPermissions: Bool = true,
         soundCues: Bool = true,
         recentProjects: [String] = [],
-        onboarded: Bool = false
+        onboarded: Bool = false,
+        petStyle: PetStyle = .roundy,
+        dnd: Bool = false
     ) {
         self.port = port
         self.token = token
@@ -58,6 +72,8 @@ public struct AppConfig: Codable, Equatable, Sendable {
         self.soundCues = soundCues
         self.recentProjects = recentProjects
         self.onboarded = onboarded
+        self.petStyle = petStyle
+        self.dnd = dnd
     }
 
     /// Files written before a key existed lack it, so they decode to the defaults.
@@ -72,6 +88,9 @@ public struct AppConfig: Codable, Equatable, Sendable {
         soundCues = try container.decodeIfPresent(Bool.self, forKey: .soundCues) ?? true
         recentProjects = try container.decodeIfPresent([String].self, forKey: .recentProjects) ?? []
         onboarded = try container.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
+        // An unknown or legacy style ("classic", "sharp", "cute", "plush") falls back to roundy instead of making the file unreadable.
+        petStyle = (try? container.decodeIfPresent(PetStyle.self, forKey: .petStyle)) ?? .roundy
+        dnd = try container.decodeIfPresent(Bool.self, forKey: .dnd) ?? false
     }
 
     /// Puts `directory` first in `recentProjects`, dropping an earlier copy and anything beyond the cap.

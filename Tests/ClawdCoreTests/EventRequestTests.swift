@@ -54,7 +54,9 @@ struct EventRequestTests {
         if case .meta(let decoded) = meta { #expect(decoded.sessionID == "a") } else { Issue.record("not meta") }
         let usage = EventEndpoint.statusline.decode(
             Data(#"{"rate_limits":{"five_hour":{"used_percentage":40}}}"#.utf8), receivedAt: now)
-        #expect(usage == .usage(UsageSnapshot(fiveHourUsedPercent: 40, resetsAt: nil, sevenDayUsedPercent: nil, sevenDayResetsAt: nil)))
+        #expect(usage == .statusline(
+            usage: UsageSnapshot(fiveHourUsedPercent: 40, resetsAt: nil, sevenDayUsedPercent: nil, sevenDayResetsAt: nil),
+            stats: nil))
     }
 
     @Test("Bodies with nothing to apply decode to nil", arguments: [EventEndpoint.hook, .sessionMeta, .statusline])
@@ -69,7 +71,9 @@ struct EventRequestTests {
         let now = Date(timeIntervalSince1970: 1)
         store.apply(.event(ClawdEvent(sessionID: "a", kind: .userPromptSubmit, cwd: "/p", toolName: nil,
                                       notificationType: nil, agentID: nil, receivedAt: now)), now: now)
-        store.apply(.usage(UsageSnapshot(fiveHourUsedPercent: 5, resetsAt: nil, sevenDayUsedPercent: nil, sevenDayResetsAt: nil)), now: now)
+        store.apply(.statusline(
+            usage: UsageSnapshot(fiveHourUsedPercent: 5, resetsAt: nil, sevenDayUsedPercent: nil, sevenDayResetsAt: nil),
+            stats: nil), now: now)
         let snapshot = store.snapshot(now: now)
         #expect(snapshot.aggregate == .thinking)
         #expect(snapshot.usage?.fiveHourUsedPercent == 5)

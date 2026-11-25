@@ -8,6 +8,8 @@ import ClawdCore
 /// `PetView` scales `root` to its bounds. Pose setters animate implicitly inside the caller's `CATransaction`.
 @MainActor
 struct PetRig {
+    /// The visual variant this rig was built in (REQ-06 AC2); `PetView` builds a new rig to change it.
+    let style: AppConfig.PetStyle
     /// Container of the whole pet: scaled to the view, sprung by pop-out, and paused as a whole.
     let root = CALayer()
     /// Body, eyes and arms; moves as one for breathing, sway, bob and bounce. Anchored at the body's bottom edge.
@@ -15,7 +17,6 @@ struct PetRig {
     let eyes: [CAShapeLayer]
     let leftArm: CAShapeLayer
     let rightArm: CAShapeLayer
-    let zzz = CATextLayer()
     let cloud: [CAShapeLayer]
     let bubble = CAShapeLayer()
     let dots: [CAShapeLayer]
@@ -26,50 +27,78 @@ struct PetRig {
     let broom = CALayer()
     /// Dust puffs at the two ends of the sweep.
     let dust: [CAShapeLayer]
-    /// Juggling balls; their model positions are the Reduce Motion pose, the loop moves them along `ballOrbit`.
+    /// Juggling balls; their model positions are the Reduce Motion pose, the loop moves them along `ballLoop`.
     let balls: [CAShapeLayer]
-    /// The flattened ellipse above the head that the balls follow (unit-box coordinates).
-    static let ballOrbit = CGRect(x: 8, y: 22.1, width: 16, height: 2.4)
+    /// Body-shaped outline behind the pet that flashes outwards on entering `done` / `needsInput`.
+    let burst: CAShapeLayer
+    /// The poke heart (REQ-24): above the head, transparent except while a poke plays.
+    let heart = CAShapeLayer()
+    /// Holds both eyes; anchored at their centre so the poke blink closes them in place.
+    let eyeGroup = CALayer()
+    /// Where the raised paws toss and catch the balls (unit-box coordinates): a ball's radius beyond each paw tip.
+    static let rightCatch = CGPoint(x: 31.2, y: 19.2)
+    static let leftCatch = CGPoint(x: 0.8, y: 19.2)
+    /// The juggling loop: a high toss from the right paw to the left, then a low one back over the head (ball
+    /// bottoms stay above it). Each half is one segment, so a ball reaches a paw every half period.
+    static let ballLoop: CGPath = {
+        let path = CGMutablePath()
+        path.move(to: rightCatch)
+        path.addCurve(to: leftCatch, control1: CGPoint(x: 30, y: 26.5), control2: CGPoint(x: 2, y: 26.5))
+        path.addCurve(to: rightCatch, control1: CGPoint(x: 3, y: 24), control2: CGPoint(x: 29, y: 24))
+        return path
+    }()
 
-    private let eyeGroup = CALayer()
     private let fullBox = CGRect(origin: .zero, size: PetTokens.unitBox)
     private let bodyBottom: CGFloat = 6
+    private let eyeCentreY: CGFloat = 14.6
     private let armPivot = CGPoint(x: 28, y: 13)
     // Raised two units above the resting pivot, so the paw points up and out.
     private let raisedArmPivot = CGPoint(x: 28, y: 15)
     private let raisedArmAngle: CGFloat = 55 * .pi / 180
+    // Juggling paws reach up and out to `leftCatch` / `rightCatch`.
+    private let jugglingArmAngle: CGFloat = 50 * .pi / 180
     // The hammer is cocked up and to the right, so it stays near the unit box instead of towering over the head.
-    private let jugglingArmAngle: CGFloat = 35 * .pi / 180
     private let cockedArmAngle: CGFloat = 65 * .pi / 180
 
-    init() {
-        let body = Self.roundedRect(CGRect(x: 4, y: 6, width: 24, height: 14), radius: 3.5, color: PetTokens.body)
-        eyes = [10.5, 19].map { Self.roundedRect(CGRect(x: $0, y: 12.5, width: 2.4, height: 4.2), radius: 1.2, color: PetTokens.eye) }
+    init(style: AppConfig.PetStyle) {
+        self.style = style
+        // Sharpy squares every pet part and the parts drawn in its look (bubble, dots, burst); other accessories keep their shapes (docs/07 "Styles").
+        let radius = { (roundy: CGFloat) in style == .sharpy ? 0 : roundy }
+        let body = Self.roundedRect(CGRect(x: 4, y: 6, width: 24, height: 14), radius: radius(3.5), color: PetTokens.body)
+        eyes = [10.5, 19].map { Self.roundedRect(CGRect(x: $0, y: 12.5, width: 2.4, height: 4.2), radius: radius(1.2), color: PetTokens.eye) }
         // Arms pivot on their inner edge so they can rotate up into a raised paw.
-        leftArm = Self.roundedRect(CGRect(x: 0.5, y: 11, width: 3.5, height: 4), radius: 1, color: PetTokens.body)
+        leftArm = Self.roundedRect(CGRect(x: 0.5, y: 11, width: 3.5, height: 4), radius: radius(1), color: PetTokens.body)
         leftArm.anchorPoint = CGPoint(x: 1, y: 0.5)
         leftArm.position = CGPoint(x: 4, y: 13)
-        rightArm = Self.roundedRect(CGRect(x: 28, y: 11, width: 3.5, height: 4), radius: 1, color: PetTokens.body)
+        rightArm = Self.roundedRect(CGRect(x: 28, y: 11, width: 3.5, height: 4), radius: radius(1), color: PetTokens.body)
         rightArm.anchorPoint = CGPoint(x: 0, y: 0.5)
         rightArm.position = armPivot
         // Two pairs with a middle gap, as in the original Clawd.
         let legs = [7.5, 11, 21, 24.5].map { centerX in
-            Self.roundedRect(CGRect(x: centerX - 1.1, y: 2, width: 2.2, height: 4), radius: 1, color: PetTokens.body)
+            Self.roundedRect(CGRect(x: centerX - 1.1, y: 2, width: 2.2, height: 4), radius: radius(1), color: PetTokens.body)
         }
         cloud = [(26, 21, 0.8), (28.2, 22, 1.1), (30.5, 22.5, 1.5)].map { Self.circle(x: $0.0, y: $0.1, radius: $0.2, color: PetTokens.bubbleFill) }
-        dots = [3.2, 5.75, 8.3].map { Self.circle(x: $0, y: 3, radius: 0.8, color: PetTokens.eye) }
-        dust = [18.5, 31].map { Self.circle(x: $0, y: 4.5, radius: 0.9, color: PetTokens.bubbleFill) }
-        balls = [PetTokens.ball1, PetTokens.ball2, PetTokens.ball3].enumerated().map { index, color in
-            let angle = CGFloat(index) * 2 * .pi / 3
-            return Self.circle(x: Self.ballOrbit.midX + 8 * cos(angle), y: Self.ballOrbit.midY + 1.2 * sin(angle), radius: 1.8, color: color)
+        // Little square "eyes" in the pet's style, so the bubble reads as part of Clawd.
+        dots = [3.2, 5.75, 8.3].map { Self.roundedRect(CGRect(x: $0 - 0.8, y: 2.2, width: 1.6, height: 1.6), radius: radius(0.5), color: PetTokens.eye) }
+        dust = [17.3, 31.7].map { Self.circle(x: $0, y: 2, radius: 0.9, color: PetTokens.bubbleFill) }
+        // Reduce Motion pose: all three in flight on the high toss (`ballLoop` at 0.2, 0.5 and 0.8 of that curve).
+        balls = zip([PetTokens.ball1, PetTokens.ball2, PetTokens.ball3], [(27.7, 22.7), (16, 24.7), (4.3, 22.7)]).map { color, centre in
+            Self.circle(x: centre.0, y: centre.1, radius: 1.8, color: color)
         }
+        burst = CAShapeLayer()
+        burst.frame = body.frame
+        burst.path = CGPath(roundedRect: burst.bounds, cornerWidth: radius(3.5), cornerHeight: radius(3.5), transform: nil)
+        burst.fillColor = nil
+        burst.lineWidth = 1.2
+        burst.opacity = 0
         badge = Self.circle(x: 3.5, y: 21, radius: 2.8, color: PetTokens.badgeAlert)
 
         root.bounds = fullBox
         torso.bounds = fullBox
         torso.anchorPoint = CGPoint(x: 0.5, y: bodyBottom / fullBox.height)
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom)
-        eyeGroup.frame = fullBox
+        eyeGroup.bounds = fullBox
+        eyeGroup.anchorPoint = CGPoint(x: 0.5, y: eyeCentreY / fullBox.height)
         eyes.forEach(eyeGroup.addSublayer)
         // Arms share the body colour, so above it they still merge.
         [body, leftArm, rightArm, eyeGroup].forEach(torso.addSublayer)
@@ -77,32 +106,37 @@ struct PetRig {
         torso.addSublayer(broom)
         dust.forEach(torso.addSublayer)
 
-        configureBubble()
-        configureText()
+        configureBubble(radius: radius(2.2))
+        configureBadge()
+        configureHeart()
+        // Behind the pet, so the flash grows out from under the body's edge.
+        root.addSublayer(burst)
         legs.forEach(root.addSublayer)
         configureHammer()
-        configureBroom()
-        [torso, zzz, bubble, badge].forEach(root.addSublayer)
+        configureBroom(pawRadius: radius(0.9))
+        [torso, bubble, badge].forEach(root.addSublayer)
         balls.forEach(root.addSublayer)
         cloud.forEach(root.addSublayer)
+        root.addSublayer(heart)
         for accessory in accessories + dust { accessory.opacity = 0 }
     }
 
     /// Accessory layers that cross-fade between states.
-    private var accessories: [CALayer] { [zzz, bubble, badge, hammer, broom] + balls + cloud }
+    private var accessories: [CALayer] { [bubble, badge, hammer, broom] + balls + cloud }
 
-    /// Sets the model values of the pose parts (eyes, torso height, right arm) for `state`.
+    /// Sets the model values of the pose parts (eyes, torso height, both arms) for `state`.
     func applyPose(_ state: PetState) {
         let eyeScale: CGFloat = state == .sleeping ? 0.15 : 1
         for eye in eyes { eye.transform = CATransform3DMakeScale(1, eyeScale, 1) }
-        eyeGroup.position = CGPoint(x: fullBox.midX, y: fullBox.midY + (state == .thinking ? 1 : 0))
+        eyeGroup.position = CGPoint(x: fullBox.midX, y: eyeCentreY + (state == .thinking ? 1 : 0))
         torso.position = CGPoint(x: fullBox.midX, y: bodyBottom - (state == .sleeping ? 1 : 0))
         let raised = state == .done || state == .needsInput || state == .usingTools
         // Juggling: both paws up and out, so the balls read as thrown by them.
         let juggling = state == .juggling
+        leftArm.position = CGPoint(x: fullBox.width - raisedArmPivot.x, y: juggling ? raisedArmPivot.y : armPivot.y)
         leftArm.transform = juggling ? CATransform3DMakeRotation(-jugglingArmAngle, 0, 0, 1) : CATransform3DIdentity
         if juggling {
-            rightArm.position = armPivot
+            rightArm.position = raisedArmPivot
             rightArm.transform = CATransform3DMakeRotation(jugglingArmAngle, 0, 0, 1)
             return
         }
@@ -113,7 +147,6 @@ struct PetRig {
 
     /// Shows only the accessories that belong to `state`.
     func showAccessories(for state: PetState) {
-        zzz.opacity = state == .sleeping ? 1 : 0
         bubble.opacity = state == .talking ? 1 : 0
         hammer.opacity = state == .usingTools ? 1 : 0
         broom.opacity = state == .compacting ? 1 : 0
@@ -133,49 +166,46 @@ struct PetRig {
         return result
     }
 
-    private func configureBubble() {
-        bubble.frame = CGRect(x: 20.5, y: 18, width: 11.5, height: 6)
+    /// A flat block in `PetTokens.bubbleSpeech` with a stepped tail of two small squares down-left towards the head, drawn
+    /// like the pet's own parts (style radius, no outline) instead of a comic balloon.
+    private func configureBubble(radius: CGFloat) {
+        bubble.frame = CGRect(x: 20.5, y: 18.5, width: 11.5, height: 5.4)
         let path = CGMutablePath()
-        path.addRoundedRect(in: bubble.bounds, cornerWidth: 2.5, cornerHeight: 2.5)
-        // Tail pointing down-left at the head.
-        path.addLines(between: [CGPoint(x: 2.2, y: 0.5), CGPoint(x: 0.3, y: -1.8), CGPoint(x: 4.6, y: 0.5)])
-        path.closeSubpath()
+        path.addRoundedRect(in: bubble.bounds, cornerWidth: radius, cornerHeight: radius)
+        // Right of the right eye (x ≤ 21.4), so the tail stays clear of it through the talking bounce.
+        path.addRect(CGRect(x: 2.8, y: -1.2, width: 1.8, height: 1.4))
+        path.addRect(CGRect(x: 1.8, y: -2.2, width: 1.2, height: 1.2))
         bubble.path = path
-        bubble.fillColor = PetTokens.bubbleFill
+        bubble.fillColor = PetTokens.bubbleSpeech
         dots.forEach(bubble.addSublayer)
     }
 
-    /// Arm-local coordinates (the arm is 3.5 × 4, pivoting at its left edge): the handle runs along the arm, the head crosses its tip.
+    /// Arm-local coordinates (the arm is 3.5 × 4, pivoting at its left edge): the handle runs along the arm, the head
+    /// crosses its tip. 1.3× the 1.0.0 hammer about the pivot (0, 2); the right wing leaves room for its swing (REQ-04 AC4).
     private func configureHammer() {
-        let handle = Self.roundedRect(CGRect(x: 2.5, y: 1.5, width: 5, height: 1), radius: 0.4, color: PetTokens.toolHandle)
-        let head = Self.roundedRect(CGRect(x: 6.5, y: 0, width: 2, height: 4), radius: 0.6, color: PetTokens.toolHead)
+        let handle = Self.roundedRect(CGRect(x: 3.25, y: 1.35, width: 6.5, height: 1.3), radius: 0.5, color: PetTokens.toolHandle)
+        let head = Self.roundedRect(CGRect(x: 8.45, y: -0.6, width: 2.6, height: 5.2), radius: 0.8, color: PetTokens.toolHead)
         hammer.frame = rightArm.bounds
         hammer.addSublayer(handle)
         hammer.addSublayer(head)
         rightArm.addSublayer(hammer)
     }
 
-    /// Broom-local coordinates (4 × 12): the 1 × 9 handle stands on a 4 × 3 bristle head. The pivot is the handle's top,
-    /// at (24.5, 15) in the torso, right of the eyes so the face stays clear. Two paws sit on the handle, so both arms hold it.
-    private func configureBroom() {
-        broom.bounds = CGRect(x: 0, y: 0, width: 4, height: 12)
+    /// Broom-local coordinates (5.2 × 15.6, 1.3× the 1.0.0 broom): a 1.3 × 11.7 handle stands on a 5.2 × 3.9 bristle head.
+    /// The pivot is the handle's top, at (24.5, 15) in the torso, right of the eyes so the face stays clear. Two paws
+    /// (pet-sized, not scaled) sit on the handle, so both arms hold it.
+    private func configureBroom(pawRadius: CGFloat) {
+        broom.bounds = CGRect(x: 0, y: 0, width: 5.2, height: 15.6)
         broom.anchorPoint = CGPoint(x: 0.5, y: 1)
         broom.position = CGPoint(x: 24.5, y: 15)
-        let handle = Self.roundedRect(CGRect(x: 1.5, y: 3, width: 1, height: 9), radius: 0.4, color: PetTokens.broomHandle)
-        let bristles = Self.roundedRect(CGRect(x: 0, y: 0, width: 4, height: 3), radius: 0.8, color: PetTokens.broomBristle)
-        let paws = [9.5, 6.5].map { Self.roundedRect(CGRect(x: 0.8, y: $0, width: 2.4, height: 2), radius: 0.9, color: PetTokens.body) }
+        let handle = Self.roundedRect(CGRect(x: 1.95, y: 3.9, width: 1.3, height: 11.7), radius: 0.5, color: PetTokens.broomHandle)
+        let bristles = Self.roundedRect(CGRect(x: 0, y: 0, width: 5.2, height: 3.9), radius: 1, color: PetTokens.broomBristle)
+        let paws = [12.35, 8.45].map { Self.roundedRect(CGRect(x: 1.4, y: $0, width: 2.4, height: 2), radius: pawRadius, color: PetTokens.body) }
         [handle, bristles].forEach(broom.addSublayer)
         paws.forEach(broom.addSublayer)
     }
 
-    private func configureText() {
-        zzz.frame = CGRect(x: 21, y: 17, width: 11, height: 6)
-        zzz.string = "Zzz"
-        zzz.font = NSFont.systemFont(ofSize: 0, weight: .heavy)
-        zzz.fontSize = 4.4
-        zzz.alignmentMode = .right
-        zzz.foregroundColor = PetTokens.bubbleFill
-
+    private func configureBadge() {
         let glyph = CATextLayer()
         glyph.frame = badge.bounds.offsetBy(dx: 0, dy: -0.3)
         glyph.string = "!"
@@ -184,6 +214,20 @@ struct PetRig {
         glyph.alignmentMode = .center
         glyph.foregroundColor = PetTokens.badgeGlyph
         badge.addSublayer(glyph)
+    }
+
+    /// A 4 × 3.7 vector heart centred over the head, its tip 0.6 u above the body. Accessory, so not squared by Sharpy.
+    private func configureHeart() {
+        heart.frame = CGRect(x: 14, y: 20.6, width: 4, height: 3.7)
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 2, y: 0))
+        path.addCurve(to: CGPoint(x: 0, y: 2.5), control1: CGPoint(x: 1.2, y: 0.7), control2: CGPoint(x: 0, y: 1.5))
+        path.addCurve(to: CGPoint(x: 2, y: 2.9), control1: CGPoint(x: 0, y: 3.9), control2: CGPoint(x: 1.7, y: 4))
+        path.addCurve(to: CGPoint(x: 4, y: 2.5), control1: CGPoint(x: 2.3, y: 4), control2: CGPoint(x: 4, y: 3.9))
+        path.addCurve(to: CGPoint(x: 2, y: 0), control1: CGPoint(x: 4, y: 1.5), control2: CGPoint(x: 2.8, y: 0.7))
+        heart.path = path
+        heart.fillColor = PetTokens.badgeAlert
+        heart.opacity = 0
     }
 
     private static func roundedRect(_ frame: CGRect, radius: CGFloat, color: CGColor) -> CAShapeLayer {

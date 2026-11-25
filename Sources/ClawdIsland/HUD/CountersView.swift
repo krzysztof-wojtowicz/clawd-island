@@ -66,7 +66,9 @@ final class CountersView: NSView, NSViewToolTipOwner {
 
     /// A 16 pt round digit label; the container speaks for the counters as a whole until they are expanded.
     private static func circle() -> NSTextField {
-        let label = HUDStyle.label(size: 10, weight: .bold, color: HUDStyle.color(PetTokens.badgeGlyph))
+        let label = CenteredLabel(labelWithString: "")
+        label.font = HUDStyle.font(size: 10, weight: .bold)
+        label.textColor = HUDStyle.color(PetTokens.badgeGlyph)
         label.alignment = .center
         label.wantsLayer = true
         label.layer?.cornerCurve = .continuous
@@ -217,5 +219,25 @@ final class CountersView: NSView, NSViewToolTipOwner {
     ) -> String {
         guard let snapshot else { return "" }
         return "\(HUDStyle.usageLine(snapshot.usage, now: .now).string)\n\(HUDStyle.countsLine(snapshot))"
+    }
+}
+
+/// A label whose digits sit in the vertical middle of its frame: AppKit draws label text from the top, which left
+/// the counter digits high in their 16 pt circles.
+private final class CenteredLabel: NSTextField {
+    override class var cellClass: AnyClass? {
+        get { CenteredCell.self }
+        set {}
+    }
+}
+
+/// Places the text line so the cap height is centred in the cell.
+private final class CenteredCell: NSTextFieldCell {
+    override func drawingRect(forBounds rect: NSRect) -> NSRect {
+        var line = super.drawingRect(forBounds: rect)
+        guard let font else { return line }
+        line.origin.y = rect.midY + font.capHeight / 2 - font.ascender
+        line.size.height = font.ascender - font.descender + font.leading
+        return line
     }
 }

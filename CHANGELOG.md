@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.0
+
+Apple silicon, macOS 14+, signed with the same self-signed "ClawdIsland" identity as 1.0.0, so permissions survive the update.
+
+- Pet styles **Roundy** (default) and **Sharpy** (`petStyle`), switched live (REQ-06 AC2, WP-36).
+- The pet shows `talking` only after Claude writes for 1.5 s, so a sentence between tool calls no longer flashes it or pops out mini mode (REQ-03 AC8, WP-52).
+- Mini mode keeps an unread `done` popped out until you read it, like `needsInput`; `talking` still pops out for 3 s (REQ-05 AC2, WP-51).
+- Session rows show the session's context use and cost at the right edge, e.g. `ctx 64% · $1.20`, from the Claude Code statusline (REQ-26, WP-48).
+- Settings has three tabs: General, Pet (live preview, pose picker, style) and Advanced (port, version, GitHub link) (REQ-21, WP-42).
+- Do Not Disturb (right-click menu or Settings → General) mutes pop-outs and sounds; state and counters still update (REQ-23, WP-45).
+- Reworked poses: no "Zzz" while sleeping, a speech bubble in the pet's own look, a bigger hammer and broom, paws that toss and catch while juggling, and an entry burst plus hops for done and needs input (REQ-03 AC7/AC9, WP-50).
+- Click the pet to poke it: a squash and a blink, sometimes a small red heart; no sound, no state change (REQ-24, WP-46).
+
 ## 1.0.0
 
 First public release. Apple silicon, macOS 14+, signed with a self-signed "ClawdIsland" identity (not notarized).

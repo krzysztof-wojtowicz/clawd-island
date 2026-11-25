@@ -8,25 +8,21 @@ import ClawdCore
 /// runs in the render server, so the app does no per-frame work. The pet is scaled to fit the view's bounds.
 @MainActor
 final class PetView: NSView {
-    private let rig = PetRig()
+    private var rig = PetRig(style: .roundy)
     /// Plain layer between the view's backing layer and the rig: AppKit does not manage it, so its anchor, tilt and
     /// placement offset stay as set here.
     private let tiltLayer = CALayer()
     private var placementCount = 0
+    /// The current tilt in radians, so the poke heart can stay upright.
+    private var tilt: CGFloat = 0
     private var state: PetState = .sleeping
     private var isPaused = false
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        tiltLayer.addSublayer(rig.root)
         layer?.addSublayer(tiltLayer)
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        rig.applyPose(state)
-        rig.showAccessories(for: state)
-        CATransaction.commit()
-        startLoops()
+        mountRig()
         NSWorkspace.shared.notificationCenter.addObserver(
             self,
             selector: #selector(reduceMotionDidChange),
@@ -57,8 +53,20 @@ final class PetView: NSView {
         CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
         rig.applyPose(state)
         CATransaction.commit()
-        startLoops()
+        startLoops(entering: true)
         updateAccessibilityLabel()
+    }
+
+    /// Redraws the pet in `style` (REQ-06 AC2), keeping its state, tilt and pause. The current style does nothing.
+    func setStyle(_ style: AppConfig.PetStyle) {
+        guard style != rig.style else { return }
+        let wasPaused = isPaused
+        rig.root.removeFromSuperlayer()
+        rig = PetRig(style: style)
+        isPaused = false
+        mountRig()
+        fitPet()
+        setPaused(wasPaused)
     }
 
     /// Plays the pop-out spring (used on `done` / `needsInput` and when un-hiding). No-op under Reduce Motion.
@@ -73,7 +81,8 @@ final class PetView: NSView {
     /// the move is an additive animation and stays correct while the window resizes. Each call adds its own
     /// animations, so an interrupted move continues and the new one sums with it.
     func setPlacement(tilt: CGFloat, from offset: CGSize, tiltChange: CGFloat, animated: Bool) {
-        tiltLayer.transform = CATransform3DMakeRotation(tilt * CGFloat.pi / 180, 0, 0, 1)
+        self.tilt = tilt * CGFloat.pi / 180
+        tiltLayer.transform = CATransform3DMakeRotation(self.tilt, 0, 0, 1)
         guard animated, offset != .zero || tiltChange != 0 else { return }
         placementCount += 1
         let reduceMotion = Self.reduceMotion
@@ -101,6 +110,24 @@ final class PetView: NSView {
             animation.toValue = keyPath == "position" ? NSValue(point: .zero) : NSNumber(value: 0)
             tiltLayer.add(animation, forKey: "\(keyPath)-\(placementCount)")
         }
+    }
+
+    /// Plays the poke (REQ-24): squash and blink, and a heart about 1 in 4 times; a blink only under Reduce Motion.
+    /// Changes no state.
+    func poke() {
+        guard !isPaused else { return }
+        let reduceMotion = Self.reduceMotion
+        rig.poke(squash: !reduceMotion, heart: !reduceMotion && Int.random(in: 0..<4) == 0, tilt: tilt)
+    }
+
+    // The panel is never key, so the first click must reach the pet.
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    // Claims the click so mouseUp arrives here; does nothing else (no focus, no panel).
+    override func mouseDown(with event: NSEvent) {}
+
+    override func mouseUp(with event: NSEvent) {
+        if bounds.contains(convert(event.locationInWindow, from: nil)) { poke() }
     }
 
     /// Freezes (`true`) or resumes every pet animation in place, e.g. while the screen sleeps or the pet is hidden.
@@ -152,14 +179,26 @@ final class PetView: NSView {
         CATransaction.commit()
     }
 
-    private func startLoops() {
+    /// Puts the rig into the tilt layer in the current state's pose, without transition animations.
+    private func mountRig() {
+        tiltLayer.addSublayer(rig.root)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        rig.applyPose(state)
+        rig.showAccessories(for: state)
+        CATransaction.commit()
+        startLoops(entering: false)
+    }
+
+    /// `entering` is true only for a real state change, so a rig rebuild or Reduce Motion toggle never replays the burst.
+    private func startLoops(entering: Bool) {
         guard !Self.reduceMotion else { return }
-        rig.startLoops(for: state)
+        rig.startLoops(for: state, entering: entering)
     }
 
     @objc private func reduceMotionDidChange() {
         rig.stopLoops()
-        startLoops()
+        startLoops(entering: false)
     }
 
     private func updateAccessibilityLabel() {

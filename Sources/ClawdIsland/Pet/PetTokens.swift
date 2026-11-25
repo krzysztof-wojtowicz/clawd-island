@@ -15,8 +15,10 @@ enum PetTokens {
     static let badgeEmpty = rgb(0x8E8E93)
     /// The "!" glyph on the alert badge, and the session counter digits.
     static let badgeGlyph = rgb(0xFFFFFF)
-    /// Speech bubble, thought cloud and "Zzz".
+    /// Thought cloud and dust puffs.
     static let bubbleFill = rgb(0xFFFFFF, alpha: 0.92)
+    /// Speech bubble (`talking`): a pale tint of `body`, so it reads as Clawd's own rather than a comic balloon.
+    static let bubbleSpeech = rgb(0xF2C9B6)
     /// Hammer handle and head (`usingTools`).
     static let toolHandle = rgb(0x8B5A2B)
     static let toolHead = rgb(0x8E8E93)

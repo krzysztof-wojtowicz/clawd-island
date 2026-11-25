@@ -11,10 +11,10 @@ Memory is judged by **`footprint`** (phys_footprint: the pages this process real
 | launch (first 10 s) | — | < 20 MB | spike allowed (LaunchServices mapping, unmapped by the system ~10 s later) |
 | `clawd-bridge statusline` | < 20 ms wall time per run | — | — |
 
-Accepted exception: the Settings window (rarely open), 60 MB RSS open and 55 MB after close, footprint 18–19 MB (see "Known limits").
+Accepted exception: the Settings window (rarely open). **1.1.0:** 66 MB RSS open and 61 MB after close, footprint 22–23 MB (was 60 / 55 MB and 18–19 MB with the 1.0.0 single-column window); accepted for 1.1.0, trimming is deferred (`09` "Deferred", see "Known limits").
 
 ## Rules
-1. **Event-driven only.** The only repeating timer is the 30 s liveness check, suspended while there are no sessions. The talking decay is a rescheduled one-shot, never a repeating timer. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3).
+1. **Event-driven only.** The only repeating timer is the 30 s liveness check, suspended while there are no sessions. The talking decay is a rescheduled one-shot, never a repeating timer. The HUD has one more one-shot, at `usage.resetsAt` (30 s tolerance), which flips the HP bar to full and stale (REQ-04 AC3). **(1.1.0)** Do Not Disturb, the poke and the talking streak add no repeating timer: DND is a flag checked on each pop-out and sound edge, the poke is a one-shot Core Animation group, and the streak promotion reuses the talking-decay one-shot (`nextDecayDeadline`). Screen-share and Focus detection for DND were dropped: neither has a permission-free, event-driven public API (REQ-23 AC3).
 2. **Animation runs in the render server.** The pet uses Core Animation layer animations only. No `TimelineView`, `CADisplayLink`, `Timer`, or SwiftUI `repeatForever`.
 3. **Render only on change.** `AppModel` publishes a new `Snapshot` only when it is `!=` to the previous one. `MessageDisplay` floods are coalesced to at most one snapshot per 100 ms.
 4. **Pause when nobody can see it.** On `screensDidSleepNotification` and `sessionDidResignActiveNotification`, pause the layers (`speed = 0`) and the liveness timer; resume on the matching wake notifications.
@@ -24,7 +24,7 @@ Accepted exception: the Settings window (rarely open), 60 MB RSS open and 55 MB 
 8. **No App Nap fights.** The app is naturally idle.
 9. **Sound out of process.** `SoundCues` runs `/usr/bin/afplay` on `popToken` edges.
 10. **Cheap effects only.** The hover glow is a layer shadow with an explicit `shadowPath`; only its opacity animates. No blur filter, `NSVisualEffectView` or per-frame redraw. Unused overlays (bubbles, broom, balls) are hidden, not animating.
-11. **Lazy creation.** The session panel, Settings window and permission cards are built on first use; Settings is released on close.
+11. **Lazy creation.** The session panel, Settings window and permission cards are built on first use; Settings is released on close. **(1.1.0)** The Settings preview pet is paused (`setPaused`) while the window is not key and is released with the window (REQ-21 AC3).
 
 ## Measured (1.0.0)
 `scripts/perf-suite.sh` run of 2026-11-23 at `cc25cb1` (same runtime behaviour as 1.0.0), release bundle, scratch port, settle 30 s, sample 20 s. CPU avg / max, RSS max, `footprint`.
@@ -40,6 +40,7 @@ Accepted exception: the Settings window (rarely open), 60 MB RSS open and 55 MB 
 | expanded hover (glow) | 0.00 / 0.00 | 40.1 | 15 |
 | permission card | 0.00 / 0.00 | 40.8 | 15 |
 | Settings open (first 10 s) / closed | 0.40 / 4.0, then 0.00 | 60.0 / 55.1 | 19 / 18 |
+| **1.1.0 tabbed Settings** open / closed (run of 2026-11-25 at `29aca2c`) | 0.62 / 6.2, then 0.00 | 66.0 / 61.0 | 23 / 22 |
 | mini mode idle | 0.00 / 0.00 | 40.7 | 11 |
 | mini-mode pop-out (after a turn) | 0.08 / 1.4 | 41.4 | 11 |
 | `clawd-bridge statusline` | about 13 ms per run | — | — |
@@ -49,7 +50,7 @@ Process CPU excludes Core Animation work in the render server (`WindowServer`). 
 ## Known limits
 - **RSS floor:** an empty accessory `NSApplication` settles at about 30 MB; our own share is about 9 MB (Network, Core Animation, ~3 MB malloc). `footprint` stays at 11 MB at rest.
 - **Burst:** each hook connection leaves about 7.8 KB of Network.framework state alive for ~30 s after close, and the allocator keeps the pages (`malloc_zone_pressure_relief` changes nothing). Only a plain-socket accept loop instead of `NWListener` would remove it; not worth it within budget.
-- **Settings window:** an empty titled window alone stays at 57 MB RSS after close; the controls add about 2 MB. Measured variants (pressure relief, system font, no controls) cannot reach 45 MB, so the exception stays.
+- **Settings window:** an empty titled window alone stays at 57 MB RSS after close; the controls add about 2 MB. Measured variants (pressure relief, system font, no controls) cannot reach 45 MB, so the exception stays. **1.1.0:** the tabbed window (toolbar tab style, SF Symbols icons, all three tabs built up front, the preview pet) adds about 6 MB RSS and 4 MB footprint, and about 4 MB stays after close. Not yet investigated (candidates: SF Symbols / CoreUI caches, the toolbar machinery, a preview that outlives the window, building the Pet tab lazily); accepted for 1.1.0.
 
 ## How to measure
 - `scripts/perf-suite.sh [settle] [sample]` runs every scenario above on a release bundle and prints one table. It swaps the config `port` (47499), `token` (random) and `onboarded` for the run, so real Claude Code hooks and the bridge cannot reach the app and no first-run window opens; the backed-up config is restored on exit. Needs the sandbox off.

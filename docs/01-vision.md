@@ -18,6 +18,8 @@ When a session finishes or asks for input, the pet pops out so you notice, even 
 
 **Non-goals:** Windows and Linux, Intel Macs, multiple pets, themes, analytics, network calls from the app (no update check), a weekly reset countdown.
 
+*Under review:* pet customization (original species, colour, accessory) and agents other than Claude Code are proposed in `11-proposals.md`; this vision changes only if they are accepted.
+
 **Distribution:** public on GitHub under MIT, as signed (self-signed, not notarized) release zips for Apple silicon (ADR-0008).
 
 **Inspiration:** `rullerzhou-afk/clawd-on-desk` (concept only; none of its code is used). The Clawd character belongs to Anthropic; this is an unofficial fan project.

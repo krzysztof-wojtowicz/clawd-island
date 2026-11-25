@@ -42,6 +42,37 @@ struct AppConfigTests {
         #expect(AppConfig.load(from: url)?.onboarded == true)
     }
 
+    @Test("dnd defaults to off for old files and round-trips when on")
+    func dnd() throws {
+        let old = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port":1,"token":"t"}"#.utf8))
+        #expect(!old.dnd)
+        let url = FileManager.default.temporaryDirectory.appending(path: "clawd-\(UUID().uuidString)/config.json")
+        try AppConfig(token: "t", dnd: true).write(to: url)
+        #expect(AppConfig.load(from: url)?.dnd == true)
+    }
+
+    @Test("petStyle defaults to roundy")
+    func petStyleDefault() throws {
+        let old = try JSONDecoder().decode(AppConfig.self, from: Data(#"{"port":1,"token":"t"}"#.utf8))
+        #expect(old.petStyle == .roundy)
+        #expect(AppConfig(token: "t").petStyle == .roundy)
+    }
+
+    @Test("Unknown and legacy petStyle values decode to roundy", arguments: ["fluffy", "classic", "sharp", "cute", "plush", ""])
+    func petStyleUnknown(value: String) throws {
+        let json = #"{"port":1,"token":"t","petStyle":"\#(value)"}"#
+        let config = try JSONDecoder().decode(AppConfig.self, from: Data(json.utf8))
+        #expect(config.petStyle == .roundy)
+        #expect(config.port == 1)
+    }
+
+    @Test("petStyle round-trips", arguments: AppConfig.PetStyle.allCases)
+    func petStyleRoundTrip(style: AppConfig.PetStyle) throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "clawd-\(UUID().uuidString)/config.json")
+        try AppConfig(token: "t", petStyle: style).write(to: url)
+        #expect(AppConfig.load(from: url)?.petStyle == style)
+    }
+
     @Test("Missing file loads as nil")
     func missing() {
         #expect(AppConfig.load(from: URL(filePath: "/nonexistent/clawd/config.json")) == nil)

@@ -1,10 +1,33 @@
+<div align="center">
+
+<img src="docs/media/idle.gif" alt="Clawd, idle" width="120">
+
 # ClawdIsland
 
-A small orange pet that lives in your MacBook notch and mirrors what Claude Code is doing.
+**A small orange pet that lives in your MacBook notch and mirrors what Claude Code is doing.**
 
-![The island: session counter, panel and glow](docs/media/island.gif)
+[![Version](https://img.shields.io/badge/version-1.1.0-e07a5f)](CHANGELOG.md)
+[![CI](https://github.com/krzysztof-wojtowicz/clawd-island/actions/workflows/ci.yml/badge.svg)](https://github.com/krzysztof-wojtowicz/clawd-island/actions/workflows/ci.yml)
+[![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](#requirements)
+[![Apple silicon](https://img.shields.io/badge/Apple%20silicon-arm64-black)](#requirements)
+[![Swift 6.2](https://img.shields.io/badge/Swift-6.2-F05138?logo=swift&logoColor=white)](#build-from-source)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-![Clawd in nine poses](docs/media/hero.gif)
+[Install](#install-from-a-release) · [Features](#features) · [Poses](#poses) · [Build](#build-from-source) · [Privacy](#privacy) · [Changelog](CHANGELOG.md)
+
+<img src="docs/media/island.gif" alt="The island: session counter, panel and glow">
+
+</div>
+
+## What's new in 1.1.0
+
+- Two pet styles, **Roundy** and **Sharpy**, switched live from Settings → Pet.
+- Session rows show context use and cost (`ctx 64% · $1.20`).
+- **Do Not Disturb** mutes pop-outs and sounds.
+- Settings in three tabs (General, Pet with a live preview, Advanced).
+- Reworked poses, a calmer `talking` (only after 1.5 s of writing), and a poke when you click the pet.
+
+Full notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## Install from a release
 
@@ -32,39 +55,42 @@ Click **Uninstall** in the Settings hooks row (it restores your previous statusl
 
 - **Notch island.** An asymmetric island around the notch: a session counter in the left wing, an HP bar and the pet in the right wing. On a Mac without a notch it draws a virtual one at the top of the main display. On hover the counter morphs into three counters.
 - **Usage from the statusline.** HP is your 5-hour usage and WK your weekly usage, both read from the Claude Code statusline `rate_limits` payload.
-- **Session panel.** Hover the island to open the panel: sessions sorted by importance, each with a state dot, plus the usage footer.
+- **Session panel.** Hover the island to open the panel: sessions sorted by importance, each with a state dot and the session's context use and cost (`ctx 64% · $1.20`, from the statusline), plus the usage footer.
 - **Focus on click.** Jump to the terminal or IDE of a session:
 
-  | App | Focus precision |
-  |---|---|
-  | Terminal.app, iTerm2 | the exact tab |
-  | VS Code family, JetBrains IDEs | the window |
-  | Ghostty, Warp | the app |
+  | App                            | Focus precision |
+  | ------------------------------ | --------------- |
+  | Terminal.app, iTerm2           | the exact tab   |
+  | VS Code family, JetBrains IDEs | the window      |
+  | Ghostty, Warp                  | the app         |
 
 - **Permissions from the notch.** Answer Claude Code permission requests with Deny, Allow or Always allow, without switching windows.
 - **"+ New" session.** Start a new Claude Code session from the panel.
-- **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes or needs you; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
+- **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out when Claude finishes or needs you, staying out until you read the session or answer it; when Claude writes for a while it pops out for 3 s. Other state changes only re-pose the peeking pet.
 
   ![Mini mode: corner peek, pose-only change, 3 s pop-out](docs/media/mini-mode.gif)
 
 - **Sound cues** for needs-input and done.
+- **Do Not Disturb.** One toggle (right-click menu or Settings) mutes pop-outs and sounds; the counters still update.
+- **Two styles and a poke.** Pick Roundy or Sharpy in Settings → Pet, with a live preview. Click the pet to poke it.
+- **Settings** in three tabs: General, Pet and Advanced (port, version, link to this repository).
 - **JetBrains Mono** for the numbers, with a monospaced fallback.
 
 ## Poses
 
-Every pose is a Core Animation layer loop run by the render server. The GIFs are rendered offscreen by the app itself.
+Every pose is a Core Animation layer loop run by the render server. The GIFs are rendered offscreen by the app itself, in both styles.
 
-| State | Trigger | Pose |
-|---|---|---|
-| `sleeping` | no sessions | ![sleeping](docs/media/sleeping.gif) |
-| `idle` | session waiting for a prompt | ![idle](docs/media/idle.gif) |
-| `thinking` | prompt submitted, between tool calls | ![thinking](docs/media/thinking.gif) |
-| `usingTools` | a tool is running | ![usingTools](docs/media/usingTools.gif) |
-| `talking` | Claude is writing text | ![talking](docs/media/talking.gif) |
-| `compacting` | context compaction | ![compacting](docs/media/compacting.gif) |
-| `juggling` | subagents running | ![juggling](docs/media/juggling.gif) |
-| `done` | turn finished | ![done](docs/media/done.gif) |
-| `needsInput` | permission or question waiting | ![needsInput](docs/media/needsInput.gif) |
+| State        | Trigger                              | Roundy                                   | Sharpy                                                   |
+| ------------ | ------------------------------------ | ---------------------------------------- | -------------------------------------------------------- |
+| `sleeping`   | no sessions                          | ![sleeping](docs/media/sleeping.gif)     | ![sleeping (Sharpy)](docs/media/sharpy/sleeping.gif)     |
+| `idle`       | session waiting for a prompt         | ![idle](docs/media/idle.gif)             | ![idle (Sharpy)](docs/media/sharpy/idle.gif)             |
+| `thinking`   | prompt submitted, between tool calls | ![thinking](docs/media/thinking.gif)     | ![thinking (Sharpy)](docs/media/sharpy/thinking.gif)     |
+| `usingTools` | a tool is running                    | ![usingTools](docs/media/usingTools.gif) | ![usingTools (Sharpy)](docs/media/sharpy/usingTools.gif) |
+| `talking`    | Claude is writing text               | ![talking](docs/media/talking.gif)       | ![talking (Sharpy)](docs/media/sharpy/talking.gif)       |
+| `compacting` | context compaction                   | ![compacting](docs/media/compacting.gif) | ![compacting (Sharpy)](docs/media/sharpy/compacting.gif) |
+| `juggling`   | subagents running                    | ![juggling](docs/media/juggling.gif)     | ![juggling (Sharpy)](docs/media/sharpy/juggling.gif)     |
+| `done`       | turn finished                        | ![done](docs/media/done.gif)             | ![done (Sharpy)](docs/media/sharpy/done.gif)             |
+| `needsInput` | permission or question waiting       | ![needsInput](docs/media/needsInput.gif) | ![needsInput (Sharpy)](docs/media/sharpy/needsInput.gif) |
 
 ## Requirements
 

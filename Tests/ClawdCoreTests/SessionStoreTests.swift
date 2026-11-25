@@ -64,13 +64,90 @@ struct SessionStoreTests {
         #expect(snapshot.hasNeedsInput)
     }
 
-    @Test("Talking decays to thinking at exactly 2 s, not at 1.99 s")
+    @Test("Talking decays to thinking 2 s after the last MessageDisplay, unchanged by the streak")
     func talkingDecayBoundary() {
         var store = SessionStore()
+        store.apply(event(.preToolUse), now: t0)
         store.apply(event(.messageDisplay), now: t0)
-        #expect(store.snapshot(now: t0.addingTimeInterval(1.99)).aggregate == .talking)
-        #expect(store.snapshot(now: t0.addingTimeInterval(2.0)).aggregate == .thinking)
-        #expect(store.snapshot(now: t0.addingTimeInterval(2.0)).sessions.first?.state == .thinking)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1.5))
+        #expect(store.snapshot(now: t0.addingTimeInterval(3.49)).aggregate == .talking)
+        #expect(store.snapshot(now: t0.addingTimeInterval(3.5)).aggregate == .thinking)
+        #expect(store.snapshot(now: t0.addingTimeInterval(3.5)).sessions.first?.state == .thinking)
+    }
+
+    @Test("A talking streak of 1.49 s keeps the previous state; a MessageDisplay at 1.5 s promotes (REQ-03 AC8)")
+    func streakPromotesByEvent() {
+        var store = SessionStore()
+        store.apply(event(.preToolUse), now: t0)
+        store.apply(event(.messageDisplay), now: t0)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1.49))
+        #expect(store.sessions.first?.state == .usingTools)
+        #expect(store.snapshot(now: t0.addingTimeInterval(1.49)).aggregate == .usingTools)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1.5))
+        #expect(store.sessions.first?.state == .talking)
+        #expect(store.snapshot(now: t0.addingTimeInterval(1.5)).aggregate == .talking)
+    }
+
+    @Test("A single MessageDisplay then silence never becomes talking and schedules no re-check (REQ-03 AC8)")
+    func singleMessageNeverTalks() {
+        var store = SessionStore()
+        store.apply(event(.preToolUse), now: t0)
+        store.apply(event(.messageDisplay), now: t0)
+        #expect(store.nextDecayDeadline(now: t0) == nil)
+        for time in [1.5, 1.99, 3.0] {
+            #expect(store.snapshot(now: t0.addingTimeInterval(time)).aggregate == .usingTools)
+        }
+    }
+
+    @Test("MessageDisplays at 0, 0.8 and 1.5 s promote on the 1.5 s one and schedule the decay")
+    func streakPromotesOnThirdMessage() {
+        var store = SessionStore()
+        store.apply(event(.userPromptSubmit), now: t0)
+        store.apply(event(.messageDisplay), now: t0)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(0.8))
+        #expect(store.sessions.first?.state == .thinking)
+        #expect(store.nextDecayDeadline(now: t0.addingTimeInterval(0.8)) == nil)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1.5))
+        #expect(store.sessions.first?.state == .talking)
+        #expect(store.nextDecayDeadline(now: t0.addingTimeInterval(1.5)) == t0.addingTimeInterval(3.5))
+    }
+
+    @Test("A MessageDisplay 2 s after the previous one starts a new streak")
+    func streakGapStartsNew() {
+        var store = SessionStore()
+        store.apply(event(.preToolUse), now: t0)
+        store.apply(event(.messageDisplay), now: t0)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(0.5))
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(2.5))
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(3.99))
+        #expect(store.snapshot(now: t0.addingTimeInterval(3.99)).aggregate != .talking)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(4))
+        #expect(store.snapshot(now: t0.addingTimeInterval(4)).aggregate == .talking)
+    }
+
+    @Test("A lone MessageDisplay after a decayed talking streak shows thinking, not talking")
+    func staleTalkingIsNotRevived() {
+        var store = SessionStore()
+        store.apply(event(.userPromptSubmit), now: t0)
+        store.apply(event(.messageDisplay), now: t0)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1.5))
+        #expect(store.sessions.first?.state == .talking)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(4))
+        #expect(store.sessions.first?.state == .thinking)
+        #expect(store.snapshot(now: t0.addingTimeInterval(4)).aggregate == .thinking)
+        #expect(store.nextDecayDeadline(now: t0.addingTimeInterval(4)) == nil)
+    }
+
+    @Test("A PreToolUse in the middle of a streak resets it")
+    func streakResetByOtherEvent() {
+        var store = SessionStore()
+        store.apply(event(.messageDisplay), now: t0)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1))
+        store.apply(event(.preToolUse), now: t0.addingTimeInterval(1.2))
+        #expect(store.nextDecayDeadline(now: t0.addingTimeInterval(1.2)) == nil)
+        store.apply(event(.messageDisplay), now: t0.addingTimeInterval(1.4))
+        #expect(store.snapshot(now: t0.addingTimeInterval(1.6)).aggregate == .usingTools)
+        #expect(store.nextDecayDeadline(now: t0.addingTimeInterval(1.6)) == nil)
     }
 
     @Test("SessionStart(compact) ends compacting; compacting counts as working and never decays")

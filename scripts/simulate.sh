@@ -38,7 +38,8 @@ case "$scenario" in
     start)      start "$sid" ;;
     think)      hook UserPromptSubmit "$sid" '"prompt":"simulated"' ;;
     tool)       hook PreToolUse "$sid" '"tool_name":"Bash","tool_input":{},"tool_use_id":"t1"' ;;
-    text)       for i in 1 2 3 4 5; do hook MessageDisplay "$sid" "\"index\":$i,\"final\":false"; sleep 0.2; done ;;
+    text)       for i in $(seq 1 12); do hook MessageDisplay "$sid" "\"index\":$i,\"final\":false"; sleep 0.2; done ;;  # 2.2 s streak: talking (REQ-03 AC8)
+    blip)       hook MessageDisplay "$sid" '"index":1,"final":true' ;;  # one short sentence: never talking
     permission) hook PermissionRequest "$sid" '"tool_name":"Bash","tool_input":{}' ;;
     done)       hook Stop "$sid" '"stop_hook_active":false' ;;
     fail)       hook StopFailure "$sid" ;;
@@ -53,7 +54,7 @@ case "$scenario" in
         hook UserPromptSubmit "$sid"; sleep 2
         hook PreToolUse "$sid" '"tool_name":"Read"'; sleep 1
         hook PostToolUse "$sid" '"tool_name":"Read"'; sleep 1.5
-        for i in 1 2 3; do hook MessageDisplay "$sid"; sleep 0.3; done
+        for i in $(seq 1 8); do hook MessageDisplay "$sid"; sleep 0.3; done
         sleep 1; hook Stop "$sid"
         ;;
     tools)
@@ -87,7 +88,7 @@ case "$scenario" in
         done
         ;;
     *)
-        echo "usage: $0 {start|think|tool|tools|compact|subagents|text|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
+        echo "usage: $0 {start|think|tool|tools|compact|subagents|text|blip|permission|done|fail|end|turn|multi|burst} [session_id] | usage <percent>" >&2
         exit 1
         ;;
 esac

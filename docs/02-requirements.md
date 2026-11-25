@@ -1,6 +1,6 @@
 # 02 — Requirements
 
-Each requirement has acceptance criteria (AC); work packages in `09-roadmap.md` and code comments cite these IDs. Everything below is implemented in 1.0.0.
+Each requirement has acceptance criteria (AC); work packages in `09-roadmap.md` and code comments cite these IDs. Everything below is implemented. Requirements and ACs marked **(1.1.0)** were added or changed in 1.1.0 (work packages in `09` "1.1.0"); the rest dates from 1.0.0.
 
 ## REQ-01 Lives in the notch
 The pet always lives on the **main display** (the one with the menu bar, as set in System Settings → Displays). If that display has a notch, the pet anchors to it. Otherwise it uses the top centre of the display as a virtual notch. This is the user's decision: with an external monitor set as main, the pet goes there even when the MacBook lid is open.
@@ -18,15 +18,15 @@ The pet stays visible above all apps, including full-screen apps, and on every S
 ## REQ-03 State is shown by appearance
 | Aggregate state | Trigger (see `04-state-machine.md`) | Visual |
 |---|---|---|
-| `sleeping` | no live sessions | eyes closed, slow breathing, "Zzz" |
+| `sleeping` | no live sessions | eyes closed, slow breathing; no "Zzz" (1.1.0) |
 | `idle` | sessions exist, none busy or unread | blinking, small idle sway |
 | `thinking` | a turn is in progress, no output yet | thought cloud or eyes up, gentle bob |
-| `usingTools` | Claude Code is running a tool (Bash, Edit, …) | swings a hammer |
-| `compacting` | context compaction (`PreCompact`) | sweeps with a broom, dust puffs |
-| `juggling` | subagents are running (`activeSubagents > 0`) | juggles 3 balls |
-| `talking` | writing text | speech bubble with animated dots, mouth/body bounce |
-| `done` | a session finished and is unread | one paw raised, then waving in a loop; pop-out on transition |
-| `needsInput` | a permission or question is pending | paw raised, then waving in a loop; red "!" badge, stronger pop-out |
+| `usingTools` | Claude Code is running a tool (Bash, Edit, …) | swings a hammer (about 1.3× bigger, 1.1.0) |
+| `compacting` | context compaction (`PreCompact`) | sweeps with a broom (about 1.3× bigger, 1.1.0), dust puffs |
+| `juggling` | subagents are running (`activeSubagents > 0`) | juggles 3 balls; both paws toss and catch in turn, in sync with the balls (1.1.0) |
+| `talking` | writing text for at least 1.5 s (a talking streak, 1.1.0) | speech bubble in the pet's own look (rounded, pet palette, 1.1.0) with animated dots, mouth/body bounce |
+| `done` | a session finished and is unread | entry burst (1.1.0), one paw raised, then waving in a loop; pop-out on transition |
+| `needsInput` | a permission or question is pending | entry burst (1.1.0), paw raised, then waving in a loop; red "!" badge, stronger pop-out |
 The pet shows no single session: it shows the **aggregate**, the most important state across all live sessions (AC3, `04`). One session waiting for permission raises the paw even while others are busy.
 - AC1: Each state is distinguishable at a glance, at actual notch size.
 - AC2: State changes render within 150 ms of the event reaching the app.
@@ -34,7 +34,9 @@ The pet shows no single session: it shows the **aggregate**, the most important 
 - AC4: `compacting` starts on `PreCompact` and ends on the next state-setting event or on `SessionStart(source: compact)` (`04`).
 - AC5: The panel text reads "compacting" and "N subagents"; both states count as working in the status buckets.
 - AC6: `juggling` is derived per session from `activeSubagents > 0` unless the session is `needsInput` or `done`. The counter resets on `Stop`, `StopFailure` and `UserPromptSubmit`, so a missed `SubagentStop` cannot leave the pet juggling.
-- AC7: In `done` and `needsInput` the paw raises, then waves in a loop: three ±20° swings (about 0.9 s), a rest of about 1.5 s, repeating while the state holds. No wave under Reduce Motion (the paw stays raised).
+- AC7: In `done` and `needsInput` the paw raises, then waves in a loop: three ±20° swings (about 0.9 s), a rest of about 1.5 s, repeating while the state holds. No wave under Reduce Motion (the paw stays raised). **(1.1.0)** Entering either state also plays a one-shot burst or flash around the pet, and the loop is stronger (`07`), so it is clear at a glance that something ended or needs you. The wave semantics above are unchanged; Reduce Motion skips the burst.
+- AC8 **(1.1.0)**: A session becomes `talking` only when a `MessageDisplay` arrives after a **talking streak** of `MessageDisplay` events has lasted 1.5 s (`04` "Talking streak"); a single sentence followed by silence never shows `talking`. A short sentence between tool calls or subagent runs keeps the previous state, so it neither shows `talking` nor pops out mini mode. The 2 s talking decay is unchanged.
+- AC9 **(1.1.0)**: The reworked poses (`07`): `sleeping` has no "Zzz"; the speech bubble matches the pet's look; the hammer and broom are about 1.3× bigger and are still never clipped (REQ-04 AC4); in `juggling` both paws visibly toss and catch, alternating in sync with the ball orbit. Every pose works in both styles (REQ-06 AC2), in mini mode and under Reduce Motion.
 
 ## REQ-04 Session counter and HP bar
 The collapsed island is laid out as `counter | notch | HP bar · pet` (see the sketch in `06`). Everything is vertically centred in the top row:
@@ -57,8 +59,8 @@ The collapsed island is laid out as `counter | notch | HP bar · pet` (see the s
 
 ## REQ-05 Mini mode
 A toggle (right-click menu "Mini Mode", or Settings) hides the wings and tucks the pet into the notch's **bottom-right corner, upside down**: it is turned 180° and then a further 30° (about 150° clockwise in total), so its legs and lower body stay hidden behind the notch while its head, eyes and arms stick out down and to the right. Its state animations (blinking, hammer, bubbles, the "!" badge) stay visible.
-- AC1: In mini mode, the pet pops out (wings shown) for about **3 s**, then retracts, only when the aggregate **enters** `talking`, `done` or `needsInput`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `juggling`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A new trigger during a pop-out restarts the 3 s.
-- AC2: `needsInput` stays popped out until it is resolved (it does not retract after 3 s).
+- AC1: In mini mode, the pet pops out (wings shown) only when the aggregate **enters** `talking`, `done` or `needsInput`, or when `popToken` advances (a new attention edge). Other state changes (`thinking`, `usingTools`, `compacting`, `juggling`, `idle`, `sleeping`) only change the peeking pet's pose and animation in the corner. A `talking` pop-out lasts about **3 s**, then retracts; a new trigger during a pop-out restarts the 3 s.
+- AC2 **(1.1.0)**: `done` and `needsInput` stay popped out until the session is read (`done`) or resolved (`needsInput`): the pop-out holds while the aggregate is `done` or `needsInput`. When the aggregate leaves both, the usual 3 s countdown runs, then the pet retracts. Do Not Disturb suppresses every pop-out (REQ-23).
 - AC3: Hovering over the peeking pet expands the island temporarily.
 - AC4: Every transition (hidden ↔ popped ↔ expanded, and switching mini mode on or off in any of them) moves the pet continuously: its position and tilt animate together with the island resize, with no jumps.
 - AC5: Launching with mini mode already on shows the pet tilted from the first frame (the pet is embedded before the persisted mode is applied).
@@ -67,6 +69,7 @@ A toggle (right-click menu "Mini Mode", or Settings) hides the wings and tucks t
 ## REQ-06 Clawd-inspired design
 Orange (`#D97757` family), a rounded-rectangle body, two tall dark eyes, little side arms and four stubby legs in two pairs with a gap between them, with smooth corners and richer animation than the pixel original.
 - AC1: Vector-only, so it is sharp on every Retina scale. There are no bitmap assets.
+- AC2 **(1.1.0)**: Settings → Pet offers a **Style**: **Roundy** (default, the look above) and **Sharpy** (the same pet with sharp corners on every pet part). It is `petStyle` in config (`roundy` / `sharpy`; an unknown value gives `roundy`). A change rebuilds the rig live, without a restart, and every style keeps the same anatomy, poses, animations and colours (`07` "Styles"). `--render-poses <dir> --pet-style <style>` renders the pose GIFs for one style.
 
 ## REQ-07 macOS only
 macOS 14+ on Apple silicon only (no universal binary, no Intel build).
@@ -81,7 +84,7 @@ See `08-performance.md`.
 - AC2: Multiple concurrent sessions (several terminals, subagents) are tracked independently.
 - AC3: Usage data comes from the statusline `rate_limits` field only (ADR-0004).
 - AC4: Install Hooks / Uninstall Hooks live in Settings only (a status row "Claude Code hooks: Installed / Not installed" plus one button), not in the right-click menu.
-- AC5: On the first launch (no `onboarded` flag in config) while the hooks are not installed, Settings opens once with a one-line welcome ("Install the Claude Code hooks to connect Clawd") and Install as the default button; the flag is then set, so later launches do not open it.
+- AC5: On the first launch (no `onboarded` flag in config) while the hooks are not installed, Settings opens once with a one-line welcome ("Install the Claude Code hooks to connect Clawd") and Install as the default button; the flag is then set, so later launches do not open it. **(1.1.0)** The hooks row and the welcome live in the **General** tab, and the first run opens that tab (REQ-21).
 
 ## REQ-10 Attention / read tracking
 A `done` session becomes *read* when any of the following happens:
@@ -146,3 +149,30 @@ Better focus for the VS Code family, JetBrains IDEs, Ghostty and Warp. **Tab pre
 Start a new Claude Code session from the expanded panel. A "+ New" footer button opens a menu of up to 5 recent project directories (`cwd`s seen, most recent first, `recentProjects` in config.json) plus "Choose Folder…". The directory opens in a new window of the preferred terminal (Terminal.app or iTerm2, from the most recent session, else Terminal.app) running `claude`. It quotes the path safely for shell and AppleScript and never edits Claude Code settings.
 - AC1: The new session appears in the panel within a few seconds (through its hooks), in the chosen directory.
 - AC2: A path with spaces, quotes or `$` opens correctly and runs nothing but `cd <dir> && claude`.
+
+## REQ-21 Settings tabs (1.1.0)
+Settings becomes a window with three toolbar tabs: **General**, **Pet** and **Advanced** (`06` "Settings window"). It stays plain AppKit: an `NSTabViewController` with the `.toolbar` tab style and SF Symbols icons. Claude Code is the only agent, so there is no Agents tab.
+- AC1: **General** holds the first-run welcome line, the Claude Code hooks row (Install / Uninstall), "Approve permissions from the notch", Mini mode, the focus-read mode, Sound cues, Do Not Disturb (REQ-23) and Launch at login. Every 1.0 control keeps its config key and behaviour (REQ-05 AC6, REQ-09 AC4 / AC5, REQ-12 AC4, REQ-16 AC4).
+- AC2: First run opens **General** with the welcome, and Install is the default button (REQ-09 AC5).
+- AC3: **Pet** holds a live preview (`PetView` at 3× notch size, with a pose picker that cycles the nine poses) and the Style popup, Roundy / Sharpy (REQ-06 AC2). The preview pauses (`setPaused`) while the window is not key, and it is released with the window.
+- AC4: **Advanced** holds only the port (read-only), the app version (`CFBundleShortVersionString`) and a link to the GitHub repository (https://github.com/krzysztof-wojtowicz/clawd-island).
+- AC5: The window always opens on **General** and has one fixed size for every tab (the largest tab's), so switching tabs never resizes it. It is built when opened and released on close, and its memory is measured with `perf-suite.sh` against the Settings exception (`08` "Known limits"; 1.1.0 accepts 66 MB open and 61 MB after close).
+- AC6: Control text is JetBrains Mono (REQ-14); the window title and toolbar tab labels are AppKit system text.
+
+## REQ-23 Do Not Disturb (1.1.0)
+A user toggle that mutes the pet's interruptions: right-click menu "Do Not Disturb" and a General checkbox, `dnd` in config, default off.
+- AC1: While DND is on, there is no pop-out (REQ-05) and no sound (REQ-12). State, counters and the panel still update; the counter still turns red.
+- AC2: When DND is turned off while a `needsInput` is pending, the pet pops out once. The pop-out is held like any `needsInput` pop-out (REQ-05 AC2), and an unread `done` does the same. Turning DND on retracts a pop-out at once.
+- AC3: Screen-sharing or Focus-mode detection is added only if an event-driven public API exists. Otherwise it is dropped (`08` rule 1). There is no new repeating timer. **Dropped (WP-45):** no public API posts screen-sharing changes (`CGSessionCopyCurrentDictionary` must be polled), and `INFocusStatusCenter` needs the Communication Notifications entitlement, a provisioning profile and user authorization.
+
+## REQ-24 Poke (1.1.0)
+A click on the pet (not on the HUD) plays a one-shot "poke": a 0.6 s squash and blink as a Core Animation group (`07` "Poke"). About 1 in 4 pokes, chosen at random, also shows a small red heart floating up. Written from scratch.
+- AC1: No sound and no state change. A poke does not mark a session read and never opens the panel.
+- AC2: The click never takes keyboard focus and does not deactivate the frontmost app (REQ-02 AC2).
+- AC3: Under Reduce Motion a poke is a blink only.
+
+## REQ-26 Context and cost per session (1.1.0)
+Each session row shows the session's context use and cost at its right edge, for example `ctx 64% · $1.20`, from the Claude Code statusline payload (`05` "Context and cost").
+- AC1: The values come from the statusline fields `context_window.used_percentage` and `cost.total_cost_usd`, attached to the session named by the payload's `session_id`. The global `rate_limits` usage handling (REQ-04, ADR-0004) is unchanged.
+- AC2: A part is omitted when its field is absent or null (context is null early in a session); with both absent, nothing is shown. The project name truncates before the stats do (REQ-14 AC3).
+- AC3: Claude Code only, and never estimated or fabricated. The cost is Claude Code's own estimate at list price and resets on `/clear`.

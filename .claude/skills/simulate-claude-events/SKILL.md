@@ -14,7 +14,8 @@ Scenarios (keep this list in sync with the script):
 | `think` | UserPromptSubmit | thinking |
 | `tool` | PreToolUse(Bash) | usingTools (hammer strike; never decays, ends on PostToolUse/Stop) |
 | `tools` | think → PreToolUse(Bash) → hold 4 s → PostToolUse → Stop | thinking → usingTools (hammer) → done |
-| `text` | MessageDisplay ×5, 200 ms apart | talking |
+| `text` | MessageDisplay ×12, 200 ms apart (a 2.2 s streak) | talking |
+| `blip` | one MessageDisplay | no change (talking needs a 1.5 s streak) |
 | `permission` | PermissionRequest | needsInput (red !) |
 | `done` | Stop | done (paw raised) + pop-out |
 | `fail` | StopFailure | done (failed) |
