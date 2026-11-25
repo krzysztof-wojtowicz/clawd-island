@@ -55,19 +55,19 @@ Click **Uninstall** in the Settings hooks row (it restores your previous statusl
 
 ## Poses
 
-Every pose is a Core Animation layer loop run by the render server. The GIFs are rendered offscreen by the app itself.
+Every pose is a Core Animation layer loop run by the render server. The GIFs are rendered offscreen by the app itself, in both styles.
 
-| State | Trigger | Pose |
-|---|---|---|
-| `sleeping` | no sessions | ![sleeping](docs/media/sleeping.gif) |
-| `idle` | session waiting for a prompt | ![idle](docs/media/idle.gif) |
-| `thinking` | prompt submitted, between tool calls | ![thinking](docs/media/thinking.gif) |
-| `usingTools` | a tool is running | ![usingTools](docs/media/usingTools.gif) |
-| `talking` | Claude is writing text | ![talking](docs/media/talking.gif) |
-| `compacting` | context compaction | ![compacting](docs/media/compacting.gif) |
-| `juggling` | subagents running | ![juggling](docs/media/juggling.gif) |
-| `done` | turn finished | ![done](docs/media/done.gif) |
-| `needsInput` | permission or question waiting | ![needsInput](docs/media/needsInput.gif) |
+| State | Trigger | Roundy | Sharpy |
+|---|---|---|---|
+| `sleeping` | no sessions | ![sleeping](docs/media/sleeping.gif) | ![sleeping (Sharpy)](docs/media/sharpy/sleeping.gif) |
+| `idle` | session waiting for a prompt | ![idle](docs/media/idle.gif) | ![idle (Sharpy)](docs/media/sharpy/idle.gif) |
+| `thinking` | prompt submitted, between tool calls | ![thinking](docs/media/thinking.gif) | ![thinking (Sharpy)](docs/media/sharpy/thinking.gif) |
+| `usingTools` | a tool is running | ![usingTools](docs/media/usingTools.gif) | ![usingTools (Sharpy)](docs/media/sharpy/usingTools.gif) |
+| `talking` | Claude is writing text | ![talking](docs/media/talking.gif) | ![talking (Sharpy)](docs/media/sharpy/talking.gif) |
+| `compacting` | context compaction | ![compacting](docs/media/compacting.gif) | ![compacting (Sharpy)](docs/media/sharpy/compacting.gif) |
+| `juggling` | subagents running | ![juggling](docs/media/juggling.gif) | ![juggling (Sharpy)](docs/media/sharpy/juggling.gif) |
+| `done` | turn finished | ![done](docs/media/done.gif) | ![done (Sharpy)](docs/media/sharpy/done.gif) |
+| `needsInput` | permission or question waiting | ![needsInput](docs/media/needsInput.gif) | ![needsInput (Sharpy)](docs/media/sharpy/needsInput.gif) |
 
 ## Requirements
 

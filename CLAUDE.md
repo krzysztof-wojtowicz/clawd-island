@@ -43,7 +43,7 @@ Swift 6.2 + **Command Line Tools only (no Xcode)**. Swift Package Manager, swift
 - `screencapture` fails unless the terminal has the Screen Recording permission. Use `window-info.swift` for geometry, and ask the user to look when visuals matter.
 - Never test hooks against the real `~/.claude/settings.json`. Use `claude -p … --settings <scratch file>` instead.
 - To try Install, onboarding or `--uninstall-hooks` on the app, set both `CLAWD_SETTINGS_PATH` and `CLAWD_CONFIG_PATH` to scratch files (the bridge ignores them and reads the real config).
-- Launch flags: `--open-settings [--close-settings-after <s>]` (perf-suite), `--uninstall-hooks` (uninstall.sh). Debug builds only: `--pet-demo`, `--render-poses <dir> [--pet-style roundy|sharpy]` (README pose GIFs: `.build/debug/ClawdIsland --render-poses docs/media --pet-style roundy`; `--pet-style` from WP-36), `--render-icon <dir>`, `--debug-auto-allow|deny|always` (answer permission cards automatically for e2e tests).
+- Launch flags: `--open-settings [--close-settings-after <s>]` (perf-suite), `--uninstall-hooks` (uninstall.sh). Debug builds only: `--pet-demo`, `--render-poses <dir> [--pet-style roundy|sharpy]` (README pose GIFs: `.build/debug/ClawdIsland --render-poses docs/media --pet-style roundy`, and `--render-poses docs/media/sharpy --pet-style sharpy` minus its unused `hero.gif`; `--pet-style` from WP-36), `--render-icon <dir>`, `--debug-auto-allow|deny|always` (answer permission cards automatically for e2e tests).
 
 ## Repo map
 ```
