@@ -16,7 +16,7 @@ cp "$bin/ClawdIsland" "$bin/clawd-bridge" "$app/Contents/MacOS/"
 cp -R Resources/Fonts "$app/Contents/Resources/Fonts"
 cp Resources/AppIcon.icns "$app/Contents/Resources/"
 
-version=1.1.0 # keep in sync with CHANGELOG.md and the README version badge
+version=1.1.0 # keep in sync with CHANGELOG.md
 build="$(git rev-list --count HEAD 2>/dev/null || echo 0)" # 0 outside a git checkout
 
 cat > "$app/Contents/Info.plist" <<EOF

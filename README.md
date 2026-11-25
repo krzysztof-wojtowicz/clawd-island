@@ -6,7 +6,7 @@
 
 **A small orange pet that lives in your MacBook notch and mirrors what Claude Code is doing.**
 
-[![Version](https://img.shields.io/badge/version-1.1.0-e07a5f)](CHANGELOG.md)
+[![Release](https://img.shields.io/github/v/release/krzysztof-wojtowicz/clawd-island?color=e07a5f)](https://github.com/krzysztof-wojtowicz/clawd-island/releases/latest)
 [![CI](https://github.com/krzysztof-wojtowicz/clawd-island/actions/workflows/ci.yml/badge.svg)](https://github.com/krzysztof-wojtowicz/clawd-island/actions/workflows/ci.yml)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](#requirements)
 [![Apple silicon](https://img.shields.io/badge/Apple%20silicon-arm64-black)](#requirements)
