@@ -32,7 +32,7 @@ Click **Uninstall** in the Settings hooks row (it restores your previous statusl
 
 - **Notch island.** An asymmetric island around the notch: a session counter in the left wing, an HP bar and the pet in the right wing. On a Mac without a notch it draws a virtual one at the top of the main display. On hover the counter morphs into three counters.
 - **Usage from the statusline.** HP is your 5-hour usage and WK your weekly usage, both read from the Claude Code statusline `rate_limits` payload.
-- **Session panel.** Hover the island to open the panel: sessions sorted by importance, each with a state dot, plus the usage footer.
+- **Session panel.** Hover the island to open the panel: sessions sorted by importance, each with a state dot and the session's context use and cost (`ctx 64% · $1.20`, from the statusline), plus the usage footer.
 - **Focus on click.** Jump to the terminal or IDE of a session:
 
   | App | Focus precision |
@@ -43,11 +43,14 @@ Click **Uninstall** in the Settings hooks row (it restores your previous statusl
 
 - **Permissions from the notch.** Answer Claude Code permission requests with Deny, Allow or Always allow, without switching windows.
 - **"+ New" session.** Start a new Claude Code session from the panel.
-- **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out for 3 s when Claude starts writing, finishes or needs you; other state changes only re-pose the peeking pet. A pending permission request stays out until you resolve it.
+- **Mini mode.** The pet hangs upside down from the notch's bottom-right corner and pops out when Claude finishes or needs you, staying out until you read the session or answer it; when Claude writes for a while it pops out for 3 s. Other state changes only re-pose the peeking pet.
 
   ![Mini mode: corner peek, pose-only change, 3 s pop-out](docs/media/mini-mode.gif)
 
 - **Sound cues** for needs-input and done.
+- **Do Not Disturb.** One toggle (right-click menu or Settings) mutes pop-outs and sounds; the counters still update.
+- **Two styles and a poke.** Pick Roundy or Sharpy in Settings → Pet, with a live preview. Click the pet to poke it.
+- **Settings** in three tabs: General, Pet and Advanced (port, version, link to this repository).
 - **JetBrains Mono** for the numbers, with a monospaced fallback.
 
 ## Poses

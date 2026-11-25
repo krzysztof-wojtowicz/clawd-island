@@ -1,6 +1,6 @@
 # 02 — Requirements
 
-Each requirement has acceptance criteria (AC); work packages in `09-roadmap.md` and code comments cite these IDs. Everything below is implemented in 1.0.0, except requirements and ACs marked **(1.1.0)**: they are planned for 1.1.0 and become implemented as their work packages in `09` ("1.1.0") land.
+Each requirement has acceptance criteria (AC); work packages in `09-roadmap.md` and code comments cite these IDs. Everything below is implemented. Requirements and ACs marked **(1.1.0)** were added or changed in 1.1.0 (work packages in `09` "1.1.0"); the rest dates from 1.0.0.
 
 ## REQ-01 Lives in the notch
 The pet always lives on the **main display** (the one with the menu bar, as set in System Settings → Displays). If that display has a notch, the pet anchors to it. Otherwise it uses the top centre of the display as a virtual notch. This is the user's decision: with an external monitor set as main, the pet goes there even when the MacBook lid is open.

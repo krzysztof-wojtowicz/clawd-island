@@ -2,7 +2,7 @@
 
 Native macOS app (Apple silicon, macOS 14+): a Clawd-inspired pet living in the MacBook notch (or a virtual notch at the top of the main display) that mirrors Claude Code state, shows a session counter and a 5-hour-usage "HP bar". Read `docs/01-vision.md` first if you are new.
 
-**Status:** 1.0.0 is released on GitHub. **1.1.0 is in progress:** its work packages are in `docs/09-roadmap.md` "1.1.0" (WP-36, 42, 45, 46, 48, 50–52), and its requirements are the items marked "(1.1.0)" in `docs/02`. New work packages continue from WP-53. The remaining post-1.0 proposals, with draft REQs and ADR-0009/0010, live in `docs/11-proposals.md`.
+**Status:** 1.0.0 is released on GitHub. **1.1.0 is complete and ready to release** (version set in `scripts/bundle.sh`): its work packages are in `docs/09-roadmap.md` "1.1.0" (WP-36, 42, 45, 46, 48, 50–52), and its requirements are the items marked "(1.1.0)" in `docs/02`. New work packages continue from WP-53. The remaining post-1.0 proposals, with draft REQs and ADR-0009/0010, live in `docs/11-proposals.md`.
 
 ## Golden rules
 1. **Use the `ponytail` skill (level `full`) before every coding task.** Smallest complete change, no speculative abstractions.
