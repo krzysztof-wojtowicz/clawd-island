@@ -26,8 +26,8 @@ Everything in `02` is implemented, reviewed, measured (`08`) and checked by hand
 | App | Settings window (hooks row, first-run welcome, toggles), launch at login, JetBrains Mono | `App/` |
 | Distribution | `bundle` / `install` / `uninstall` / `package` scripts, self-signed "ClawdIsland" identity, GitHub Actions CI, README GIFs, release zip + sha256 | `scripts/`, `.github/`, ADR-0001/0008 |
 
-## 1.1.0
-Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-50..52). The requirements are the ACs marked "(1.1.0)" in `02`. Claude Code stays the only agent. Run in this order; WPs with disjoint owners may run in parallel (WP-36 and WP-52 both touch Core: use a worktree or run them back to back). Each WP also marks itself `done` here and adds a `CHANGELOG.md` line under "1.1.0". **All 1.1.0 WPs are done**; the release itself is the user's step (checklist above).
+## 1.1.0 — released
+Accepted scope (`11` P1 styles only, P2 without Agents, P4a, P4b, P4d, plus WP-50..52). The requirements are the ACs marked "(1.1.0)" in `02`. Claude Code stays the only agent. Run in this order; WPs with disjoint owners may run in parallel (WP-36 and WP-52 both touch Core: use a worktree or run them back to back). Each WP also marks itself `done` here and adds a `CHANGELOG.md` line under "1.1.0". **All 1.1.0 WPs are done and 1.1.0 is released.**
 
 ### WP-36 — Pet styles Roundy / Sharpy · owner: pet-animator (`AppConfig` through core-engineer) · deps: none · status: `done`
 - Reuse commit `6ff6829` from `pet-variants` (not the plush commits `6a85832`, `0864b24`, nor the README commit `f203f40`). Drop Cute; rename Classic → `roundy` and Sharp → `sharpy`. `petStyle` in config (default `roundy`, an unknown value decodes to `roundy`); `PetRig` per style; `PetView` rebuilds the rig live; `--render-poses <dir> --pet-style <style>` (REQ-06 AC2, `07` "Styles"). The Settings popup is temporary and moves to the Pet tab in WP-42.
